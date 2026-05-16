@@ -49,7 +49,7 @@ const seedData = async () => {
         description: 'Explore ancient monasteries on Lake Tana islands.',
         price: 45,
         ecoFriendly: true,
-        images: ['monastry.jpg']
+        images: ['monastery.jpg']
       },
       {
         vendor: vendor._id,

@@ -71,6 +71,13 @@ export default function VendorDashboard() {
   const [vendorServices, setVendorServices] = useState([])
   const [vendorBookings, setVendorBookings] = useState([])
   const [loading, setLoading] = useState(true)
+  const [isAdding, setIsAdding] = useState(false)
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
+  const [completedChecklist, setCompletedChecklist] = useState<number[]>([1, 3, 5])
+  const [reviewResponses, setReviewResponses] = useState<Record<number, string>>({})
+  const [replyingTo, setReplyingTo] = useState<number | null>(null)
+  const [notifFilter, setNotifFilter] = useState('all')
+  const [ecoScore, setEcoScore] = useState(72)
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -79,6 +86,23 @@ export default function VendorDashboard() {
     } else {
       setAuthed(true)
     }
+  }, [])
+
+  useEffect(() => {
+    const fetchVendorData = async () => {
+      try {
+        const servicesRes = await API.get('/services')
+        setVendorServices(servicesRes.data.data)
+        const bookingsRes = await API.get('/bookings/user')
+        setVendorBookings(bookingsRes.data.data)
+        setVendorStats((prev) => ({ ...prev, bookings: bookingsRes.data.count || 12 }))
+      } catch (err) {
+        console.error('Error fetching vendor data:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchVendorData()
   }, [])
 
   if (authed === false) {
@@ -106,13 +130,6 @@ export default function VendorDashboard() {
       </div>
     )
   }
-  const [isAdding, setIsAdding] = useState(false)
-  const [showMobileMenu, setShowMobileMenu] = useState(false)
-  const [completedChecklist, setCompletedChecklist] = useState<number[]>([1, 3, 5])
-  const [reviewResponses, setReviewResponses] = useState<Record<number, string>>({})
-  const [replyingTo, setReplyingTo] = useState<number | null>(null)
-  const [notifFilter, setNotifFilter] = useState('all')
-  const [ecoScore, setEcoScore] = useState(72)
 
   const toggleChecklist = (id: number) => {
     setCompletedChecklist((prev) =>
@@ -121,23 +138,6 @@ export default function VendorDashboard() {
   }
 
   const ecoPercentage = Math.round((completedChecklist.length / ecoChecklistItems.length) * 100)
-
-  useEffect(() => {
-    const fetchVendorData = async () => {
-      try {
-        const servicesRes = await API.get('/services')
-        setVendorServices(servicesRes.data.data)
-        const bookingsRes = await API.get('/bookings/user')
-        setVendorBookings(bookingsRes.data.data)
-        setVendorStats((prev) => ({ ...prev, bookings: bookingsRes.data.count || 12 }))
-      } catch (err) {
-        console.error('Error fetching vendor data:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchVendorData()
-  }, [])
 
   const recentBookings = vendorBookings.slice(0, 5)
   const pendingBookings = vendorBookings.filter((b: any) => b.status === 'pending')

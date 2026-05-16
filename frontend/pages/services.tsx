@@ -81,7 +81,7 @@ export default function Services() {
     setEcoOnly(queryEco)
     setPage(Number.isInteger(queryPage) && queryPage > 0 ? queryPage : 1)
     setIsQueryReady(true)
-  }, [router.isReady])
+  }, [router.isReady, router.query, isQueryReady])
 
   useEffect(() => {
     if (!isQueryReady) return
@@ -138,7 +138,7 @@ export default function Services() {
   useEffect(() => {
     if (!isQueryReady) return
     setPage(1)
-  }, [filter, ecoOnly, sortBy, minPrice, maxPrice])
+  }, [filter, ecoOnly, sortBy, minPrice, maxPrice, isQueryReady])
 
   const applySearchAndPriceFilters = () => {
     const normalizedMin = normalizeNonNegativeNumber(minPriceInput)
