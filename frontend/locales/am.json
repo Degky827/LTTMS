@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "home": "መነሻ",
+    "services": "አገልግሎቶች",
+    "vendors": "�ጠባቂዎች",
+    "bookings": "ቦታ ማስያዝ",
+    "ecoTourism": "ኢኮ-ቱሪዝም",
+    "reviews": "ግምገማዎች",
+    "aboutLakeTana": "ስለ ጣና ሐይቅ",
+    "contactUs": "አግኙን",
+    "register": "ይመዝገቡ",
+    "login": "ይግቡ",
+    "logout": "ይውጡ",
+    "dashboard": "ዳሽቦርድ",
+    "language": "ቋንቋ"
+  },
+  "common": {
+    "lakeTana": "ጣና ሐይቅ",
+    "ecoTourism": "ኢኮ-ቱሪዝም",
+    "loading": "በመጫን ላይ...",
+    "submit": "አስገባ",
+    "cancel": "ሰርዝ",
+    "save": "አስቀምጥ",
+    "delete": "ሰርዝ",
+    "search": "ፈልግ",
+    "filter": "አጣራ",
+    "sort": "ደርድር",
+    "noResults": "ምንም ውጤት አልተገኘም",
+    "viewAll": "ሁሉንም ይመልከቱ",
+    "learnMore": "ተጨማሪ ይወቁ",
+    "bookNow": "አሁን ያስይዙ",
+    "readMore": "ተጨማሪ ያንብቡ"
+  },
+  "home": {
+    "heroTitle": "ጣና ሐይቅን ያግኙ",
+    "heroSubtitle": "የኢትዮጵያን ትልቁን ሐይቅ ያስሱ — የዩኔስኮ ባዮስፌር ሪዘርቭ ከጥንታዊ ገዳማት፣ የተለያዩ የዱር አራዊት እና የማይረሱ ኢኮ-ጀብዱዎች ጋር።",
+    "heroSearchPlaceholder": "ጉብኝቶችን፣ ሆቴሎችን፣ እንቅስቃሴዎችን ይፈልጉ...",
+    "heroCta": "ልምዶችን ይመርቁ",
+    "featuredDestinations": "ታዋቂ መዳረሻዎች",
+    "whyChooseUs": "ለምን እኛን ይመርጣሉ",
+    "topServices": "ከፍተኛ የኢኮ-ቱሪዝም አገልግሎቶች",
+    "communityTitle": "ማህበረሰብ እና ዘላቂነት",
+    "testimonials": "ተጓዦች የሚሉት",
+    "statsTitle": "በቁጥር ያለን ተጽእኖ"
+  },
+  "footer": {
+    "description": "የኢትዮጵያን ትልቁን ሐይቅ ያግኙ — የዩኔስኮ ባዮስፌር ሪዘርቭ ከጥንታዊ ገዳማት፣ የተለያዩ የዱር አራዊት እና የማይረሱ ኢኮ-ጀብዱዎች ጋር።",
+    "quickLinks": "ፈጣን አገናኞች",
+    "explore": "ያስሱ",
+    "contact": "አግኙን",
+    "copyright": "© 2026 የጣና ሐይቅ ኢኮ-ቱሪዝም መድረክ። ሁሉም መብቶች የተጠበቁ ናቸው።"
+  }
+}

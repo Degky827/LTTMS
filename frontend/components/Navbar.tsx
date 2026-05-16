@@ -1,22 +1,29 @@
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   FaBars, FaTimes, FaLeaf, FaGlobe,
   FaCompass, FaStore, FaCalendarCheck, FaStar,
   FaWater, FaEnvelope, FaTree, FaTachometerAlt,
-  FaSignInAlt, FaUserPlus
+  FaSignInAlt, FaUserPlus, FaUser
 } from 'react-icons/fa'
+import { useAuth } from '../context/AuthContext'
+import { useLanguage } from '../context/LanguageContext'
 
 export default function Navbar() {
+  const { user, logout, loading } = useAuth()
+  const { t, lang, setLang } = useLanguage()
   const [isOpen, setIsOpen] = useState(false)
-  const [lang, setLang] = useState('en')
-  const [user, setUser] = useState<{ role: 'tourist' | 'vendor' | 'admin' | null }>({ role: null })
   const [scrolled, setScrolled] = useState(false)
 
-  if (typeof window !== 'undefined') {
-    window.addEventListener('scroll', () => {
-      setScrolled(window.scrollY > 20)
-    })
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', onScroll)
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  const handleLogout = async () => {
+    await logout()
+    setIsOpen(false)
   }
 
   return (
@@ -45,87 +52,40 @@ export default function Navbar() {
 
           {/* Desktop Menu */}
           <div className="hidden lg:flex items-center">
-            <Link
-              href="/"
-              className="px-3 py-2.5 rounded-lg font-medium text-sm text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300 whitespace-nowrap"
-            >
-              Home
-            </Link>
-            <Link
-              href="/services"
-              className="px-3 py-2.5 rounded-lg font-medium text-sm text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300 whitespace-nowrap"
-            >
-              <FaCompass className="inline mr-1.5" />Services
-            </Link>
-            <Link
-              href={user.role === 'vendor' ? '/vendor/dashboard' : '/vendors'}
-              className="px-3 py-2.5 rounded-lg font-medium text-sm text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300 whitespace-nowrap"
-            >
-              <FaStore className="inline mr-1.5" />Vendors
-            </Link>
-            <Link
-              href="/booking"
-              className="px-3 py-2.5 rounded-lg font-medium text-sm text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300 whitespace-nowrap"
-            >
-              <FaCalendarCheck className="inline mr-1.5" />Bookings
-            </Link>
-            <Link
-              href="/eco-tourism"
-              className="px-3 py-2.5 rounded-lg font-medium text-sm text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300 whitespace-nowrap"
-            >
-              <FaTree className="inline mr-1.5" />Eco-Tourism
-            </Link>
-            <Link
-              href="/reviews"
-              className="px-3 py-2.5 rounded-lg font-medium text-sm text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300 whitespace-nowrap"
-            >
-              <FaStar className="inline mr-1.5" />Reviews
-            </Link>
-            <Link
-              href="/about"
-              className="px-3 py-2.5 rounded-lg font-medium text-sm text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300 whitespace-nowrap"
-            >
-              <FaWater className="inline mr-1.5" />About Lake Tana
-            </Link>
-            <Link
-              href="/contact"
-              className="px-3 py-2.5 rounded-lg font-medium text-sm text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300 whitespace-nowrap"
-            >
-              <FaEnvelope className="inline mr-1.5" />Contact Us
-            </Link>
+            <Link href="/" className="px-3 py-2.5 rounded-lg font-medium text-sm text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300 whitespace-nowrap">{t('nav.home')}</Link>
+            <Link href="/services" className="px-3 py-2.5 rounded-lg font-medium text-sm text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300 whitespace-nowrap"><FaCompass className="inline mr-1.5" />{t('nav.services')}</Link>
+            <Link href={user?.role === 'vendor' ? '/vendor/dashboard' : '/vendors'} className="px-3 py-2.5 rounded-lg font-medium text-sm text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300 whitespace-nowrap"><FaStore className="inline mr-1.5" />{t('nav.vendors')}</Link>
+            <Link href="/booking" className="px-3 py-2.5 rounded-lg font-medium text-sm text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300 whitespace-nowrap"><FaCalendarCheck className="inline mr-1.5" />{t('nav.bookings')}</Link>
+            <Link href="/eco-tourism" className="px-3 py-2.5 rounded-lg font-medium text-sm text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300 whitespace-nowrap"><FaTree className="inline mr-1.5" />{t('nav.ecoTourism')}</Link>
+            <Link href="/reviews" className="px-3 py-2.5 rounded-lg font-medium text-sm text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300 whitespace-nowrap"><FaStar className="inline mr-1.5" />{t('nav.reviews')}</Link>
+            <Link href="/about" className="px-3 py-2.5 rounded-lg font-medium text-sm text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300 whitespace-nowrap"><FaWater className="inline mr-1.5" />{t('nav.aboutLakeTana')}</Link>
+            <Link href="/contact" className="px-3 py-2.5 rounded-lg font-medium text-sm text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300 whitespace-nowrap"><FaEnvelope className="inline mr-1.5" />{t('nav.contactUs')}</Link>
 
             <div className="ml-3 flex items-center space-x-2">
-              {!user.role ? (
+              {!user ? (
                 <>
-                  <Link
-                    href="/vendor/register"
-                    className="px-4 py-2.5 rounded-lg font-medium text-sm text-gray-600 hover:text-primary hover:bg-gray-50 transition-all duration-300 whitespace-nowrap border border-gray-200"
-                  >
-                    Register
-                  </Link>
-                  <Link
-                    href="/vendor/login"
-                    className="bg-gradient-to-r from-primary to-blue-600 text-white px-4 py-2.5 rounded-lg font-semibold text-sm hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center whitespace-nowrap"
-                  >
-                    <FaSignInAlt className="mr-1.5" />Login
-                  </Link>
+                  {!loading && (
+                    <>
+                      <Link href="/register" className="px-4 py-2.5 rounded-lg font-medium text-sm text-gray-600 hover:text-primary hover:bg-gray-50 transition-all duration-300 whitespace-nowrap border border-gray-200">{t('nav.register')}</Link>
+                      <Link href="/login" className="bg-gradient-to-r from-primary to-blue-600 text-white px-4 py-2.5 rounded-lg font-semibold text-sm hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center whitespace-nowrap"><FaSignInAlt className="mr-1.5" />{t('nav.login')}</Link>
+                    </>
+                  )}
                 </>
               ) : (
                 <>
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-sm">
+                    <FaUser className="text-primary text-xs" />
+                    <span className="font-medium text-gray-700 max-w-[100px] truncate">{user.name}</span>
+                    <span className={`text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded ${
+                      user.role === 'admin' ? 'bg-purple-100 text-purple-700' :
+                      user.role === 'vendor' ? 'bg-amber-100 text-amber-700' :
+                      'bg-emerald-100 text-emerald-700'
+                    }`}>{user.role}</span>
+                  </div>
                   {(user.role === 'admin' || user.role === 'vendor') && (
-                    <Link
-                      href={user.role === 'admin' ? '/admin/dashboard' : '/vendor/dashboard'}
-                      className="px-3 py-2.5 rounded-lg font-medium text-sm bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-300 whitespace-nowrap flex items-center"
-                    >
-                      <FaTachometerAlt className="mr-1.5" />Dashboard
-                    </Link>
+                    <Link href={user.role === 'admin' ? '/admin/dashboard' : '/vendor/dashboard'} className="px-3 py-2.5 rounded-lg font-medium text-sm bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-300 whitespace-nowrap flex items-center"><FaTachometerAlt className="mr-1.5" />{t('nav.dashboard')}</Link>
                   )}
-                  <button
-                    onClick={() => setUser({ role: null })}
-                    className="text-gray-600 hover:text-red-500 transition font-medium text-sm px-3 py-2 rounded-lg hover:bg-red-50 whitespace-nowrap"
-                  >
-                    Logout
-                  </button>
+                  <button onClick={handleLogout} className="text-gray-600 hover:text-red-500 transition font-medium text-sm px-3 py-2 rounded-lg hover:bg-red-50 whitespace-nowrap">{t('nav.logout')}</button>
                 </>
               )}
 
@@ -133,11 +93,7 @@ export default function Navbar() {
               <div className="relative group ml-1">
                 <div className="flex items-center space-x-1 px-3 py-2.5 rounded-lg bg-gradient-to-r from-gray-50 to-white border border-gray-200 cursor-pointer group-hover:border-primary transition-colors">
                   <FaGlobe className="text-gray-500 group-hover:text-primary transition-colors text-sm" />
-                  <select
-                    value={lang}
-                    onChange={(e) => setLang(e.target.value)}
-                    className="bg-transparent focus:outline-none text-gray-700 font-medium text-sm appearance-none cursor-pointer"
-                  >
+                  <select value={lang} onChange={e => setLang(e.target.value as 'en' | 'am')} className="bg-transparent focus:outline-none text-gray-700 font-medium text-sm appearance-none cursor-pointer">
                     <option value="en">EN</option>
                     <option value="am">አማ</option>
                   </select>
@@ -147,10 +103,7 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="lg:hidden p-3 rounded-xl bg-gradient-to-r from-gray-50 to-white border border-gray-200 hover:border-primary transition-colors"
-          >
+          <button onClick={() => setIsOpen(!isOpen)} className="lg:hidden p-3 rounded-xl bg-gradient-to-r from-gray-50 to-white border border-gray-200 hover:border-primary transition-colors">
             {isOpen ? <FaTimes size={20} className="text-gray-700" /> : <FaBars size={20} className="text-gray-700" />}
           </button>
         </div>
@@ -159,112 +112,39 @@ export default function Navbar() {
         {isOpen && (
           <div className="lg:hidden mt-4 pb-6 rounded-2xl bg-gradient-to-b from-white to-gray-50 border border-gray-200 shadow-xl">
             <div className="p-4 space-y-1">
-              <Link
-                href="/"
-                className="block px-4 py-3 rounded-xl font-medium text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300"
-                onClick={() => setIsOpen(false)}
-              >
-                Home
-              </Link>
-              <Link
-                href="/services"
-                className="block px-4 py-3 rounded-xl font-medium text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300"
-                onClick={() => setIsOpen(false)}
-              >
-                <FaCompass className="inline mr-2" />Explore Services
-              </Link>
-              <Link
-                href={user.role === 'vendor' ? '/vendor/dashboard' : '/vendors'}
-                className="block px-4 py-3 rounded-xl font-medium text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300"
-                onClick={() => setIsOpen(false)}
-              >
-                <FaStore className="inline mr-2" />Vendors
-              </Link>
-              <Link
-                href="/booking"
-                className="block px-4 py-3 rounded-xl font-medium text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300"
-                onClick={() => setIsOpen(false)}
-              >
-                <FaCalendarCheck className="inline mr-2" />Bookings
-              </Link>
-              <Link
-                href="/eco-tourism"
-                className="block px-4 py-3 rounded-xl font-medium text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300"
-                onClick={() => setIsOpen(false)}
-              >
-                <FaTree className="inline mr-2" />Eco-Tourism
-              </Link>
-              <Link
-                href="/reviews"
-                className="block px-4 py-3 rounded-xl font-medium text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300"
-                onClick={() => setIsOpen(false)}
-              >
-                <FaStar className="inline mr-2" />Reviews
-              </Link>
-              <Link
-                href="/about"
-                className="block px-4 py-3 rounded-xl font-medium text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300"
-                onClick={() => setIsOpen(false)}
-              >
-                <FaWater className="inline mr-2" />About Lake Tana
-              </Link>
-              <Link
-                href="/contact"
-                className="block px-4 py-3 rounded-xl font-medium text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300"
-                onClick={() => setIsOpen(false)}
-              >
-                <FaEnvelope className="inline mr-2" />Contact Us
-              </Link>
+              <Link href="/" className="block px-4 py-3 rounded-xl font-medium text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300" onClick={() => setIsOpen(false)}>{t('nav.home')}</Link>
+              <Link href="/services" className="block px-4 py-3 rounded-xl font-medium text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300" onClick={() => setIsOpen(false)}><FaCompass className="inline mr-2" />{t('nav.services')}</Link>
+              <Link href={user?.role === 'vendor' ? '/vendor/dashboard' : '/vendors'} className="block px-4 py-3 rounded-xl font-medium text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300" onClick={() => setIsOpen(false)}><FaStore className="inline mr-2" />{t('nav.vendors')}</Link>
+              <Link href="/booking" className="block px-4 py-3 rounded-xl font-medium text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300" onClick={() => setIsOpen(false)}><FaCalendarCheck className="inline mr-2" />{t('nav.bookings')}</Link>
+              <Link href="/eco-tourism" className="block px-4 py-3 rounded-xl font-medium text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300" onClick={() => setIsOpen(false)}><FaTree className="inline mr-2" />{t('nav.ecoTourism')}</Link>
+              <Link href="/reviews" className="block px-4 py-3 rounded-xl font-medium text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300" onClick={() => setIsOpen(false)}><FaStar className="inline mr-2" />{t('nav.reviews')}</Link>
+              <Link href="/about" className="block px-4 py-3 rounded-xl font-medium text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300" onClick={() => setIsOpen(false)}><FaWater className="inline mr-2" />{t('nav.aboutLakeTana')}</Link>
+              <Link href="/contact" className="block px-4 py-3 rounded-xl font-medium text-gray-700 hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-emerald-500/5 transition-all duration-300" onClick={() => setIsOpen(false)}><FaEnvelope className="inline mr-2" />{t('nav.contactUs')}</Link>
 
-              {!user.role ? (
+              {!user ? (
                 <div className="pt-4 border-t space-y-2">
-                  <Link
-                    href="/vendor/login"
-                    className="block w-full text-center bg-gradient-to-r from-primary to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-xl transition-all duration-300"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <FaSignInAlt className="inline mr-2" />Login
-                  </Link>
-                  <Link
-                    href="/vendor/register"
-                    className="block w-full text-center border border-gray-300 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:border-primary hover:text-primary transition-all duration-300"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <FaUserPlus className="inline mr-2" />Register
-                  </Link>
+                  <Link href="/login" className="block w-full text-center bg-gradient-to-r from-primary to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-xl transition-all duration-300" onClick={() => setIsOpen(false)}><FaSignInAlt className="inline mr-2" />{t('nav.login')}</Link>
+                  <Link href="/register" className="block w-full text-center border border-gray-300 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:border-primary hover:text-primary transition-all duration-300" onClick={() => setIsOpen(false)}><FaUserPlus className="inline mr-2" />{t('nav.register')}</Link>
                 </div>
               ) : (
                 <div className="pt-4 border-t space-y-2">
+                  <div className="px-4 py-2 flex items-center gap-2 text-sm text-gray-600"><FaUser className="text-primary" /> {user.name} <span className={`text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded ${
+                    user.role === 'admin' ? 'bg-purple-100 text-purple-700' :
+                    user.role === 'vendor' ? 'bg-amber-100 text-amber-700' :
+                    'bg-emerald-100 text-emerald-700'
+                  }`}>{user.role}</span></div>
                   {(user.role === 'admin' || user.role === 'vendor') && (
-                    <Link
-                      href={user.role === 'admin' ? '/admin/dashboard' : '/vendor/dashboard'}
-                      className="block px-4 py-3 rounded-xl font-medium text-primary bg-primary/5 hover:bg-primary/10 transition-all duration-300"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <FaTachometerAlt className="inline mr-2" />Dashboard
-                    </Link>
+                    <Link href={user.role === 'admin' ? '/admin/dashboard' : '/vendor/dashboard'} className="block px-4 py-3 rounded-xl font-medium text-primary bg-primary/5 hover:bg-primary/10 transition-all duration-300" onClick={() => setIsOpen(false)}><FaTachometerAlt className="inline mr-2" />{t('nav.dashboard')}</Link>
                   )}
-                  <button
-                    onClick={() => { setUser({ role: null }); setIsOpen(false) }}
-                    className="block w-full text-left px-4 py-3 rounded-xl font-medium text-red-500 hover:bg-red-50 transition-colors"
-                  >
-                    Logout
-                  </button>
+                  <button onClick={handleLogout} className="block w-full text-left px-4 py-3 rounded-xl font-medium text-red-500 hover:bg-red-50 transition-colors">{t('nav.logout')}</button>
                 </div>
               )}
 
               {/* Mobile Language Selector */}
               <div className="pt-4 border-t">
                 <div className="flex items-center justify-between px-4 py-3">
-                  <div className="flex items-center">
-                    <FaGlobe className="text-gray-500 mr-3" />
-                    <span className="font-medium text-gray-700">Language</span>
-                  </div>
-                  <select
-                    value={lang}
-                    onChange={(e) => setLang(e.target.value)}
-                    className="bg-transparent focus:outline-none text-gray-700 font-medium border rounded-lg px-3 py-1 text-sm"
-                  >
+                  <div className="flex items-center"><FaGlobe className="text-gray-500 mr-3" /><span className="font-medium text-gray-700">{t('nav.language')}</span></div>
+                  <select value={lang} onChange={e => setLang(e.target.value as 'en' | 'am')} className="bg-transparent focus:outline-none text-gray-700 font-medium border rounded-lg px-3 py-1 text-sm">
                     <option value="en">English</option>
                     <option value="am">አማርኛ</option>
                   </select>

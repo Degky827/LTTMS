@@ -87,7 +87,7 @@ export default function VendorRegister() {
         <div className="mt-6 text-center">
           <p className="text-gray-600">
             Already have an account? 
-            <Link href="/vendor/login" className="text-primary font-semibold ml-2">
+            <Link href="/login" className="text-primary font-semibold ml-2">
               Login
             </Link>
           </p>

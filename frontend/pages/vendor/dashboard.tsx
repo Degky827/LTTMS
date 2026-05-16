@@ -73,7 +73,7 @@ export default function VendorDashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('vendorToken')
+    const token = localStorage.getItem('token')
     if (!token) {
       setAuthed(false)
     } else {
@@ -89,7 +89,7 @@ export default function VendorDashboard() {
           <h1 className="text-2xl font-black text-gray-900 mb-3">Access Restricted</h1>
           <p className="text-gray-500 mb-8">Please log in to access your vendor dashboard.</p>
           <Link
-            href="/vendor/login"
+            href="/login"
             className="inline-flex items-center gap-2 bg-gradient-to-r from-primary to-blue-600 text-white px-8 py-3.5 rounded-xl font-semibold hover:shadow-lg transition-all"
           >
             Go to Login
@@ -169,7 +169,7 @@ export default function VendorDashboard() {
               <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">3</span>
             </button>
             <button
-              onClick={() => { localStorage.removeItem('vendorToken'); router.push('/vendor/login') }}
+              onClick={() => { localStorage.removeItem('token'); router.push('/vendor/login') }}
               className="flex items-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-semibold hover:bg-red-100 transition-colors"
             >
               Logout

@@ -1,13 +1,35 @@
-import axios from 'axios';
+import axios from 'axios'
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const baseURL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api'
 
 const API = axios.create({
   baseURL,
-  withCredentials: true
-});
+  withCredentials: true,
+  headers: { 'Content-Type': 'application/json' }
+})
 
-// Keep interceptor for optional backward compatibility with legacy clients only.
-API.interceptors.request.use((config) => config);
+API.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+  }
+  return config
+})
 
-export default API;
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 && typeof window !== 'undefined') {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      if (!window.location.pathname.startsWith('/login')) {
+        window.location.href = '/login'
+      }
+    }
+    return Promise.reject(error)
+  }
+)
+
+export default API

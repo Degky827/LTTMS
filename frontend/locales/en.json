@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "home": "Home",
+    "services": "Services",
+    "vendors": "Vendors",
+    "bookings": "Bookings",
+    "ecoTourism": "Eco-Tourism",
+    "reviews": "Reviews",
+    "aboutLakeTana": "About Lake Tana",
+    "contactUs": "Contact Us",
+    "register": "Register",
+    "login": "Login",
+    "logout": "Logout",
+    "dashboard": "Dashboard",
+    "language": "Language"
+  },
+  "common": {
+    "lakeTana": "Lake Tana",
+    "ecoTourism": "Eco-Tourism",
+    "loading": "Loading...",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "noResults": "No results found",
+    "viewAll": "View All",
+    "learnMore": "Learn More",
+    "bookNow": "Book Now",
+    "readMore": "Read More"
+  },
+  "home": {
+    "heroTitle": "Discover Lake Tana",
+    "heroSubtitle": "Explore Ethiopia's largest lake — a UNESCO Biosphere Reserve with ancient monasteries, diverse wildlife, and unforgettable eco-adventures.",
+    "heroSearchPlaceholder": "Search tours, hotels, activities...",
+    "heroCta": "Explore Experiences",
+    "featuredDestinations": "Featured Destinations",
+    "whyChooseUs": "Why Choose Us",
+    "topServices": "Top Eco-Tourism Services",
+    "communityTitle": "Community & Sustainability",
+    "testimonials": "What Travelers Say",
+    "statsTitle": "Our Impact in Numbers"
+  },
+  "footer": {
+    "description": "Discover Ethiopia's largest lake — a UNESCO Biosphere Reserve with ancient monasteries, diverse wildlife, and unforgettable eco-adventures.",
+    "quickLinks": "Quick Links",
+    "explore": "Explore",
+    "contact": "Contact",
+    "copyright": "© 2026 Lake Tana Eco-Tourism Platform. All rights reserved."
+  }
+}

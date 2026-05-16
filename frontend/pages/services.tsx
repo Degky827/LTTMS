@@ -6,7 +6,7 @@ import {
   FaStar, FaLeaf, FaChevronRight, FaShip, FaHotel,
   FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaUsers,
   FaHeart, FaRegHeart, FaTimes, FaClock, FaShieldAlt,
-  FaGlobeAfrica, FaTree, FaCompass
+  FaGlobeAfrica, FaTree, FaCompass, FaStore
 } from 'react-icons/fa'
 import { GiChurch, GiCampingTent } from 'react-icons/gi'
 import API from '../utils/api'

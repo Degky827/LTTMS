@@ -74,7 +74,7 @@ export default function Vendors() {
               <p className="text-xs text-gray-500">Manage your services, bookings, and revenue.</p>
             </div>
           </div>
-          <Link href="/vendor/login" className="shrink-0 bg-gradient-to-r from-primary to-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:shadow-lg transition-all">
+          <Link href="/login" className="shrink-0 bg-gradient-to-r from-primary to-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:shadow-lg transition-all">
             Access Dashboard
           </Link>
         </div>

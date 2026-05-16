@@ -69,7 +69,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/vendor/login" className="text-gray-300 hover:text-cyan-300 transition-colors flex items-center group">
+                <Link href="/login" className="text-gray-300 hover:text-cyan-300 transition-colors flex items-center group">
                   <span className="w-2 h-2 bg-cyan-500 rounded-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity"></span>
                   Vendor Portal
                 </Link>
