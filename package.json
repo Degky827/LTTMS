@@ -1,0 +1,14 @@
+{
+  "name": "lttms-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install-all": "npm install && npm install --prefix frontend && npm install --prefix backend",
+    "frontend": "npm run dev --prefix frontend",
+    "backend": "npm run dev --prefix backend",
+    "dev": "concurrently \"npm run frontend\" \"npm run backend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
