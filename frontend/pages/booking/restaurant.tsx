@@ -145,7 +145,7 @@ export default function RestaurantBooking() {
                     min="1"
                     max="12"
                     value={guests}
-                    onChange={(e) => setGuests(parseInt(e.target.value))}
+                    onChange={(e) => setGuests(Number(e.target.value))}
                     className="w-full border rounded-lg px-4 py-2"
                     required
                   />

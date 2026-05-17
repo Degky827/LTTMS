@@ -11,17 +11,17 @@ const router = express.Router();
 
 const { protect, authorize } = require('../middleware/auth');
 const validate = require('../middleware/validate');
-const { serviceQuerySchema } = require('../validation/serviceSchemas');
+const { serviceQuerySchema, createServiceSchema, updateServiceSchema } = require('../validation/serviceSchemas');
 
 router
   .route('/')
   .get(validate(serviceQuerySchema), getServices)
-  .post(protect, authorize('vendor', 'admin'), createService);
+  .post(protect, authorize('vendor', 'admin'), validate(createServiceSchema), createService);
 
 router
   .route('/:id')
   .get(getService)
-  .put(protect, authorize('vendor', 'admin'), updateService)
+  .put(protect, authorize('vendor', 'admin'), validate(updateServiceSchema), updateService)
   .delete(protect, authorize('vendor', 'admin'), deleteService);
 
 module.exports = router;

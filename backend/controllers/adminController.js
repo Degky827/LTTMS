@@ -4,6 +4,7 @@ const Booking = require('../models/Booking');
 const Service = require('../models/Service');
 const Review = require('../models/Review');
 const logger = require('../utils/logger');
+const sendEmail = require('../utils/email');
 
 const audit = (action, adminId, details = {}) => {
   logger.info({ action, adminId, ...details, timestamp: new Date().toISOString() }, 'ADMIN_AUDIT');
@@ -43,15 +44,27 @@ exports.getVendorDetail = async (req, res) => {
 
 exports.updateVendorStatus = async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, reason } = req.body;
     if (!['approved', 'rejected', 'pending', 'suspended', 'blacklisted'].includes(status)) {
       return res.status(400).json({ success: false, message: 'Invalid status' });
     }
-    const vendor = await Vendor.findByIdAndUpdate(req.params.id, { status }, { new: true, runValidators: true });
+    const update = { status };
+    if (status === 'rejected') update.rejectionReason = reason || '';
+    if (status === 'approved') update.approvedAt = new Date();
+    const vendor = await Vendor.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true }).populate('user', 'name email');
     if (!vendor) return res.status(404).json({ success: false, message: 'Vendor not found' });
-    if (status === 'approved') await User.findByIdAndUpdate(vendor.user, { role: 'vendor' });
+    if (status === 'approved') await User.findByIdAndUpdate(vendor.user._id, { role: 'vendor' });
     if (status === 'rejected' || status === 'suspended' || status === 'blacklisted') {
-      await User.findByIdAndUpdate(vendor.user, { role: 'tourist' });
+      await User.findByIdAndUpdate(vendor.user._id, { role: 'tourist' });
+    }
+    if (vendor.user?.email) {
+      const template = status === 'approved' ? 'vendor-approved' : 'vendor-rejected';
+      await sendEmail({
+        to: vendor.user.email,
+        subject: status === 'approved' ? 'Vendor Account Approved' : 'Vendor Application Update',
+        template,
+        context: { name: vendor.user.name, businessName: vendor.businessName, reason, url: `${process.env.FRONTEND_ORIGIN || 'http://localhost:3000'}/vendor/dashboard` }
+      });
     }
     audit('vendor.status.update', req.user._id, { vendorId: vendor._id, status });
     res.json({ success: true, data: vendor });

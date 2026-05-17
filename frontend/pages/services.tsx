@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import {
   FaStar, FaLeaf, FaChevronRight, FaShip, FaHotel,
-  FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaUsers,
+  FaSearch, FaMapMarkerAlt, FaUsers,
   FaHeart, FaRegHeart, FaTimes, FaClock, FaShieldAlt,
   FaGlobeAfrica, FaTree, FaCompass, FaStore
 } from 'react-icons/fa'
@@ -27,7 +27,7 @@ export default function Services() {
   const router = useRouter()
   const [filter, setFilter] = useState('all')
   const [ecoOnly, setEcoOnly] = useState(false)
-  const [services, setServices] = useState([])
+  const [services, setServices] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [sortBy, setSortBy] = useState('featured')
   const [searchTerm, setSearchTerm] = useState('')

@@ -1,20 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import {
   FaChartBar, FaStore, FaUsers, FaCalendarCheck, FaDollarSign,
   FaLeaf, FaStar, FaBell, FaShieldAlt, FaSignOutAlt, FaBars,
-  FaTimes, FaCheck, FaBan, FaSearch, FaEye, FaDownload,
-  FaChevronRight, FaFilter, FaSortAmountDown, FaPlus,
-  FaTrash, FaReply, FaUserShield, FaKey, FaMobileAlt,
-  FaGlobeAmericas, FaPercentage, FaHandHoldingHeart,
-  FaRecycle, FaAward, FaClipboardList, FaUserCircle,
-  FaCamera, FaLightbulb, FaArrowUp, FaArrowDown,
-  FaExchangeAlt, FaBellSlash, FaExclamationTriangle,
+  FaCheck, FaBan, FaDownload,
+  FaTrash, FaUserShield, FaKey, FaUserCircle,
+  FaExclamationTriangle,
   FaExclamationCircle, FaInfoCircle, FaCheckCircle,
-  FaEnvelope, FaPaperPlane, FaHistory, FaLock,
-  FaFileInvoice, FaMoneyBillWave, FaShip, FaHotel,
-  FaUtensils, FaWater, FaTree, FaFlag
+  FaPaperPlane, FaHistory, FaLock,
+  FaTree, FaFlag
 } from 'react-icons/fa'
 import { useAuth } from '../../context/AuthContext'
 import API from '../../utils/api'
@@ -30,8 +25,6 @@ const tabs = [
   { id: 'notifications', label: 'Notifications', icon: <FaBell /> },
   { id: 'security', label: 'Security & Audit', icon: <FaShieldAlt /> },
 ]
-
-const categoryIcons: Record<string, any> = { tour: <FaShip />, hotel: <FaHotel />, food: <FaUtensils />, monastery: <FaWater />, boat: <FaShip />, waterfall: <FaTree /> }
 
 const mockVendors = [
   { id: '1', businessName: 'EcoTours Bahir Dar', user: { name: 'Abebe K.', email: 'abebe@ecotours.com' }, ecoCertification: true, status: 'approved', rating: 4.8, totalBookings: 156, revenue: 12450 },
@@ -76,16 +69,38 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [stats, setStats] = useState<any>({ users: 0, vendors: 0, services: 0, bookings: 0, pendingVendors: 0, totalRevenue: 0 })
+  const [vendors, setVendors] = useState<any[]>(mockVendors)
+  const [users, setUsers] = useState<any[]>(mockUsers)
+  const [bookings, setBookings] = useState<any[]>(mockBookings)
+  const [transactions, setTransactions] = useState<any[]>(mockTransactions)
+  const [reviews, setReviews] = useState<any[]>(mockReviews)
   const [vendorFilter, setVendorFilter] = useState('all')
   const [announcement, setAnnouncement] = useState({ title: '', message: '', target: 'all' })
+
+  const fetchData = useCallback(async () => {
+    try {
+      const [statsRes, vendorsRes, usersRes, bookingsRes, transactionsRes, reviewsRes] = await Promise.allSettled([
+        API.get('/admin/stats'),
+        API.get('/admin/vendors'),
+        API.get('/admin/users'),
+        API.get('/admin/bookings'),
+        API.get('/admin/transactions'),
+        API.get('/admin/reviews'),
+      ])
+      if (statsRes.status === 'fulfilled') setStats(statsRes.value.data.data)
+      if (vendorsRes.status === 'fulfilled') setVendors(vendorsRes.value.data.data)
+      if (usersRes.status === 'fulfilled') setUsers(usersRes.value.data.data)
+      if (bookingsRes.status === 'fulfilled') setBookings(bookingsRes.value.data.data)
+      if (transactionsRes.status === 'fulfilled') setTransactions(transactionsRes.value.data.data)
+      if (reviewsRes.status === 'fulfilled') setReviews(reviewsRes.value.data.data)
+    } catch {}
+  }, [])
 
   useEffect(() => {
     if (!loading && !user) { router.push('/login'); return }
     if (!loading && user && user.role !== 'admin') { router.push('/'); return }
-    if (user?.role === 'admin') {
-      API.get('/admin/stats').then(r => setStats(r.data.data)).catch(() => {})
-    }
-  }, [loading, user, router])
+    if (user?.role === 'admin') fetchData()
+  }, [loading, user, router, fetchData])
 
   if (loading || !user || user.role !== 'admin') return null
 
@@ -94,12 +109,12 @@ export default function AdminDashboard() {
   const TabContent = () => {
     switch (activeTab) {
       case 'overview': return <OverviewTab stats={stats} />
-      case 'vendors': return <VendorsTab vendors={mockVendors} filter={vendorFilter} setFilter={setVendorFilter} />
-      case 'users': return <UsersTab users={mockUsers} />
-      case 'bookings': return <BookingsTab bookings={mockBookings} />
-      case 'payments': return <PaymentsTab transactions={mockTransactions} />
-      case 'eco': return <EcoTab vendors={mockVendors} />
-      case 'reviews': return <ReviewsTab reviews={mockReviews} />
+      case 'vendors': return <VendorsTab vendors={vendors} filter={vendorFilter} setFilter={setVendorFilter} onUpdate={fetchData} />
+      case 'users': return <UsersTab users={users} />
+      case 'bookings': return <BookingsTab bookings={bookings} onUpdate={fetchData} />
+      case 'payments': return <PaymentsTab transactions={transactions} />
+      case 'eco': return <EcoTab vendors={vendors} />
+      case 'reviews': return <ReviewsTab reviews={reviews} />
       case 'notifications': return <NotificationsTab announcement={announcement} setAnnouncement={setAnnouncement} />
       case 'security': return <SecurityTab />
       default: return null
@@ -228,8 +243,34 @@ function OverviewTab({ stats }: { stats: any }) {
 }
 
 // ==================== VENDORS TAB ====================
-function VendorsTab({ vendors, filter, setFilter }: { vendors: any[]; filter: string; setFilter: (f: string) => void }) {
+function VendorsTab({ vendors, filter, setFilter, onUpdate }: { vendors: any[]; filter: string; setFilter: (f: string) => void; onUpdate: () => void }) {
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
   const filtered = filter === 'all' ? vendors : vendors.filter(v => v.status === filter)
+
+  const updateStatus = async (id: string, status: string) => {
+    setActionLoading(id)
+    try {
+      await API.put(`/admin/vendors/${id}/status`, { status })
+      onUpdate()
+    } catch (err: any) {
+      alert(err?.response?.data?.message || 'Failed to update vendor status')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const toggleEcoBadge = async (id: string, current: boolean) => {
+    setActionLoading(`eco-${id}`)
+    try {
+      await API.put(`/admin/vendors/${id}/eco-badge`, { ecoCertification: !current })
+      onUpdate()
+    } catch {
+      alert('Failed to update eco badge')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -244,16 +285,16 @@ function VendorsTab({ vendors, filter, setFilter }: { vendors: any[]; filter: st
             <thead className="bg-gray-50 border-b"><tr>{['Vendor', 'Contact', 'Eco-Badge', 'Rating', 'Status', 'Actions'].map(h => <th key={h} className="px-6 py-4 text-xs font-black uppercase tracking-widest text-gray-500">{h}</th>)}</tr></thead>
             <tbody className="divide-y">
               {filtered.map((v: any) => (
-                <tr key={v.id} className="hover:bg-gray-50/50 transition">
-                  <td className="px-6 py-4"><div className="flex items-center gap-3"><div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/10 to-blue-600/10 flex items-center justify-center text-primary font-bold text-xs">{v.businessName.charAt(0)}</div><span className="font-semibold text-gray-900">{v.businessName}</span></div></td>
+                <tr key={v._id || v.id} className="hover:bg-gray-50/50 transition">
+                  <td className="px-6 py-4"><div className="flex items-center gap-3"><div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/10 to-blue-600/10 flex items-center justify-center text-primary font-bold text-xs">{v.businessName?.charAt(0)}</div><span className="font-semibold text-gray-900">{v.businessName}</span></div></td>
                   <td className="px-6 py-4"><p className="text-sm font-medium text-gray-900">{v.user?.name}</p><p className="text-xs text-gray-500">{v.user?.email}</p></td>
                   <td className="px-6 py-4">{v.ecoCertification ? <span className="inline-flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg text-xs font-bold"><FaCheckCircle /> Certified</span> : <span className="text-gray-400 text-xs">—</span>}</td>
-                  <td className="px-6 py-4"><div className="flex items-center gap-1 text-amber-400 text-sm">{Array.from({ length: 5 }).map((_, i) => <FaStar key={i} className={i < Math.round(v.rating) ? '' : 'text-gray-200'} />)}<span className="text-gray-500 text-xs ml-1">{v.rating}</span></div></td>
+                  <td className="px-6 py-4"><div className="flex items-center gap-1 text-amber-400 text-sm">{Array.from({ length: 5 }).map((_, i) => <FaStar key={i} className={i < Math.round(v.rating || 0) ? '' : 'text-gray-200'} />)}<span className="text-gray-500 text-xs ml-1">{v.rating || 'N/A'}</span></div></td>
                   <td className="px-6 py-4"><span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${statusColors[v.status] || 'bg-gray-100 text-gray-700'}`}>{v.status}</span></td>
                   <td className="px-6 py-4"><div className="flex gap-2">
-                    {v.status === 'pending' && <><button className="px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold hover:bg-emerald-100"><FaCheck className="inline mr-1" />Approve</button><button className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-bold hover:bg-red-100"><FaBan className="inline mr-1" />Reject</button></>}
-                    {v.status === 'approved' && <><button className="px-3 py-1.5 bg-amber-50 text-amber-600 rounded-lg text-xs font-bold hover:bg-amber-100"><FaBan className="inline mr-1" />Suspend</button><button className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100"><FaCheckCircle className="inline mr-1" />Badge</button></>}
-                    {v.status === 'suspended' && <button className="px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold hover:bg-emerald-100"><FaCheck className="inline mr-1" />Reinstate</button>}
+                    {v.status === 'pending' && <><button disabled={actionLoading === v._id} onClick={() => updateStatus(v._id, 'approved')} className="px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold hover:bg-emerald-100 disabled:opacity-50"><FaCheck className="inline mr-1" />{actionLoading === v._id ? '...' : 'Approve'}</button><button disabled={actionLoading === v._id} onClick={() => updateStatus(v._id, 'rejected')} className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-bold hover:bg-red-100 disabled:opacity-50"><FaBan className="inline mr-1" />Reject</button></>}
+                    {v.status === 'approved' && <><button disabled={actionLoading === v._id} onClick={() => updateStatus(v._id, 'suspended')} className="px-3 py-1.5 bg-amber-50 text-amber-600 rounded-lg text-xs font-bold hover:bg-amber-100 disabled:opacity-50"><FaBan className="inline mr-1" />Suspend</button><button disabled={actionLoading === `eco-${v._id}`} onClick={() => toggleEcoBadge(v._id, v.ecoCertification)} className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 disabled:opacity-50"><FaCheckCircle className="inline mr-1" />Badge</button></>}
+                    {v.status === 'suspended' && <button disabled={actionLoading === v._id} onClick={() => updateStatus(v._id, 'approved')} className="px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold hover:bg-emerald-100 disabled:opacity-50"><FaCheck className="inline mr-1" />Reinstate</button>}
                   </div></td>
                 </tr>
               ))}
@@ -297,7 +338,21 @@ function UsersTab({ users }: { users: any[] }) {
 }
 
 // ==================== BOOKINGS TAB ====================
-function BookingsTab({ bookings }: { bookings: any[] }) {
+function BookingsTab({ bookings, onUpdate }: { bookings: any[]; onUpdate: () => void }) {
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+
+  const overrideBooking = async (id: string, status: string) => {
+    setActionLoading(id)
+    try {
+      await API.put(`/admin/bookings/${id}/override`, { status })
+      onUpdate()
+    } catch {
+      alert('Failed to update booking')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
   return (
     <div>
       <div className="mb-6"><h2 className="text-2xl font-bold text-gray-900">Booking Oversight</h2><p className="text-sm text-gray-500">View all bookings, resolve disputes, override when necessary</p></div>
@@ -307,16 +362,18 @@ function BookingsTab({ bookings }: { bookings: any[] }) {
             <thead className="bg-gray-50 border-b"><tr>{['Service', 'Tourist', 'Vendor', 'Amount', 'Status', 'Payment', 'Actions'].map(h => <th key={h} className="px-6 py-4 text-xs font-black uppercase tracking-widest text-gray-500">{h}</th>)}</tr></thead>
             <tbody className="divide-y">
               {bookings.map((b: any) => (
-                <tr key={b.id} className="hover:bg-gray-50/50 transition">
-                  <td className="px-6 py-4 font-semibold text-gray-900 text-sm">{b.service?.title}</td>
+                <tr key={b._id || b.id} className="hover:bg-gray-50/50 transition">
+                  <td className="px-6 py-4 font-semibold text-gray-900 text-sm">{b.service?.title || b.service?.name}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{b.user?.name}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{b.service?.vendor?.businessName}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600">{b.service?.vendor?.businessName || '—'}</td>
                   <td className="px-6 py-4 font-bold text-gray-900">${b.totalAmount}</td>
                   <td className="px-6 py-4"><span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${b.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' : b.status === 'pending' ? 'bg-amber-100 text-amber-700' : b.status === 'completed' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}`}>{b.status}</span></td>
                   <td className="px-6 py-4"><span className={`text-xs font-bold ${b.paymentStatus === 'paid' ? 'text-emerald-600' : 'text-gray-400'}`}>{b.paymentStatus}</span></td>
                   <td className="px-6 py-4"><div className="flex gap-2">
-                    <button className="px-3 py-1.5 bg-amber-50 text-amber-600 rounded-lg text-xs font-bold hover:bg-amber-100"><FaExclamationTriangle className="inline mr-1" />Dispute</button>
-                    <button className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-bold hover:bg-red-100"><FaBan className="inline mr-1" />Cancel</button>
+                    {b.status !== 'cancelled' && b.status !== 'completed' && (
+                      <><button disabled={actionLoading === b._id} onClick={() => overrideBooking(b._id, 'confirmed')} className="px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold hover:bg-emerald-100 disabled:opacity-50"><FaCheck className="inline mr-1" />Confirm</button>
+                      <button disabled={actionLoading === b._id} onClick={() => overrideBooking(b._id, 'cancelled')} className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-bold hover:bg-red-100 disabled:opacity-50"><FaBan className="inline mr-1" />Cancel</button></>
+                    )}
                   </div></td>
                 </tr>
               ))}
@@ -403,12 +460,21 @@ function EcoTab({ vendors }: { vendors: any[] }) {
 
 // ==================== REVIEWS TAB ====================
 function ReviewsTab({ reviews }: { reviews: any[] }) {
+  const moderateReview = async (id: string, action: string) => {
+    try {
+      await API.put(`/admin/reviews/${id}/moderate`, { action })
+      window.location.reload()
+    } catch {
+      alert('Failed to moderate review')
+    }
+  }
+
   return (
     <div>
       <div className="mb-6"><h2 className="text-2xl font-bold text-gray-900">Review Moderation</h2><p className="text-sm text-gray-500">Monitor reviews for authenticity and remove offensive content</p></div>
       <div className="space-y-4">
         {reviews.map((r: any) => (
-          <div key={r.id} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+          <div key={r._id || r.id} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-4 flex-1">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-500 font-bold shrink-0">{r.user?.name?.charAt(0)}</div>
@@ -416,12 +482,12 @@ function ReviewsTab({ reviews }: { reviews: any[] }) {
                   <div className="flex items-center gap-3 flex-wrap"><span className="font-bold text-gray-900">{r.user?.name}</span><span className="text-xs text-gray-400">{r.createdAt}</span><span className="text-xs text-gray-400">·</span><span className="text-xs text-gray-500">{r.service?.title}</span><span className="text-xs text-gray-500">·</span><span className="text-xs text-gray-500">{r.service?.vendor?.businessName}</span></div>
                   <div className="flex text-amber-400 text-xs my-2">{Array.from({ length: 5 }).map((_, i) => <FaStar key={i} className={i < r.rating ? '' : 'text-gray-200'} />)}</div>
                   <p className="text-gray-600 text-sm">{r.comment}</p>
-                  {r.comment.includes('www.') && <div className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 rounded-lg text-xs text-red-600 font-bold"><FaExclamationTriangle /> Suspected spam</div>}
+                  {r.comment?.includes('www.') && <div className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 rounded-lg text-xs text-red-600 font-bold"><FaExclamationTriangle /> Suspected spam</div>}
                 </div>
               </div>
               <div className="flex gap-2 shrink-0">
-                <button className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-bold hover:bg-red-100"><FaTrash /> Remove</button>
-                <button className="px-3 py-1.5 bg-amber-50 text-amber-600 rounded-lg text-xs font-bold hover:bg-amber-100"><FaFlag /> Flag</button>
+                <button onClick={() => moderateReview(r._id, 'remove')} className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-bold hover:bg-red-100"><FaTrash /> Remove</button>
+                <button onClick={() => moderateReview(r._id, 'flag')} className="px-3 py-1.5 bg-amber-50 text-amber-600 rounded-lg text-xs font-bold hover:bg-amber-100"><FaFlag /> Flag</button>
               </div>
             </div>
           </div>
@@ -434,10 +500,20 @@ function ReviewsTab({ reviews }: { reviews: any[] }) {
 // ==================== NOTIFICATIONS TAB ====================
 function NotificationsTab({ announcement, setAnnouncement }: { announcement: { title: string; message: string; target: string }; setAnnouncement: (a: any) => void }) {
   const [sent, setSent] = useState(false)
-  const handleSend = (e: React.FormEvent) => {
+  const [sending, setSending] = useState(false)
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSent(true)
-    setTimeout(() => setSent(false), 3000)
+    setSending(true)
+    try {
+      await API.post('/admin/announcement', announcement)
+      setSent(true)
+      setAnnouncement({ title: '', message: '', target: 'all' })
+      setTimeout(() => setSent(false), 3000)
+    } catch {
+      alert('Failed to send announcement')
+    } finally {
+      setSending(false)
+    }
   }
   return (
     <div className="grid lg:grid-cols-2 gap-8">
@@ -449,7 +525,7 @@ function NotificationsTab({ announcement, setAnnouncement }: { announcement: { t
           <div><label className="block text-sm font-semibold text-gray-700 mb-2">Title</label><input type="text" value={announcement.title} onChange={e => setAnnouncement({ ...announcement, title: e.target.value })} placeholder="e.g., Platform Update" required className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-gray-50/50" /></div>
           <div><label className="block text-sm font-semibold text-gray-700 mb-2">Message</label><textarea rows={4} value={announcement.message} onChange={e => setAnnouncement({ ...announcement, message: e.target.value })} placeholder="Write your announcement..." required className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-gray-50/50 resize-none" /></div>
           <div><label className="block text-sm font-semibold text-gray-700 mb-2">Target</label><select value={announcement.target} onChange={e => setAnnouncement({ ...announcement, target: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-gray-50/50"><option value="all">All Users</option><option value="tourists">Tourists Only</option><option value="vendors">Vendors Only</option></select></div>
-          <button type="submit" className="w-full bg-gradient-to-r from-primary to-blue-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-2"><FaPaperPlane /> Send Announcement</button>
+          <button type="submit" disabled={sending} className="w-full bg-gradient-to-r from-primary to-blue-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"><FaPaperPlane /> {sending ? 'Sending...' : 'Send Announcement'}</button>
         </form>
       </div>
       <div>

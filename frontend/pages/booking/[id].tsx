@@ -6,7 +6,7 @@ import Link from 'next/link'
 import {
   FaStar, FaMapMarkerAlt, FaLeaf, FaUsers,
   FaCalendarAlt, FaClock, FaShieldAlt, FaCheckCircle,
-  FaCreditCard, FaMobileAlt, FaPaypal, FaChevronRight,
+  FaCreditCard, FaMobileAlt, FaPaypal,
   FaArrowLeft, FaBell
 } from 'react-icons/fa'
 import { useRouter } from 'next/router'
@@ -19,8 +19,6 @@ const paymentMethods = [
   { id: 'paypal', name: 'PayPal', icon: <FaPaypal />, color: 'from-blue-500 to-indigo-600' },
   { id: 'stripe', name: 'Stripe', icon: <FaCreditCard />, color: 'from-purple-500 to-purple-700' },
 ]
-
-const unavailableDates = [3, 7, 12, 18, 25]
 
 export default function BookingPage() {
   const router = useRouter()

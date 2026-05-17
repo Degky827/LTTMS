@@ -1,15 +1,14 @@
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { useState } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import {
-  FaStar, FaStarHalfAlt, FaRegStar, FaQuoteLeft, FaChevronRight,
+  FaStar, FaRegStar, FaQuoteLeft, FaChevronRight,
   FaLeaf, FaCheckCircle, FaShieldAlt, FaFlag, FaThumbsUp,
-  FaCamera, FaSortAmountDown, FaFilter, FaSearch, FaReply,
-  FaChartBar, FaAward, FaMedal, FaTrophy, FaUserCheck,
-  FaExclamationTriangle, FaTrash, FaClock, FaArrowUp,
-  FaArrowDown, FaGem, FaStore, FaShip, FaHotel, FaTree
+  FaCamera, FaSearch, FaReply,
+  FaAward, FaTrophy, FaUserCheck,
+  FaExclamationTriangle, FaTrash, FaClock,
+  FaStore
 } from 'react-icons/fa'
 
 const reviewsData = [

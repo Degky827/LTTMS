@@ -9,6 +9,7 @@
     "test": "node --test \"tests/**/*.test.js\""
   },
   "dependencies": {
+    "axios": "^1.16.1",
     "bcryptjs": "^2.4.3",
     "caniuse-lite": "^1.0.30001791",
     "cookie-parser": "^1.4.7",
@@ -21,6 +22,8 @@
     "mongoose": "^8.3.4",
     "multer": "^2.1.1",
     "node-cache": "^5.1.2",
+    "nodemailer": "^8.0.7",
+    "otplib": "^13.4.0",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
     "zod": "^4.4.3"

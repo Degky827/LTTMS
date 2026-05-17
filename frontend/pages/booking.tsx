@@ -3,24 +3,19 @@ import Footer from '../components/Footer'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/router'
 import {
-  FaCalendarAlt, FaChevronRight, FaLeaf, FaSearch,
-  FaFilter, FaDownload, FaFileInvoice, FaUndo,
-  FaCheck, FaBan, FaEye, FaTimes, FaStar,
-  FaMapMarkerAlt, FaUsers, FaUser, FaStore,
-  FaExclamationTriangle, FaChartBar, FaCalendarCheck,
-  FaClock, FaMoneyBillWave, FaShieldAlt, FaBell,
-  FaArrowUp, FaArrowDown
+  FaCalendarAlt, FaChevronRight, FaSearch,
+  FaDownload, FaFileInvoice, FaUndo,
+  FaCheck, FaBan, FaEye, FaTimes,
+  FaMapMarkerAlt, FaUsers, FaStore,
+  FaExclamationTriangle, FaCalendarCheck,
+  FaClock
 } from 'react-icons/fa'
 import API from '../utils/api'
 
 type BookingStatus = 'upcoming' | 'pending' | 'completed' | 'cancelled'
-type UserRole = 'tourist' | 'vendor' | 'admin' | null
 
 export default function Bookings() {
-  const router = useRouter()
-  const [user, setUser] = useState<{ role: UserRole }>({ role: null })
   const [bookings, setBookings] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<BookingStatus>('upcoming')

@@ -4,16 +4,16 @@ import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import {
   FaDollarSign, FaCalendar, FaStar, FaPlus, FaTimes,
-  FaStore, FaShip, FaHotel, FaUtensils, FaLeaf,
-  FaCheckCircle, FaExclamationCircle, FaBell, FaCog,
-  FaChartBar, FaUsers, FaEnvelope, FaShieldAlt,
+  FaStore, FaLeaf,
+  FaCheckCircle, FaBell, FaCog,
+  FaChartBar, FaShieldAlt,
   FaDownload, FaFileInvoice, FaTrash, FaEdit,
   FaCheck, FaBan, FaReply, FaComments, FaChartLine,
-  FaEye, FaCalendarAlt, FaClock, FaMoneyBillWave,
+  FaEye, FaCalendarAlt, FaMoneyBillWave,
   FaUserShield, FaKey, FaMobileAlt, FaGlobeAmericas,
-  FaPercentage, FaHandHoldingHeart, FaRecycle,
-  FaAward, FaClipboardList, FaUserCircle, FaCamera,
-  FaSearch, FaFilter, FaSortAmountDown, FaLightbulb,
+  FaPercentage,
+  FaAward, FaUserCircle, FaCamera,
+  FaLightbulb,
   FaArrowUp, FaArrowDown, FaExchangeAlt, FaBellSlash
 } from 'react-icons/fa'
 import Chat from '../../components/Chat'
@@ -77,7 +77,7 @@ export default function VendorDashboard() {
   const [reviewResponses, setReviewResponses] = useState<Record<number, string>>({})
   const [replyingTo, setReplyingTo] = useState<number | null>(null)
   const [notifFilter, setNotifFilter] = useState('all')
-  const [ecoScore, setEcoScore] = useState(72)
+  const [ecoScore] = useState(72)
 
   useEffect(() => {
     const token = localStorage.getItem('token')

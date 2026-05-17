@@ -24,9 +24,12 @@ const vendorSchema = new mongoose.Schema({
   phone: String,
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected'],
+    enum: ['pending', 'approved', 'rejected', 'suspended', 'blacklisted'],
     default: 'pending'
   },
+  licenseFile: String,
+  rejectionReason: String,
+  approvedAt: Date,
   createdAt: {
     type: Date,
     default: Date.now

@@ -1,8 +1,10 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const { authenticator } = require('otplib');
 const logger = require('../utils/logger');
 const sendEmail = require('../utils/email');
+const { blacklistToken } = require('../middleware/auth');
 
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCK_DURATION = 30 * 60 * 1000; // 30 minutes
@@ -144,16 +146,24 @@ exports.login = async (req, res) => {
 
     // Check 2FA
     if (user.twoFactorEnabled) {
+      const code = authenticator.generate(user.twoFactorSecret);
+      await sendEmail({
+        to: user.email,
+        subject: 'Your 2FA verification code',
+        template: '2fa-code',
+        context: { name: user.name, code }
+      });
+
       const twoFactorToken = jwt.sign(
         { id: user._id, type: '2fa', role: user.role },
         process.env.JWT_SECRET,
-        { expiresIn: '5m' }
+        { expiresIn: '10m' }
       );
       return res.status(200).json({
         success: true,
         requiresTwoFactor: true,
         twoFactorToken,
-        message: '2FA code required. Check your email or phone.'
+        message: '2FA code sent to your email.'
       });
     }
 
@@ -184,8 +194,8 @@ exports.verifyTwoFactor = async (req, res) => {
       return res.status(401).json({ success: false, message: 'User not found' });
     }
 
-    // Simple code comparison (in production, use TOTP)
-    if (code !== user.twoFactorSecret) {
+    const isValid = authenticator.check(code, user.twoFactorSecret);
+    if (!isValid) {
       return res.status(401).json({ success: false, message: 'Invalid 2FA code' });
     }
 
@@ -201,17 +211,19 @@ exports.verifyTwoFactor = async (req, res) => {
 
 exports.enableTwoFactor = async (req, res) => {
   try {
-    const secret = Math.floor(100000 + Math.random() * 900000).toString();
-    req.user.twoFactorEnabled = true;
+    const secret = authenticator.generateSecret();
     req.user.twoFactorSecret = secret;
     await req.user.save({ validateBeforeSave: false });
+
+    const otpauth = authenticator.keyuri(req.user.email, 'Lake Tana Eco-Tourism', secret);
 
     auditLog('user.2fa.enable', req.user._id);
 
     res.status(200).json({
       success: true,
       secret,
-      message: '2FA enabled. Save this code for verification.'
+      otpauth,
+      message: '2FA enabled. Scan the QR code or use the secret key in your authenticator app.'
     });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
@@ -392,6 +404,7 @@ exports.refresh = async (req, res) => {
 // ========== LOGOUT ==========
 
 exports.logout = async (req, res) => {
+  blacklistToken(req.token);
   res.clearCookie('accessToken');
   res.clearCookie('refreshToken');
   auditLog('user.logout', req.user?._id);

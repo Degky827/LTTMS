@@ -15,4 +15,38 @@ const serviceQuerySchema = z.object({
   }).optional()
 });
 
-module.exports = { serviceQuerySchema };
+const createServiceSchema = z.object({
+  body: z.object({
+    title: z.string().min(3, 'Title must be at least 3 characters').max(200),
+    description: z.string().min(10, 'Description must be at least 10 characters').max(5000),
+    price: z.number().positive('Price must be positive'),
+    category: z.enum(['tour', 'hotel', 'food', 'monastery', 'boat', 'waterfall']),
+    duration: z.string().optional(),
+    location: z.string().optional(),
+    dailyCapacity: z.number().int().positive().optional(),
+    ecoFriendly: z.boolean().optional(),
+    images: z.array(z.string()).optional(),
+    highlights: z.array(z.string()).optional()
+  }).strict(),
+  params: z.object({}).optional(),
+  query: z.object({}).optional()
+});
+
+const updateServiceSchema = z.object({
+  body: z.object({
+    title: z.string().min(3).max(200).optional(),
+    description: z.string().min(10).max(5000).optional(),
+    price: z.number().positive().optional(),
+    category: z.enum(['tour', 'hotel', 'food', 'monastery', 'boat', 'waterfall']).optional(),
+    duration: z.string().optional(),
+    location: z.string().optional(),
+    dailyCapacity: z.number().int().positive().optional(),
+    ecoFriendly: z.boolean().optional(),
+    images: z.array(z.string()).optional(),
+    highlights: z.array(z.string()).optional()
+  }).strict(),
+  params: z.object({}).optional(),
+  query: z.object({}).optional()
+});
+
+module.exports = { serviceQuerySchema, createServiceSchema, updateServiceSchema };

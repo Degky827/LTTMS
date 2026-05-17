@@ -4,15 +4,14 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import {
-  FaLeaf, FaTree, FaHandHoldingHeart, FaRecycle, FaChevronRight,
-  FaAward, FaSeedling, FaSolarPanel, FaWater, FaGlobeAfrica,
+  FaLeaf, FaTree, FaHandHoldingHeart,
+  FaAward, FaSolarPanel, FaWater, FaGlobeAfrica,
   FaCalculator, FaDonate, FaHandsHelping, FaBookOpen,
-  FaVideo, FaShieldAlt, FaCheckCircle, FaStar, FaUsers,
-  FaMapMarkerAlt, FaSearch, FaFilter, FaDownload, FaArrowRight,
-  FaQuoteLeft, FaLightbulb, FaTrash, FaHeart, FaCamera,
-  FaChartLine, FaTrophy, FaMedal, FaPhone, FaEnvelope
+  FaShieldAlt, FaCheckCircle, FaStar, FaUsers,
+  FaArrowRight,
+  FaLightbulb, FaTrash, FaCamera,
+  FaChartLine, FaTrophy, FaMedal
 } from 'react-icons/fa'
-import { GiPlantWatering, GiWindmill } from 'react-icons/gi'
 
 const tips = [
   { icon: <FaLeaf />, title: 'Travel Responsibly', desc: 'Respect local customs, dress modestly at religious sites, and always ask permission before taking photos of people.' },

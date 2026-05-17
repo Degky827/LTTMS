@@ -8,11 +8,13 @@ const {
 const router = express.Router();
 
 const { protect } = require('../middleware/auth');
+const validate = require('../middleware/validate');
+const { sendMessageSchema } = require('../validation/messageSchemas');
 
 router.use(protect);
 
 router.get('/', getMessages);
-router.post('/', sendMessage);
+router.post('/', validate(sendMessageSchema), sendMessage);
 router.put('/:id/read', markAsRead);
 
 module.exports = router;

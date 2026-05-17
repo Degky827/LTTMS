@@ -1,21 +1,31 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/router'
+import { useAuth } from '../context/AuthContext'
 import {
-  FaShip, FaHotel, FaStar, FaUsers, FaLeaf, FaShieldAlt,
+  FaHotel, FaStar, FaLeaf, FaShieldAlt,
   FaChevronRight, FaChurch, FaWater, FaTree, FaSearch,
   FaCalendarAlt, FaMapMarkerAlt, FaCheckCircle,
   FaHandHoldingHeart, FaRecycle, FaHandsHelping,
-  FaQuoteLeft, FaArrowRight, FaTwitter, FaFacebook,
-  FaYoutube, FaLinkedin
+  FaQuoteLeft, FaArrowRight
 } from 'react-icons/fa'
 import { GiHummingbird, GiBoatFishing } from 'react-icons/gi'
 
 export default function Home() {
+  const { user } = useAuth()
+  const router = useRouter()
   const [activeTestimonial, setActiveTestimonial] = useState(0)
-  const [activeDest, setActiveDest] = useState(0)
+
+  const requireAuth = useCallback((path: string) => {
+    if (user) {
+      router.push(path)
+    } else {
+      router.push(`/register?redirect=${encodeURIComponent(path)}`)
+    }
+  }, [user, router])
 
   const featuredDestinations = [
     {
@@ -184,20 +194,20 @@ export default function Home() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/services"
+              <button
+                onClick={() => requireAuth('/services')}
                 className="group bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-8 py-4 rounded-xl font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center"
               >
                 <span>Explore Tours</span>
                 <FaChevronRight className="ml-2 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <Link
-                href="/services"
+              </button>
+              <button
+                onClick={() => requireAuth('/services')}
                 className="group bg-white text-primary px-8 py-4 rounded-xl font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center"
               >
                 <span>Book Now</span>
                 <FaArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
-              </Link>
+              </button>
               <Link
                 href="/eco-tourism"
                 className="group bg-white/10 backdrop-blur-sm border border-white/20 text-white px-8 py-4 rounded-xl font-semibold hover:bg-white/20 transition-all duration-300 flex items-center justify-center"
@@ -259,12 +269,12 @@ export default function Home() {
                 <div className="absolute bottom-0 left-0 right-0 p-6">
                   <h3 className="text-xl font-bold text-white mb-2">{dest.title}</h3>
                   <p className="text-sm text-gray-200 mb-4 line-clamp-2">{dest.description}</p>
-                  <Link
-                    href="/services"
+                  <button
+                    onClick={() => requireAuth('/services')}
                     className="inline-flex items-center text-sm font-semibold text-cyan-300 hover:text-white transition-colors"
                   >
                     Book Now <FaChevronRight className="ml-1 text-xs" />
-                  </Link>
+                  </button>
                 </div>
               </div>
             ))}
@@ -327,13 +337,13 @@ export default function Home() {
                 Curated sustainable experiences designed to connect you with nature and culture
               </p>
             </div>
-            <Link
-              href="/services"
+            <button
+              onClick={() => requireAuth('/services')}
               className="group mt-8 md:mt-0 bg-gradient-to-r from-primary to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-xl transition-all duration-300 flex items-center shrink-0"
             >
               <span>View All Services</span>
               <FaChevronRight className="ml-2 group-hover:translate-x-1 transition-transform" />
-            </Link>
+            </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -349,12 +359,12 @@ export default function Home() {
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-3">{service.title}</h3>
                   <p className="text-gray-600 text-sm leading-relaxed mb-6">{service.desc}</p>
-                  <Link
-                    href="/services"
+                  <button
+                    onClick={() => requireAuth('/services')}
                     className="inline-flex items-center text-sm font-semibold text-primary hover:text-emerald-600 transition-colors"
                   >
                     Book Now <FaChevronRight className="ml-1 text-xs" />
-                  </Link>
+                  </button>
                 </div>
               </div>
             ))}
@@ -402,13 +412,13 @@ export default function Home() {
           </div>
 
           <div className="text-center mt-12">
-            <Link
-              href="/eco-tourism"
+            <button
+              onClick={() => requireAuth('/eco-tourism')}
               className="inline-flex items-center bg-white text-emerald-800 px-8 py-4 rounded-xl font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300"
             >
               <span>Learn More About Eco-Tourism</span>
               <FaChevronRight className="ml-2" />
-            </Link>
+            </button>
           </div>
         </div>
       </section>
@@ -478,14 +488,14 @@ export default function Home() {
             </div>
 
             <div className="text-center mt-10">
-              <Link
-                href="/reviews"
+              <button
+                onClick={() => requireAuth('/reviews')}
                 className="inline-flex items-center bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-8 py-4 rounded-xl font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300"
               >
                 <FaStar className="mr-2" />
                 <span>Share Your Experience</span>
                 <FaArrowRight className="ml-2" />
-              </Link>
+              </button>
             </div>
           </div>
         </div>

@@ -10,6 +10,7 @@ import Image from 'next/image'
 export default function Register() {
   const { register } = useAuth()
   const router = useRouter()
+  const { redirect } = router.query
   const [role, setRole] = useState<'tourist' | 'vendor'>('tourist')
   const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', confirmPassword: '', businessName: '', businessDesc: '' })
   const [showPassword, setShowPassword] = useState(false)
@@ -54,7 +55,8 @@ export default function Register() {
       })
       setSuccess(true)
       setTimeout(() => {
-        if (role === 'vendor') router.push('/vendor/dashboard')
+        if (redirect) router.push(redirect as string)
+        else if (role === 'vendor') router.push('/vendor/dashboard')
         else router.push('/booking')
       }, 2000)
     } catch (err: any) {

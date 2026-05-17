@@ -46,6 +46,11 @@ const userSchema = new mongoose.Schema({
     default: false
   },
   twoFactorSecret: String,
+  twoFactorCodeExpire: Date,
+  isActive: {
+    type: Boolean,
+    default: true
+  },
   // Account lockout
   loginAttempts: {
     type: Number,

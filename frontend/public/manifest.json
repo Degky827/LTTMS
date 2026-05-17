@@ -1,0 +1,15 @@
+{
+  "name": "Lake Tana Eco-Tourism",
+  "short_name": "Lake Tana",
+  "description": "Explore Ethiopia's largest lake — a UNESCO Biosphere Reserve with ancient monasteries, diverse wildlife, and unforgettable eco-adventures.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0EA5E9",
+  "orientation": "any",
+  "icons": [
+    { "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" }
+  ]
+}

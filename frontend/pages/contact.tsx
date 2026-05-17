@@ -1,5 +1,4 @@
 import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
 import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaLeaf, FaPaperPlane, FaUndo, FaCheckCircle, FaFacebook, FaTwitter, FaYoutube, FaLinkedin, FaGithub, FaQuestionCircle, FaComments, FaStore, FaExternalLinkAlt } from 'react-icons/fa'
 import { useState } from 'react'
 import Link from 'next/link'

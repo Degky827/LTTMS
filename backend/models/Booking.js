@@ -30,8 +30,13 @@ const bookingSchema = new mongoose.Schema({
   },
   paymentStatus: {
     type: String,
-    enum: ['unpaid', 'paid'],
+    enum: ['unpaid', 'paid', 'refunded', 'processing', 'failed'],
     default: 'unpaid'
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['telebirr', 'cbe', 'amole', 'paypal', 'stripe', 'chapa'],
+    default: 'chapa'
   },
   transactionId: String,
   createdAt: {

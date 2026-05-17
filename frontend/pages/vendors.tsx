@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import {
-  FaStar, FaLeaf, FaChevronRight, FaSearch,
+  FaStar, FaLeaf, FaSearch,
   FaMapMarkerAlt, FaPhone, FaEnvelope, FaShieldAlt,
-  FaCheckCircle, FaFilter, FaStore
+  FaStore
 } from 'react-icons/fa'
 import API from '../utils/api'
 

@@ -1,5 +1,25 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const logger = require('../utils/logger');
+
+// In-memory token blacklist (use Redis in production)
+const tokenBlacklist = new Map();
+const BLACKLIST_CLEANUP_INTERVAL = 15 * 60 * 1000; // 15 min
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, expiry] of tokenBlacklist) {
+    if (expiry < now) tokenBlacklist.delete(key);
+  }
+}, BLACKLIST_CLEANUP_INTERVAL);
+
+const isBlacklisted = (token) => {
+  return tokenBlacklist.has(token);
+};
+
+const addToBlacklist = (token, expiresIn = 15 * 60 * 1000) => {
+  tokenBlacklist.set(token, Date.now() + expiresIn);
+};
 
 // Protect routes
 exports.protect = async (req, res, next) => {
@@ -9,24 +29,33 @@ exports.protect = async (req, res, next) => {
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
   ) {
-    // Set token from Bearer token in header
     token = req.headers.authorization.split(' ')[1];
   }
   if (!token && req.cookies?.accessToken) {
     token = req.cookies.accessToken;
   }
 
-  // Make sure token exists
   if (!token) {
     return res.status(401).json({ success: false, message: 'Not authorized to access this route' });
   }
 
-  try {
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  if (isBlacklisted(token)) {
+    return res.status(401).json({ success: false, message: 'Token has been revoked. Please log in again.' });
+  }
 
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = await User.findById(decoded.id);
 
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'User no longer exists' });
+    }
+
+    if (!req.user.isActive) {
+      return res.status(403).json({ success: false, message: 'Account has been deactivated' });
+    }
+
+    req.token = token;
     next();
   } catch (err) {
     return res.status(401).json({ success: false, message: 'Not authorized to access this route' });
@@ -45,3 +74,19 @@ exports.authorize = (...roles) => {
     next();
   };
 };
+
+// Logout helper - call from auth controller
+exports.blacklistToken = (token) => {
+  if (token && process.env.JWT_BLACKLIST_ENABLED !== 'false') {
+    try {
+      const decoded = jwt.decode(token);
+      const expiresIn = decoded?.exp ? (decoded.exp * 1000 - Date.now()) : 15 * 60 * 1000;
+      if (expiresIn > 0) addToBlacklist(token, expiresIn);
+    } catch {
+      addToBlacklist(token);
+    }
+  }
+};
+
+// Rate limiting info exporter
+exports.getBlacklistSize = () => tokenBlacklist.size;

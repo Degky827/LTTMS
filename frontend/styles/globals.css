@@ -29,6 +29,15 @@ body {
   50% { opacity: 0.8; }
 }
 
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
 .animate-zoom {
   animation: zoom 20s ease-in-out infinite alternate;
 }
