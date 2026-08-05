@@ -1,13 +1,10 @@
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
 import Link from 'next/link'
 import { FaBookOpen, FaChevronRight } from 'react-icons/fa'
 import { lakeTanaHistorySources, lakeTanaHistoryTimeline } from '../data/lakeTanaHistory'
 
 export default function HistoryPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
-      <Navbar />
+    <div>
 
       <section className="relative h-96 overflow-hidden">
         <div className="absolute inset-0">
@@ -80,7 +77,6 @@ export default function HistoryPage() {
         </div>
       </section>
 
-      <Footer />
     </div>
   )
 }

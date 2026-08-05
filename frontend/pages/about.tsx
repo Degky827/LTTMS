@@ -1,5 +1,3 @@
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
 import { FaLeaf, FaHandshake, FaShieldAlt, FaGlobe, FaStar, FaChevronRight, FaHeart, FaCompass, FaCheckCircle, FaWater, FaMapMarkerAlt, FaChurch, FaBookOpen, FaTree, FaShip } from 'react-icons/fa'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -13,7 +11,7 @@ export default function About() {
   ]
 
   const values = [
-    { icon: '🌍', title: 'Sustainability', description: 'Protecting Lake Tana\'s ecosystem for future generations' },
+    { icon: <FaGlobe />, title: 'Sustainability', description: 'Protecting Lake Tana\'s ecosystem for future generations' },
     { icon: '🤝', title: 'Community', description: 'Empowering local families and businesses' },
     { icon: '🎨', title: 'Culture', description: 'Preserving Ethiopian heritage and traditions' },
     { icon: '💎', title: 'Authenticity', description: 'Genuine experiences, not tourist traps' },
@@ -96,8 +94,7 @@ export default function About() {
   ]
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
-      <Navbar />
+    <div>
 
       {/* Hero */}
       <section className="relative h-96 overflow-hidden">
@@ -344,7 +341,6 @@ export default function About() {
         </div>
       </section>
 
-      <Footer />
     </div>
   )
 }

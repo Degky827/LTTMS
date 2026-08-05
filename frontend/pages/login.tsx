@@ -1,6 +1,4 @@
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
-import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaLeaf, FaChevronRight, FaShieldAlt, FaUserGraduate } from 'react-icons/fa'
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaLeaf, FaChevronRight, FaShieldAlt } from 'react-icons/fa'
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -11,15 +9,26 @@ export default function Login() {
   const { login } = useAuth()
   const router = useRouter()
   const [form, setForm] = useState({ email: '', password: '', rememberMe: false })
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [twoFactor, setTwoFactor] = useState<{ token: string } | null>(null)
   const [twoFactorCode, setTwoFactorCode] = useState('')
   const [loading, setLoading] = useState(false)
 
+  const validate = () => {
+    const e: { email?: string; password?: string } = {}
+    if (!form.email.trim()) e.email = 'Email is required'
+    else if (!/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(form.email)) e.email = 'Please enter a valid email'
+    if (!form.password) e.password = 'Password is required'
+    setErrors(e)
+    return Object.keys(e).length === 0
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    if (!validate()) return
     setLoading(true)
     try {
       const result = await login(form.email, form.password, form.rememberMe)
@@ -59,8 +68,7 @@ export default function Login() {
 
   if (twoFactor) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
-        <Navbar />
+      <div>
         <div className="flex-1 flex items-center justify-center px-4 py-16">
           <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
             <div className="text-center mb-8">
@@ -82,15 +90,12 @@ export default function Login() {
             </button>
           </div>
         </div>
-        <Footer />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
-      <Navbar />
-
+    <div>
       <section className="relative h-56 overflow-hidden">
         <div className="absolute inset-0">
           <Image src="/images/LakeTana.jpg" alt="Login" fill className="object-cover" priority />
@@ -113,8 +118,8 @@ export default function Login() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm mb-6 flex items-center gap-2">
-                <span>⚠</span> {error}
+              <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm mb-6">
+                {error}
               </div>
             )}
 
@@ -123,7 +128,14 @@ export default function Login() {
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
                 <div className="relative">
                   <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" required className="w-full border border-gray-200 rounded-xl pl-11 pr-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-gray-50/50" />
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={e => { setForm({ ...form, email: e.target.value }); setErrors(prev => ({ ...prev, email: undefined })) }}
+                    placeholder="you@example.com"
+                    className={`w-full border ${errors.email ? 'border-red-300 ring-2 ring-red-200' : 'border-gray-200'} rounded-xl pl-11 pr-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-gray-50/50`}
+                  />
+                  {errors.email && <p className="text-red-500 text-xs mt-1.5">{errors.email}</p>}
                 </div>
               </div>
 
@@ -131,8 +143,15 @@ export default function Login() {
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
                 <div className="relative">
                   <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input type={showPassword ? 'text' : 'password'} value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} placeholder="Enter your password" required className="w-full border border-gray-200 rounded-xl pl-11 pr-12 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-gray-50/50" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={form.password}
+                    onChange={e => { setForm({ ...form, password: e.target.value }); setErrors(prev => ({ ...prev, password: undefined })) }}
+                    placeholder="Enter your password"
+                    className={`w-full border ${errors.password ? 'border-red-300 ring-2 ring-red-200' : 'border-gray-200'} rounded-xl pl-11 pr-12 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-gray-50/50`}
+                  />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">{showPassword ? <FaEyeSlash /> : <FaEye />}</button>
+                  {errors.password && <p className="text-red-500 text-xs mt-1.5">{errors.password}</p>}
                 </div>
               </div>
 
@@ -165,13 +184,8 @@ export default function Login() {
             </div>
           </div>
 
-          <div className="mt-6 bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl p-4 border border-emerald-100 text-center">
-            <p className="text-xs text-emerald-700 flex items-center justify-center gap-2"><FaUserGraduate /> Demo: tourist@test.com / password123</p>
-          </div>
         </div>
       </div>
-
-      <Footer />
     </div>
   )
 }

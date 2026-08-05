@@ -1,5 +1,3 @@
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
 import { FaEnvelope, FaLeaf, FaPaperPlane, FaCheckCircle } from 'react-icons/fa'
 import { useState } from 'react'
 import Link from 'next/link'
@@ -27,8 +25,7 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
-      <Navbar />
+    <div>
       <section className="relative h-48 overflow-hidden">
         <div className="absolute inset-0">
           <Image src="/images/bgservice&about.avif" alt="Reset password" fill className="object-cover" priority />
@@ -53,7 +50,7 @@ export default function ForgotPassword() {
           ) : (
             <>
               <div className="flex items-center justify-center gap-2 mb-6"><FaLeaf className="text-emerald-500 text-2xl" /><span className="text-lg font-bold text-gray-900">Reset Password</span></div>
-              {error && <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm mb-6">⚠ {error}</div>}
+              {error && <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm mb-6">{error}</div>}
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
@@ -71,7 +68,6 @@ export default function ForgotPassword() {
           )}
         </div>
       </div>
-      <Footer />
     </div>
   )
 }
