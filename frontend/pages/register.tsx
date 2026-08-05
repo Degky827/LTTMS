@@ -1,5 +1,3 @@
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
 import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaPhone, FaStore, FaLeaf, FaChevronRight, FaUpload, FaCheckCircle } from 'react-icons/fa'
 import { useState } from 'react'
 import Link from 'next/link'
@@ -60,6 +58,10 @@ export default function Register() {
         else router.push('/booking')
       }, 2000)
     } catch (err: any) {
+      console.error('Registration error:', err)
+      console.error('Error response:', err.response)
+      console.error('Error response data:', err.response?.data)
+      console.error('Error message:', err.response?.data?.message)
       setError(err.response?.data?.message || 'Registration failed. Please try again.')
     } finally {
       setLoading(false)
@@ -68,8 +70,7 @@ export default function Register() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
-        <Navbar />
+      <div>
         <div className="flex-1 flex items-center justify-center px-4 py-16">
           <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 border border-gray-100 text-center">
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center"><FaCheckCircle className="text-white text-4xl" /></div>
@@ -77,15 +78,12 @@ export default function Register() {
             <p className="text-gray-500">Check your email to verify your account before your first booking.</p>
           </div>
         </div>
-        <Footer />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
-      <Navbar />
-
+    <div>
       {/* Hero */}
       <section className="relative h-56 overflow-hidden">
         <div className="absolute inset-0">
@@ -125,8 +123,8 @@ export default function Register() {
             )}
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm mb-6 flex items-center gap-2">
-                <span>⚠</span> {error}
+              <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm mb-6">
+                {error}
               </div>
             )}
 
@@ -222,8 +220,6 @@ export default function Register() {
           </div>
         </div>
       </div>
-
-      <Footer />
     </div>
   )
 }

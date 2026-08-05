@@ -1,5 +1,3 @@
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
 import { useState } from 'react'
 import Link from 'next/link'
 import {
@@ -102,8 +100,7 @@ export default function Reviews() {
     })
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
-      <Navbar />
+    <div>
 
       {/* Hero */}
       <section className="relative h-56 overflow-hidden">
@@ -438,7 +435,6 @@ export default function Reviews() {
         </div>
       )}
 
-      <Footer />
     </div>
   )
 }

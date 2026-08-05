@@ -30,7 +30,7 @@ exports.registerVendor = async (req, res, next) => {
 // @access  Public
 exports.getVendors = async (req, res, next) => {
   try {
-    const vendors = await Vendor.find().populate('user', 'name email');
+    const vendors = await Vendor.find({ status: 'approved' }).populate('user', 'name email');
 
     res.status(200).json({
       success: true,

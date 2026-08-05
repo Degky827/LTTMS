@@ -1,5 +1,3 @@
-import Navbar from '../../components/Navbar'
-import Footer from '../../components/Footer'
 import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -76,8 +74,7 @@ export default function BookingPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
-      <Navbar />
+    <div>
 
       {loadingService ? (
         <div className="flex-1 flex justify-center items-center py-20">
@@ -304,7 +301,6 @@ export default function BookingPage() {
         </div>
       )}
 
-      <Footer />
     </div>
   )
 }

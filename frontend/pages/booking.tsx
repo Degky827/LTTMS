@@ -1,5 +1,3 @@
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -71,8 +69,7 @@ export default function Bookings() {
 
   if (authed === false) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
-        <Navbar />
+      <div>
         <div className="flex-1 flex items-center justify-center">
           <div className="bg-white rounded-3xl shadow-xl p-10 max-w-md text-center">
             <FaCalendarAlt className="text-5xl text-primary/30 mx-auto mb-4" />
@@ -83,22 +80,20 @@ export default function Bookings() {
             </Link>
           </div>
         </div>
-        <Footer />
       </div>
     )
   }
 
   if (authed === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div>
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
-      <Navbar />
+    <div>
 
       {/* Hero */}
       <section className="relative h-56 overflow-hidden">
@@ -399,7 +394,6 @@ export default function Bookings() {
         </div>
       )}
 
-      <Footer />
     </div>
   )
 }

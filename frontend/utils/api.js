@@ -24,8 +24,8 @@ API.interceptors.response.use(
     if (error.response?.status === 401 && typeof window !== 'undefined') {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      if (!window.location.pathname.startsWith('/login')) {
-        window.location.href = '/login'
+      if (window.location.pathname !== '/' && !window.location.pathname.startsWith('/register') && !window.location.pathname.startsWith('/login')) {
+        window.location.href = '/register'
       }
     }
     return Promise.reject(error)

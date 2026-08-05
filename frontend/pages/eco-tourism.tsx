@@ -1,5 +1,3 @@
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -75,8 +73,7 @@ export default function EcoTourism() {
   ]
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
-      <Navbar />
+    <div>
 
       {/* Hero */}
       <section className="relative h-64 overflow-hidden">
@@ -649,7 +646,6 @@ export default function EcoTourism() {
         </div>
       </div>
 
-      <Footer />
     </div>
   )
 }

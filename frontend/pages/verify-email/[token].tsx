@@ -1,5 +1,3 @@
-import Navbar from '../../components/Navbar'
-import Footer from '../../components/Footer'
 import { FaCheckCircle, FaTimesCircle, FaLeaf } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
@@ -29,8 +27,7 @@ export default function VerifyEmail() {
   }, [token])
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
-      <Navbar />
+    <div>
       <section className="relative h-48 overflow-hidden">
         <div className="absolute inset-0">
           <Image src="/images/bgservice&about.avif" alt="Verify email" fill className="object-cover" priority />
@@ -68,7 +65,6 @@ export default function VerifyEmail() {
           )}
         </div>
       </div>
-      <Footer />
     </div>
   )
 }

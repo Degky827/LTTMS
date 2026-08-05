@@ -5,6 +5,7 @@ import { AuthProvider } from '../context/AuthContext'
 import { LanguageProvider } from '../context/LanguageContext'
 import { ToastProvider } from '../context/ToastContext'
 import ErrorBoundary from '../components/ErrorBoundary'
+import Layout from '../components/Layout'
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
@@ -29,7 +30,9 @@ export default function App({ Component, pageProps }: AppProps) {
         <AuthProvider>
           <ToastProvider>
             <ErrorBoundary>
-              <Component {...pageProps} />
+              <Layout>
+                <Component {...pageProps} />
+              </Layout>
             </ErrorBoundary>
           </ToastProvider>
         </AuthProvider>

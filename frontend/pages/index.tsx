@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
+
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
@@ -10,14 +9,21 @@ import {
   FaChevronRight, FaChurch, FaWater, FaTree, FaSearch,
   FaCalendarAlt, FaMapMarkerAlt, FaCheckCircle,
   FaHandHoldingHeart, FaRecycle, FaHandsHelping,
-  FaQuoteLeft, FaArrowRight
+  FaQuoteLeft, FaArrowRight,
+  FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash
 } from 'react-icons/fa'
 import { GiHummingbird, GiBoatFishing } from 'react-icons/gi'
 
 export default function Home() {
-  const { user } = useAuth()
+  const { user, register } = useAuth()
   const router = useRouter()
   const [activeTestimonial, setActiveTestimonial] = useState(0)
+  const [regForm, setRegForm] = useState({ name: '', email: '', password: '', confirmPassword: '' })
+  const [regErrors, setRegErrors] = useState<{ name?: string; email?: string; password?: string; confirmPassword?: string }>({})
+  const [regLoading, setRegLoading] = useState(false)
+  const [regSuccess, setRegSuccess] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const requireAuth = useCallback((path: string) => {
     if (user) {
@@ -121,9 +127,53 @@ export default function Home() {
     return () => clearInterval(interval)
   }, [testimonials.length])
 
+  const validateRegForm = () => {
+    const errors: { name?: string; email?: string; password?: string; confirmPassword?: string } = {}
+    if (!regForm.name.trim()) errors.name = 'Full name is required'
+    if (!regForm.email.trim()) errors.email = 'Email is required'
+    else if (!/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(regForm.email)) errors.email = 'Please enter a valid email'
+    if (!regForm.password) errors.password = 'Password is required'
+    else if (regForm.password.length < 6) errors.password = 'Password must be at least 6 characters'
+    if (!regForm.confirmPassword) errors.confirmPassword = 'Please confirm your password'
+    else if (regForm.password !== regForm.confirmPassword) errors.confirmPassword = 'Passwords do not match'
+    setRegErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const passwordStrength = (pw: string): { score: number; label: string; color: string } => {
+    let score = 0
+    if (pw.length >= 6) score++
+    if (pw.length >= 10) score++
+    if (/[A-Z]/.test(pw)) score++
+    if (/[0-9]/.test(pw)) score++
+    if (/[^A-Za-z0-9]/.test(pw)) score++
+    const labels = ['Very Weak', 'Weak', 'Fair', 'Strong', 'Very Strong']
+    const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-emerald-500', 'bg-green-500']
+    return { score, label: labels[score] || 'Weak', color: colors[score] || colors[1] }
+  }
+
+  const handleRegField = (field: string, value: string) => {
+    setRegForm(prev => ({ ...prev, [field]: value }))
+    if (regErrors[field as keyof typeof regErrors]) setRegErrors(prev => ({ ...prev, [field]: undefined }))
+  }
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!validateRegForm()) return
+    setRegLoading(true)
+    try {
+      await register({ name: regForm.name, email: regForm.email, password: regForm.password })
+      setRegSuccess(true)
+      setTimeout(() => router.push('/booking'), 2000)
+    } catch (err: any) {
+      setRegErrors({ email: err.response?.data?.message || 'Registration failed. Please try again.' })
+    } finally {
+      setRegLoading(false)
+    }
+  }
+
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
-      <Navbar />
+    <div>
 
       {/* ===== 1. Hero Banner with Search Bar ===== */}
       <section className="relative h-[90vh] min-h-[600px] overflow-hidden">
@@ -525,7 +575,168 @@ export default function Home() {
         </div>
       </section>
 
-      <Footer />
+      {/* ===== 8. Register Section ===== */}
+      <section id="register" className="py-20 bg-gradient-to-br from-gray-900 via-slate-900 to-emerald-900 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-20 right-20 w-96 h-96 bg-emerald-400 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 left-20 w-80 h-80 bg-cyan-400 rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left side - Info */}
+            <div>
+              <div className="inline-flex items-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-5 py-2 mb-6">
+                <FaLeaf className="mr-2 text-emerald-300" />
+                <span className="text-emerald-100 text-sm font-medium">Join Our Community</span>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+                Start Your{' '}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-emerald-300">
+                  Eco-Adventure
+                </span>
+              </h2>
+              <p className="text-lg text-gray-300 mb-8 leading-relaxed">
+                Create your free account and unlock access to sustainable tours, eco-lodges, 
+                and cultural experiences across Lake Tana and Bahir Dar.
+              </p>
+              <div className="space-y-4 mb-8">
+                {[
+                  'Book eco-certified tours and accommodations',
+                  'Connect with verified local guides and vendors',
+                  'Earn rewards for sustainable travel choices',
+                  'Join a community of conscious travelers'
+                ].map((benefit, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <FaCheckCircle className="text-emerald-400 mt-1 shrink-0" />
+                    <span className="text-gray-300">{benefit}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right side - Registration Form */}
+            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-3xl p-8 shadow-2xl">
+              {regSuccess ? (
+                <div className="text-center py-8">
+                  <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center">
+                    <FaCheckCircle className="text-white text-4xl" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-2">Welcome Aboard!</h3>
+                  <p className="text-emerald-100">Your account has been created. Redirecting you to your dashboard...</p>
+                </div>
+              ) : (
+                <form onSubmit={handleRegister} className="space-y-5">
+                  <div className="text-center mb-6">
+                    <h3 className="text-xl font-bold text-white">Create Your Account</h3>
+                    <p className="text-gray-400 text-sm mt-1">Free registration — no credit card required</p>
+                  </div>
+
+                  {/* Full Name */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-200 mb-2">Full Name *</label>
+                    <div className="relative">
+                      <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        value={regForm.name}
+                        onChange={e => handleRegField('name', e.target.value)}
+                        placeholder="Your Name"
+                        className={`w-full bg-white/10 border ${regErrors.name ? 'border-red-400' : 'border-white/20'} rounded-xl pl-11 pr-4 py-3.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 transition`}
+                      />
+                    </div>
+                    {regErrors.name && <p className="text-red-400 text-xs mt-1.5">{regErrors.name}</p>}
+                  </div>
+
+                  {/* Email */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-200 mb-2">Email Address *</label>
+                    <div className="relative">
+                      <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="email"
+                        value={regForm.email}
+                        onChange={e => handleRegField('email', e.target.value)}
+                        placeholder="you@example.com"
+                        className={`w-full bg-white/10 border ${regErrors.email ? 'border-red-400' : 'border-white/20'} rounded-xl pl-11 pr-4 py-3.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 transition`}
+                      />
+                    </div>
+                    {regErrors.email && <p className="text-red-400 text-xs mt-1.5">{regErrors.email}</p>}
+                  </div>
+
+                  {/* Password */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-200 mb-2">Password *</label>
+                    <div className="relative">
+                      <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={regForm.password}
+                        onChange={e => handleRegField('password', e.target.value)}
+                        placeholder="Min. 6 characters"
+                        className={`w-full bg-white/10 border ${regErrors.password ? 'border-red-400' : 'border-white/20'} rounded-xl pl-11 pr-12 py-3.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 transition`}
+                      />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition">
+                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                      </button>
+                    </div>
+                    {regErrors.password && <p className="text-red-400 text-xs mt-1.5">{regErrors.password}</p>}
+                    {regForm.password && !regErrors.password && (
+                      <div className="mt-2">
+                        <div className="flex gap-1 mb-1">
+                          {[1, 2, 3, 4, 5].map(i => (
+                            <div key={i} className={`h-1.5 flex-1 rounded-full ${i <= passwordStrength(regForm.password).score ? passwordStrength(regForm.password).color : 'bg-white/10'}`} />
+                          ))}
+                        </div>
+                        <p className="text-xs text-gray-400">Strength: {passwordStrength(regForm.password).label}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Confirm Password */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-200 mb-2">Confirm Password *</label>
+                    <div className="relative">
+                      <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        value={regForm.confirmPassword}
+                        onChange={e => handleRegField('confirmPassword', e.target.value)}
+                        placeholder="Repeat password"
+                        className={`w-full bg-white/10 border ${regErrors.confirmPassword ? 'border-red-400' : 'border-white/20'} rounded-xl pl-11 pr-12 py-3.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 transition`}
+                      />
+                      <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition">
+                        {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                      </button>
+                    </div>
+                    {regErrors.confirmPassword && <p className="text-red-400 text-xs mt-1.5">{regErrors.confirmPassword}</p>}
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={regLoading}
+                    className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white py-3.5 rounded-xl font-semibold hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {regLoading ? 'Creating Account...' : <><FaLeaf /> Create Account <FaChevronRight className="text-sm" /></>}
+                  </button>
+
+                  <p className="text-xs text-gray-400 text-center">
+                    By registering, you agree to our Terms of Service and Privacy Policy.
+                  </p>
+
+                  <div className="pt-4 border-t border-white/10 text-center">
+                    <p className="text-sm text-gray-400">
+                      Already have an account?{' '}
+                      <Link href="/login" className="text-emerald-300 hover:text-emerald-200 font-semibold">Sign in</Link>
+                    </p>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
     </div>
   )
 }

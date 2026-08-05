@@ -1,4 +1,3 @@
-import Navbar from '../components/Navbar'
 import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaLeaf, FaPaperPlane, FaUndo, FaCheckCircle, FaFacebook, FaTwitter, FaYoutube, FaLinkedin, FaGithub, FaQuestionCircle, FaComments, FaStore, FaExternalLinkAlt } from 'react-icons/fa'
 import { useState } from 'react'
 import Link from 'next/link'
@@ -34,8 +33,7 @@ export default function Contact() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
-      <Navbar />
+    <div>
 
       {/* Hero */}
       <section className="relative h-72 overflow-hidden">
@@ -241,46 +239,6 @@ export default function Contact() {
         </section>
       </div>
 
-      {/* Footer with quick links */}
-      <footer className="bg-gradient-to-br from-slate-900 to-blue-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h4 className="text-lg font-bold mb-4 flex items-center"><FaLeaf className="text-emerald-400 mr-2" /> Lake Tana Eco-Tourism</h4>
-              <p className="text-sm text-blue-100">Discover Ethiopia's largest lake — a UNESCO Biosphere Reserve with ancient monasteries, diverse wildlife, and unforgettable eco-adventures.</p>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">Quick Links</h4>
-              <ul className="space-y-2 text-sm text-blue-100">
-                <li><Link href="/" className="hover:text-white transition-colors">Home</Link></li>
-                <li><Link href="/services" className="hover:text-white transition-colors">Explore Services</Link></li>
-                <li><Link href="/vendors" className="hover:text-white transition-colors">Vendors</Link></li>
-                <li><Link href="/booking" className="hover:text-white transition-colors">Bookings</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">Explore</h4>
-              <ul className="space-y-2 text-sm text-blue-100">
-                <li><Link href="/eco-tourism" className="hover:text-white transition-colors">Eco-Tourism</Link></li>
-                <li><Link href="/reviews" className="hover:text-white transition-colors">Reviews</Link></li>
-                <li><Link href="/about" className="hover:text-white transition-colors">About Lake Tana</Link></li>
-                <li><Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">Contact</h4>
-              <ul className="space-y-2 text-sm text-blue-100">
-                <li className="flex items-start gap-2"><FaMapMarkerAlt className="mt-0.5 shrink-0" /> Bahir Dar, Ethiopia</li>
-                <li><a href="tel:+251908720092" className="hover:text-white transition-colors"><FaPhone className="inline mr-1" /> +251 908 720 092</a></li>
-                <li><a href="mailto:desalegnky827@gmail.com" className="hover:text-white transition-colors"><FaEnvelope className="inline mr-1" /> desalegnky827@gmail.com</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-white/10 pt-8 text-center text-sm text-blue-200">
-            <p>&copy; 2026 Lake Tana Eco-Tourism Platform. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }
