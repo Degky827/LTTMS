@@ -5,8 +5,7 @@ const vendorSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: [true, 'Vendor must belong to a user account'],
-    unique: true,
-    index: true
+    unique: true
   },
   businessName: {
     type: String,
@@ -103,6 +102,5 @@ const vendorSchema = new mongoose.Schema({
 
 // Indexes for query performance
 vendorSchema.index({ status: 1, ecoCertification: 1 });
-vendorSchema.index({ businessName: 1 }, { unique: true });
 
 module.exports = mongoose.model('Vendor', vendorSchema);

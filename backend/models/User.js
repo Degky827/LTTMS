@@ -115,8 +115,6 @@ const userSchema = new mongoose.Schema({
 // Do NOT add a TTL index on lockUntil! A TTL index ({ expireAfterSeconds: 0 }) automatically deletes
 // the entire User document when lockUntil expires. Account locks must be evaluated in application logic.
 
-// Index for email queries
-userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ role: 1, isActive: 1 });
 
 // Encrypt password using bcrypt before saving
