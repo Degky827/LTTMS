@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import API from '../utils/api'
+import { connectSocket, disconnectSocket, joinUserRoom, joinAdminRoom } from '../utils/socket'
 
 interface User {
   id: string
@@ -37,6 +38,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const setupSocketConnection = useCallback((token: string, userData: User) => {
+    try {
+      connectSocket(token)
+      if (userData?.id) {
+        joinUserRoom(userData.id)
+      }
+      if (userData?.role === 'admin') {
+        joinAdminRoom()
+      }
+    } catch (err) {
+      console.warn('[Socket] Could not connect realtime socket:', err)
+    }
+  }, [])
+
   const loadUser = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
@@ -45,15 +60,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return
       }
       const res = await API.get('/auth/me')
-      setUser(res.data.data)
+      const userData = res.data?.data || res.data?.user
+      if (userData) {
+        setUser(userData)
+        setupSocketConnection(token, userData)
+      }
     } catch {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
+      disconnectSocket()
       setUser(null)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [setupSocketConnection])
 
   useEffect(() => {
     loadUser()
@@ -64,18 +84,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (res.data.requiresTwoFactor) {
       return { requiresTwoFactor: true, twoFactorToken: res.data.twoFactorToken }
     }
-    localStorage.setItem('token', res.data.token)
-    localStorage.setItem('user', JSON.stringify(res.data.user))
-    setUser(res.data.user)
-    return { requiresTwoFactor: false, user: res.data.user }
+    const token = res.data.token || res.data.data?.accessToken
+    const userData = res.data.user || res.data.data?.user
+
+    if (token) localStorage.setItem('token', token)
+    if (userData) {
+      localStorage.setItem('user', JSON.stringify(userData))
+      setUser(userData)
+      if (token) setupSocketConnection(token, userData)
+    }
+    return { requiresTwoFactor: false, user: userData }
   }
 
   const register = async (data: RegisterData) => {
     const res = await API.post('/auth/register', data)
-    localStorage.setItem('token', res.data.token)
-    localStorage.setItem('user', JSON.stringify(res.data.user))
-    setUser(res.data.user)
-    return res.data.user
+    const token = res.data.token || res.data.data?.accessToken
+    const userData = res.data.user || res.data.data?.user
+
+    if (token) localStorage.setItem('token', token)
+    if (userData) {
+      localStorage.setItem('user', JSON.stringify(userData))
+      setUser(userData)
+      if (token) setupSocketConnection(token, userData)
+    }
+    return userData
   }
 
   const logout = async () => {
@@ -85,8 +117,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Proceed with local logout even if API fails
     }
     localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
     localStorage.removeItem('user')
     localStorage.removeItem('vendorToken')
+    disconnectSocket()
     setUser(null)
   }
 
