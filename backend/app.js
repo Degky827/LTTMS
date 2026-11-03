@@ -66,9 +66,15 @@ app.get('/', (req, res) => {
 
 // Health check handler (liveness probe)
 const healthHandler = (req, res) => {
+  const dbHealth = checkDBHealth();
+  const io = req.app.get('io');
   res.status(200).json({
     success: true,
     status: 'ok',
+    dependencies: {
+      mongodb: dbHealth.status,
+      socketio: io ? 'up' : 'down'
+    },
     uptime: process.uptime(),
     timestamp: new Date().toISOString()
   });
