@@ -61,13 +61,25 @@ const auditLogSchema = new mongoose.Schema({
 const forbidModification = function(next) {
   const err = new Error('AuditLog records are immutable and cannot be updated or deleted.');
   err.statusCode = 403;
-  next(err);
+  if (typeof next === 'function') {
+    return next(err);
+  }
+  throw err;
 };
 
+// Document-level guards
+auditLogSchema.pre('save', function(next) {
+  if (!this.isNew) {
+    return forbidModification(next);
+  }
+  next();
+});
+auditLogSchema.pre('deleteOne', { document: true, query: true }, forbidModification);
+
+// Query-level guards
 auditLogSchema.pre('updateOne', forbidModification);
 auditLogSchema.pre('updateMany', forbidModification);
 auditLogSchema.pre('findOneAndUpdate', forbidModification);
-auditLogSchema.pre('deleteOne', forbidModification);
 auditLogSchema.pre('deleteMany', forbidModification);
 auditLogSchema.pre('findOneAndDelete', forbidModification);
 auditLogSchema.pre('findOneAndRemove', forbidModification);

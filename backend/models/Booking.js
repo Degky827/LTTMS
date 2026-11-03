@@ -94,7 +94,7 @@ const bookingSchema = new mongoose.Schema({
   idempotencyKey: {
     type: String,
     sparse: true,
-    index: true,
+    unique: true,
     default: null
   },
   adminNote: {

@@ -164,6 +164,7 @@ test('MODEL: Payment requires txRef, amount, and validates status enum', async (
   const err = await p.validate().catch(e => e);
   assert.ok(!(err instanceof Error));
   assert.equal(p.currency, 'ETB');
+  assert.equal(Payment.schema.path('rawWebhookPayload').options.select, false, 'rawWebhookPayload must be select: false');
 
   const invalidPayment = new Payment({
     booking: new mongoose.Types.ObjectId(),
@@ -239,4 +240,5 @@ test('MODEL: AuditLog blocks modification and deletion hooks (immutability)', ()
   const hooks = AuditLog.schema.s.hooks;
   assert.ok(hooks._pres.has('updateOne'), 'AuditLog must register pre updateOne hook');
   assert.ok(hooks._pres.has('deleteOne'), 'AuditLog must register pre deleteOne hook');
+  assert.ok(hooks._pres.has('save'), 'AuditLog must register pre save hook');
 });
