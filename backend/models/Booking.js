@@ -50,7 +50,8 @@ const bookingSchema = new mongoose.Schema({
   totalAmount: {
     type: Number,
     required: [true, 'Total amount is required'],
-    min: [0, 'Total amount cannot be negative']
+    min: [0, 'Total amount cannot be negative'],
+    alias: 'totalPrice'
   },
   currency: {
     type: String,
@@ -125,6 +126,12 @@ bookingSchema.pre('validate', function (next) {
     const timestamp = Date.now().toString(36).toUpperCase();
     const randomHex = crypto.randomBytes(3).toString('hex').toUpperCase();
     this.bookingReference = `LTTMS-BKG-${timestamp}-${randomHex}`;
+  }
+  if (this.totalAmount === undefined && this.totalPrice !== undefined) {
+    this.totalAmount = this.totalPrice;
+  }
+  if (this.priceSnapshot === undefined && this.totalAmount !== undefined) {
+    this.priceSnapshot = this.totalAmount / (this.guests || 1);
   }
   next();
 });

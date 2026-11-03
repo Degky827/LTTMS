@@ -21,7 +21,8 @@ const commissionTransactionSchema = new mongoose.Schema({
   totalBookingAmount: {
     type: Number,
     required: [true, 'Total booking amount is required'],
-    min: [0, 'Amount cannot be negative']
+    min: [0, 'Amount cannot be negative'],
+    alias: 'grossAmount'
   },
   commissionRate: {
     type: Number,
@@ -38,7 +39,8 @@ const commissionTransactionSchema = new mongoose.Schema({
   vendorEarning: {
     type: Number,
     required: [true, 'Vendor earning amount is required'],
-    min: [0, 'Vendor earning cannot be negative']
+    min: [0, 'Vendor earning cannot be negative'],
+    alias: 'vendorPayoutAmount'
   },
   currency: {
     type: String,
@@ -49,7 +51,7 @@ const commissionTransactionSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: {
-      values: ['pending', 'settled', 'refunded'],
+      values: ['pending', 'collected', 'settled', 'refunded'],
       message: '{VALUE} is not a valid commission status'
     },
     default: 'pending',
@@ -63,6 +65,17 @@ const commissionTransactionSchema = new mongoose.Schema({
   timestamps: true,
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
+});
+
+// Pre-validate normalization for aliases
+commissionTransactionSchema.pre('validate', function(next) {
+  if (this.totalBookingAmount === undefined && this.grossAmount !== undefined) {
+    this.totalBookingAmount = this.grossAmount;
+  }
+  if (this.vendorEarning === undefined && this.vendorPayoutAmount !== undefined) {
+    this.vendorEarning = this.vendorPayoutAmount;
+  }
+  next();
 });
 
 commissionTransactionSchema.index({ vendor: 1, status: 1, createdAt: -1 });

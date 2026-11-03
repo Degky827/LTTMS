@@ -40,7 +40,7 @@ const paymentSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: {
-      values: ['pending', 'success', 'failed', 'refunded'],
+      values: ['pending', 'success', 'successful', 'failed', 'refunded'],
       message: '{VALUE} is not a valid transaction status'
     },
     default: 'pending',
