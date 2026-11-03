@@ -7,6 +7,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 const http = require('http');
+const mongoose = require('mongoose');
+mongoose.set('bufferCommands', false);
 const app = require('../index');
 
 let server;
