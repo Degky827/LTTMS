@@ -6,6 +6,13 @@ let transporter = null;
 const getTransporter = () => {
   if (transporter) return transporter;
 
+  if (process.env.NODE_ENV === 'test') {
+    transporter = nodemailer.createTransport({
+      jsonTransport: true
+    });
+    return transporter;
+  }
+
   if (process.env.SMTP_HOST && process.env.SMTP_HOST !== 'smtp.ethereal.email') {
     transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
@@ -50,43 +57,42 @@ const templates = {
       </div>`
   }),
   'password-reset': (ctx) => ({
-    subject: 'Password reset request for Lake Tana',
+    subject: 'Reset your Lake Tana password',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #0EA5E9;">Password Reset</h1>
+        <h1 style="color: #0EA5E9;">Password Reset Request</h1>
         <p>Hi ${ctx.name},</p>
-        <p>Click below to reset your password. This link expires in 1 hour.</p>
+        <p>You requested a password reset. Click the button below to choose a new password.</p>
         <a href="${ctx.url}" style="display: inline-block; padding: 12px 24px; background: #0EA5E9; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">Reset Password</a>
-        <p style="margin-top: 20px; color: #666;">If you didn't request this, ignore this email.</p>
+        <p style="margin-top: 20px; color: #666;">This link expires in 1 hour. If you didn't request this, ignore this email.</p>
       </div>`
   }),
   'booking-confirmation': (ctx) => ({
-    subject: 'Booking Confirmed - Lake Tana',
+    subject: `Booking Confirmed: ${ctx.service}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #0EA5E9;">Booking Confirmed!</h1>
+        <h1 style="color: #0EA5E9;">Your Booking is Confirmed!</h1>
         <p>Hi ${ctx.name},</p>
-        <p>Your booking for <strong>${ctx.service}</strong> is confirmed.</p>
-        <ul>
-          <li>Date: ${new Date(ctx.date).toLocaleDateString()}</li>
-          <li>Amount: $${ctx.amount}</li>
-          <li>Booking ID: ${ctx.bookingId}</li>
-        </ul>
-        <p>Thank you for choosing Lake Tana Eco-Tourism!</p>
+        <p>Thank you for booking with Lake Tana Eco-Tourism. Your reservation details:</p>
+        <div style="background: #f0f9ff; padding: 16px; border-radius: 8px; margin: 16px 0;">
+          <p><strong>Service:</strong> ${ctx.service}</p>
+          <p><strong>Date:</strong> ${new Date(ctx.date).toLocaleDateString()}</p>
+          <p><strong>Guests:</strong> ${ctx.guests}</p>
+          <p><strong>Total:</strong> ${ctx.totalAmount} ETB</p>
+          <p><strong>Booking ID:</strong> ${ctx.bookingId}</p>
+        </div>
+        <p>Every booking directly supports local communities and Lake Tana conservation.</p>
       </div>`
   }),
   'payment-confirmation': (ctx) => ({
-    subject: 'Payment Received - Lake Tana',
+    subject: `Payment Receipt: ${ctx.service}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #0EA5E9;">Payment Received!</h1>
+        <h1 style="color: #10B981;">Payment Received!</h1>
         <p>Hi ${ctx.name},</p>
-        <p>Your payment for <strong>${ctx.service}</strong> has been received.</p>
-        <ul>
-          <li>Amount: $${ctx.amount}</li>
-          <li>Booking ID: ${ctx.bookingId}</li>
-        </ul>
-        <p>Get ready for an amazing eco-adventure!</p>
+        <p>We've received your payment of <strong>${ctx.amount} ETB</strong> for <strong>${ctx.service}</strong>.</p>
+        <p>Booking ID: <code>${ctx.bookingId}</code></p>
+        <p>Thank you for supporting sustainable tourism at Lake Tana.</p>
       </div>`
   }),
   'vendor-approved': (ctx) => ({

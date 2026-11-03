@@ -85,35 +85,39 @@ router.post('/checkout', protect, async (req, res) => {
       success: true,
       data: {
         checkoutUrl: response.data.data.checkout_url,
-        txRef: response.data.data.tx_ref,
-        amount,
-        currency
+        txRef
       }
     });
   } catch (err) {
-    logger.error({ err: err.message }, 'Payment checkout failed');
-    res.status(400).json({ success: false, message: err.response?.data?.message || err.message });
+    logger.error({ err: err.response?.data || err.message }, 'Payment checkout error');
+    res.status(400).json({
+      success: false,
+      message: err.response?.data?.message || err.message || 'Payment initialization failed'
+    });
   }
 });
 
-// @desc    Verify payment (called by Chapa webhook + return URL)
+// @desc    Verify payment
 // @route   GET /api/payments/verify/:tx_ref
-// @access  Public (with signature)
+// @access  Public (called by Chapa or redirected user)
 router.get('/verify/:tx_ref', async (req, res) => {
   try {
     const { tx_ref } = req.params;
-    const booking = await Booking.findOne({ transactionId: tx_ref }).populate('user').populate('service');
+
+    const booking = await Booking.findOne({ transactionId: tx_ref }).populate('user service');
     if (!booking) {
-      return res.status(404).json({ success: false, message: 'Booking not found' });
+      return res.status(404).json({ success: false, message: 'Transaction reference not found' });
     }
 
     let verified = false;
+
     if (CHAPA_SECRET_KEY && CHAPA_SECRET_KEY !== 'replace-this') {
       const response = await axios.get(`${CHAPA_API}/transaction/verify/${tx_ref}`, {
         headers: { Authorization: `Bearer ${CHAPA_SECRET_KEY}` }
       });
-      verified = response.data.data?.status === 'success';
+      verified = response.data.status === 'success' && response.data.data.status === 'success';
     } else {
+      // Sandbox auto-verifies
       verified = true;
     }
 
@@ -121,6 +125,19 @@ router.get('/verify/:tx_ref', async (req, res) => {
       booking.paymentStatus = 'paid';
       booking.status = 'confirmed';
       await booking.save({ validateBeforeSave: false });
+
+      // Socket.IO realtime emission
+      const io = req.app.get('io');
+      if (io) {
+        const userId = booking.user?._id || booking.user;
+        io.to(`user:${userId}`).emit('payment:update', {
+          bookingId: booking._id,
+          paymentStatus: 'paid',
+          status: 'confirmed'
+        });
+        io.to(`user:${userId}`).emit('booking:update', booking);
+        io.to('admin').emit('payment:update', { bookingId: booking._id, totalAmount: booking.totalAmount });
+      }
 
       await sendEmail({
         to: booking.user.email,
@@ -179,6 +196,17 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       booking.paymentStatus = 'paid';
       booking.status = 'confirmed';
       await booking.save({ validateBeforeSave: false });
+
+      // Socket.IO realtime emission
+      const io = req.app.get('io');
+      if (io) {
+        io.to(`user:${booking.user}`).emit('payment:update', {
+          bookingId: booking._id,
+          paymentStatus: 'paid',
+          status: 'confirmed'
+        });
+        io.to(`user:${booking.user}`).emit('booking:update', booking);
+      }
 
       const user = await User.findById(booking.user);
       if (user) {

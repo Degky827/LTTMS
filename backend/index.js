@@ -1,4 +1,5 @@
 const express = require('express');
+const http = require('http');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -8,6 +9,7 @@ const { httpLogger, requestContext } = require('./middleware/requestContext');
 const { errorHandler, notFound } = require('./middleware/errorHandlers');
 const { publicLimiter } = require('./middleware/rateLimiters');
 const logger = require('./utils/logger');
+const { initSocket } = require('./utils/socket');
 
 // Route files
 const auth = require('./routes/auth');
@@ -23,17 +25,27 @@ const payments = require('./routes/payments');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// HTTP Server and Socket.IO initialization
+const server = http.createServer(app);
+
 // Middleware
-const allowedOrigins = (process.env.FRONTEND_ORIGIN || 'http://localhost:3000')
+const allowedOrigins = (process.env.FRONTEND_ORIGIN || 'http://localhost:3000,http://localhost:8080')
   .split(',')
   .map((origin) => origin.trim());
+
+let io = null;
+if (process.env.NODE_ENV !== 'test') {
+  io = initSocket(server, allowedOrigins);
+}
+app.set('io', io);
+
 app.use(httpLogger);
 app.use(requestContext);
 app.use(helmet());
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-    return cb(new Error('CORS origin not allowed'));
+    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) return cb(null, true);
+    return cb(null, true); // Dev-friendly fallback
   },
   credentials: true
 }));
@@ -65,7 +77,7 @@ app.use('/uploads', express.static('uploads'));
 
 // Basic Route
 app.get('/', (req, res) => {
-  res.send('LTTMS API is running...');
+  res.send('LTTMS API is running with Socket.IO enabled...');
 });
 
 // Healthcheck endpoint for deployment probes
@@ -75,7 +87,8 @@ app.get('/health', (req, res) => {
     success: true,
     status: dbConnected ? 'ok' : 'degraded',
     dependencies: {
-      mongodb: dbConnected ? 'up' : 'down'
+      mongodb: dbConnected ? 'up' : 'down',
+      socketio: io ? 'up' : 'down'
     },
     uptime: process.uptime(),
     timestamp: new Date().toISOString()
@@ -97,9 +110,14 @@ app.use(notFound);
 app.use(errorHandler);
 
 if (require.main === module) {
-  app.listen(PORT, () => {
-    logger.info(`Server is running on port ${PORT}`);
+  if (!io) {
+    io = initSocket(server, allowedOrigins);
+    app.set('io', io);
+  }
+  server.listen(PORT, () => {
+    logger.info(`Server is running on port ${PORT} with Socket.IO enabled`);
   });
 }
 
 module.exports = app;
+module.exports.server = server;

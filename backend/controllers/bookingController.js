@@ -116,6 +116,16 @@ exports.createBooking = async (req, res, next) => {
       bookingIdempotencyCache.set(`${req.user.id}:${idempotencyKey}`, booking);
     }
 
+    // Socket.IO realtime event emission
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`user:${req.user.id}`).emit('booking:update', booking);
+      if (service.vendor) {
+        io.to(`vendor:${service.vendor}`).emit('booking:new', booking);
+      }
+      io.to('admin').emit('booking:new', booking);
+    }
+
     res.status(201).json({
       success: true,
       data: booking
@@ -161,6 +171,13 @@ exports.updateBooking = async (req, res, next) => {
       new: true,
       runValidators: true
     });
+
+    // Socket.IO realtime event emission
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`user:${booking.user}`).emit('booking:update', booking);
+      io.to('admin').emit('booking:update', booking);
+    }
 
     res.status(200).json({
       success: true,

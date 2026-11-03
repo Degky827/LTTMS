@@ -6,12 +6,15 @@ const logger = require('../utils/logger');
 const tokenBlacklist = new Map();
 const BLACKLIST_CLEANUP_INTERVAL = 15 * 60 * 1000; // 15 min
 
-setInterval(() => {
+const cleanupTimer = setInterval(() => {
   const now = Date.now();
   for (const [key, expiry] of tokenBlacklist) {
     if (expiry < now) tokenBlacklist.delete(key);
   }
 }, BLACKLIST_CLEANUP_INTERVAL);
+if (cleanupTimer.unref) {
+  cleanupTimer.unref();
+}
 
 const isBlacklisted = (token) => {
   return tokenBlacklist.has(token);
