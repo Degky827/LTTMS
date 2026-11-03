@@ -153,6 +153,18 @@ test('MODEL: Booking auto-generates bookingReference and sets price snapshots', 
   assert.equal(booking.priceSnapshot, 450);
 });
 
+test('MODEL: Booking enforces partial unique index for non-empty string idempotency keys', () => {
+  const indexes = Booking.schema.indexes();
+  const idempotencyIdx = indexes.find(([fields, options]) => {
+    return fields.idempotencyKey === 1 && options && options.unique === true;
+  });
+  assert.ok(idempotencyIdx, 'Booking schema must define a unique index on idempotencyKey');
+  const [fields, options] = idempotencyIdx;
+  assert.equal(options.unique, true);
+  assert.ok(options.partialFilterExpression, 'Must use partialFilterExpression to avoid indexing explicit null values');
+  assert.deepEqual(options.partialFilterExpression.idempotencyKey, { $type: 'string', $gt: '' });
+});
+
 test('MODEL: Payment requires txRef, amount, and validates status enum', async () => {
   const p = new Payment({
     txRef: 'LTTMS-TX-12345',
