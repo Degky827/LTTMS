@@ -30,6 +30,8 @@ const uploadsRoutes = require('./routes/uploads');
 const paymentsRoutes = require('./routes/payments');
 const vendorFinanceRoutes = require('./routes/vendorFinance');
 const adminFinanceRoutes = require('./routes/adminFinance');
+const notificationsRoutes = require('./routes/notifications');
+const supportRoutes = require('./routes/support');
 
 const app = express();
 
@@ -193,6 +195,8 @@ v1Router.use('/uploads', uploadsRoutes);
 v1Router.use('/payments', paymentsRoutes);
 v1Router.use('/vendor/finance', vendorFinanceRoutes);
 v1Router.use('/admin/finance', adminFinanceRoutes);
+v1Router.use('/notifications', notificationsRoutes);
+v1Router.use('/support', supportRoutes);
 
 // Mount v1 router at /api/v1
 app.use('/api/v1', v1Router);

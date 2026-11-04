@@ -20,6 +20,11 @@ const {
   approveRefundRequest,
   rejectRefundRequest
 } = require('../controllers/adminBookingController');
+const adminDashboardController = require('../controllers/adminDashboardController');
+const adminSupportController = require('../controllers/adminSupportController');
+const adminRefundsController = require('../controllers/adminRefundsController');
+const adminExportsController = require('../controllers/adminExportsController');
+const reviewController = require('../controllers/reviewController');
 
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
@@ -303,16 +308,56 @@ router.get('/transactions', getTransactions);
 router.get('/reports/commission', getCommissionReport);
 router.put('/bookings/:id/refund', approveRefund);
 
+// Admin Dashboard Analytics (Step 8)
+router.get('/dashboard/overview', adminDashboardController.getOverview);
+router.get('/dashboard/bookings', adminDashboardController.getBookingsAnalysis);
+router.get('/dashboard/revenue', adminDashboardController.getRevenueAnalysis);
+router.get('/dashboard/vendors', adminDashboardController.getVendorsAnalysis);
+router.get('/dashboard/tourists', adminDashboardController.getTouristsAnalysis);
+router.get('/dashboard/services', adminDashboardController.getServicesAnalysis);
+router.get('/dashboard/reviews', adminDashboardController.getReviewsAnalysis);
+router.get('/dashboard/refunds', adminDashboardController.getRefundsAnalysis);
+router.get('/dashboard/support', adminDashboardController.getSupportAnalysis);
+router.get('/dashboard/recent-activity', adminDashboardController.getRecentActivity);
+
+// Review Moderation (Step 8)
+router.get('/reviews', reviewController.adminGetReviews);
+router.patch('/reviews/:reviewId/moderate', reviewController.adminModerateReview);
+router.get('/reviews/:reviewId/reports', reviewController.adminGetReviewReports);
+router.delete('/reviews/:id', moderateReview);
+
+// Support Ticket Management (Step 8)
+router.get('/support/tickets', adminSupportController.getAdminTickets);
+router.get('/support/tickets/:ticketId', adminSupportController.getAdminTicketDetail);
+router.patch('/support/tickets/:ticketId/assign', adminSupportController.assignTicket);
+router.patch('/support/tickets/:ticketId/status', adminSupportController.updateStatus);
+router.patch('/support/tickets/:ticketId/priority', adminSupportController.updatePriority);
+router.post('/support/tickets/:ticketId/reply', adminSupportController.adminReply);
+router.post('/support/tickets/:ticketId/internal-notes', adminSupportController.adminInternalNote);
+
+// Admin Refunds (Step 7 / Step 8 Integration)
+router.get('/refunds', adminRefundsController.getRefundRequests);
+router.get('/refunds/:refundId', adminRefundsController.getRefundRequestDetail);
+router.patch('/refunds/:refundId/approve', adminRefundsController.approveRefund);
+router.patch('/refunds/:refundId/reject', adminRefundsController.rejectRefund);
+router.post('/refunds/:refundId/retry', adminRefundsController.retryRefund);
+
+// Data Export Engine (Step 8)
+router.get('/exports/bookings', adminExportsController.exportBookings);
+router.get('/exports/payments', adminExportsController.exportPayments);
+router.get('/exports/commissions', adminExportsController.exportCommissions);
+router.get('/exports/refunds', adminExportsController.exportRefunds);
+router.get('/exports/settlements', adminExportsController.exportSettlements);
+router.get('/exports/vendors', adminExportsController.exportVendors);
+router.get('/exports/reviews', adminExportsController.exportReviews);
+router.get('/exports/support-tickets', adminExportsController.exportSupportTickets);
+
 // Eco-Compliance
 router.get('/eco-compliance', getEcoCompliance);
 
 // Analytics & Reports
 router.get('/analytics', getAnalytics);
 router.get('/reports/export', exportReport);
-
-// Review Moderation
-router.get('/reviews', getAllReviews);
-router.delete('/reviews/:id', moderateReview);
 
 // Notifications & Audit Logs
 router.post('/announcements', sendAnnouncement);

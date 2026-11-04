@@ -6,7 +6,7 @@ const Message = require('../models/Message');
 let io = null;
 
 /**
- * Initialize Socket.IO with HTTP server
+ * Initialize Socket.IO with HTTP server and hardened security
  */
 function initSocket(server, allowedOrigins = ['http://localhost:3000']) {
   io = new Server(server, {
@@ -23,14 +23,13 @@ function initSocket(server, allowedOrigins = ['http://localhost:3000']) {
     transports: ['websocket', 'polling']
   });
 
-  // JWT Authentication middleware for Socket.IO
+  // Strict JWT Authentication middleware for Socket.IO
   io.use((socket, next) => {
     try {
       const token = socket.handshake.auth?.token || 
                     socket.handshake.headers?.authorization?.replace('Bearer ', '');
 
       if (!token) {
-        // Allow unauthenticated connection for public broadcasts, but mark as guest
         socket.user = null;
         return next();
       }
@@ -48,40 +47,58 @@ function initSocket(server, allowedOrigins = ['http://localhost:3000']) {
   io.on('connection', (socket) => {
     const userId = socket.user?.id || socket.user?._id;
     const userRole = socket.user?.role;
+    const vendorId = socket.user?.vendorId;
 
     logger.info({ socketId: socket.id, userId, userRole }, 'Socket client connected');
 
-    // Automatically join user-specific room if authenticated
+    // SERVER-CONTROLLED ROOM MEMBERSHIP ONLY:
+    // Clients automatically join only the rooms their authenticated credentials permit.
     if (userId) {
       socket.join(`user:${userId}`);
-      logger.info({ socketId: socket.id, room: `user:${userId}` }, 'Joined user room');
+      logger.info({ socketId: socket.id, room: `user:${userId}` }, 'Joined user private room');
 
-      if (userRole === 'admin') {
+      if (vendorId) {
+        socket.join(`vendor:${vendorId}`);
+        logger.info({ socketId: socket.id, room: `vendor:${vendorId}` }, 'Joined vendor private room');
+      }
+
+      if (['admin', 'super_admin'].includes(userRole)) {
         socket.join('admin');
-        logger.info({ socketId: socket.id }, 'Joined admin room');
+        socket.join('role:admin');
+        socket.join('role:support');
+        logger.info({ socketId: socket.id }, 'Joined admin and support rooms');
+      } else if (userRole === 'support') {
+        socket.join('role:support');
+        logger.info({ socketId: socket.id }, 'Joined support room');
       }
     }
 
-    // Explicit room join handlers
+    // Explicit room join handlers (SECURED: Disallow arbitrary room spoofing)
     socket.on('join:user', (targetUserId) => {
-      if (targetUserId) {
+      // Disallow joining another user's room unless user is admin
+      if (userId && (targetUserId === userId.toString() || ['admin', 'super_admin'].includes(userRole))) {
         socket.join(`user:${targetUserId}`);
+      } else {
+        logger.warn({ socketId: socket.id, userId, targetUserId }, 'Blocked unauthorized room join attempt');
       }
     });
 
-    socket.on('join:vendor', (vendorId) => {
-      if (vendorId) {
-        socket.join(`vendor:${vendorId}`);
+    socket.on('join:vendor', (targetVendorId) => {
+      if (vendorId && (targetVendorId === vendorId.toString() || ['admin', 'super_admin'].includes(userRole))) {
+        socket.join(`vendor:${targetVendorId}`);
+      } else {
+        logger.warn({ socketId: socket.id, userId, targetVendorId }, 'Blocked unauthorized vendor room join attempt');
       }
     });
 
     socket.on('join:admin', () => {
-      if (socket.user?.role === 'admin') {
+      if (['admin', 'super_admin'].includes(socket.user?.role)) {
         socket.join('admin');
+        socket.join('role:admin');
       }
     });
 
-    // Realtime chat messaging via Socket
+    // Real-time chat messaging via Socket
     socket.on('message:send', async (data, callback) => {
       try {
         const senderId = socket.user?.id || socket.user?._id;
@@ -106,7 +123,7 @@ function initSocket(server, allowedOrigins = ['http://localhost:3000']) {
         const populatedMessage = await Message.findById(message._id)
           .populate('sender receiver', 'name email');
 
-        // Deliver in realtime to receiver's room
+        // Deliver in realtime to receiver's private room
         io.to(`user:${receiver}`).emit('message:receive', populatedMessage);
 
         // Acknowledge to sender
@@ -173,6 +190,12 @@ function notifyAdmin(event, data) {
   }
 }
 
+function notifySupport(event, data) {
+  if (io) {
+    io.to('role:support').emit(event, data);
+  }
+}
+
 function broadcastAnnouncement(announcement) {
   if (io) {
     io.emit('announcement', announcement);
@@ -185,5 +208,6 @@ module.exports = {
   notifyUser,
   notifyVendor,
   notifyAdmin,
+  notifySupport,
   broadcastAnnouncement
 };

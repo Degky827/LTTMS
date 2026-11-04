@@ -88,6 +88,22 @@ const swaggerDefinition = {
     {
       name: 'Admin Finance',
       description: 'Platform financial governance, commission rules, payouts, settlements, and refund execution'
+    },
+    {
+      name: 'Notifications',
+      description: 'In-app notifications inbox, unread counts, and real-time alerts'
+    },
+    {
+      name: 'Support',
+      description: 'Support tickets, user inquiry messaging threads, and conflict resolution'
+    },
+    {
+      name: 'Admin Dashboard',
+      description: 'Real-time operational dashboard, multi-period analytics, booking, revenue, and support metrics'
+    },
+    {
+      name: 'Admin Exports',
+      description: 'Enterprise RFC 4180 CSV export engine for bookings, transactions, commissions, refunds, reviews, and support'
     }
   ],
   components: {
@@ -397,6 +413,106 @@ const swaggerDefinition = {
           heldCapacity: { type: 'integer', example: 2 },
           remainingCapacity: { type: 'integer', example: 13 },
           isAvailable: { type: 'boolean', example: true }
+        }
+      },
+      ReviewInput: {
+        type: 'object',
+        required: ['service', 'rating', 'comment'],
+        properties: {
+          service: { type: 'string', example: '660fa1b2c3d4e5f6a7b8c9d0' },
+          booking: { type: 'string', example: '660fa1b2c3d4e5f6a7b8c9d1' },
+          rating: { type: 'number', minimum: 1, maximum: 5, example: 5 },
+          categoryRatings: {
+            type: 'object',
+            properties: {
+              cleanliness: { type: 'number', minimum: 1, maximum: 5, example: 5 },
+              ecoFriendly: { type: 'number', minimum: 1, maximum: 5, example: 5 },
+              hospitality: { type: 'number', minimum: 1, maximum: 5, example: 5 },
+              value: { type: 'number', minimum: 1, maximum: 5, example: 5 }
+            }
+          },
+          title: { type: 'string', example: 'Unforgettable boat tour to Ura Kidane Mehret' },
+          comment: { type: 'string', example: 'The guide was knowledgeable and the lake scenery was breathtaking.' },
+          images: {
+            type: 'array',
+            items: { type: 'string' }
+          }
+        }
+      },
+      ReviewResponse: {
+        type: 'object',
+        properties: {
+          _id: { type: 'string' },
+          user: { type: 'object' },
+          service: { type: 'string' },
+          vendor: { type: 'string' },
+          rating: { type: 'number' },
+          comment: { type: 'string' },
+          status: { type: 'string', enum: ['pending', 'approved', 'rejected', 'hidden', 'flagged'] },
+          isVerifiedBooking: { type: 'boolean' },
+          createdAt: { type: 'string', format: 'date-time' }
+        }
+      },
+      NotificationResponse: {
+        type: 'object',
+        properties: {
+          _id: { type: 'string' },
+          recipient: { type: 'string' },
+          type: { type: 'string', example: 'booking_confirmed' },
+          title: { type: 'string', example: 'Booking Confirmed' },
+          message: { type: 'string', example: 'Your reservation for Lake Tana Sunset Boat Tour has been confirmed.' },
+          isRead: { type: 'boolean', example: false },
+          actionUrl: { type: 'string', example: '/bookings/660fa1b2c3d4e5f6a7b8c9d1' },
+          createdAt: { type: 'string', format: 'date-time' }
+        }
+      },
+      SupportTicketInput: {
+        type: 'object',
+        required: ['subject', 'message'],
+        properties: {
+          subject: { type: 'string', example: 'Inquiry regarding private boat schedule' },
+          category: { type: 'string', enum: ['general', 'booking', 'payment', 'vendor', 'technical', 'safety', 'refund'], default: 'general' },
+          priority: { type: 'string', enum: ['low', 'medium', 'high', 'urgent'], default: 'medium' },
+          message: { type: 'string', example: 'Can we change the departure time from 8:00 AM to 9:00 AM?' },
+          relatedBooking: { type: 'string' }
+        }
+      },
+      SupportTicketResponse: {
+        type: 'object',
+        properties: {
+          _id: { type: 'string' },
+          ticketNumber: { type: 'string', example: 'TIK-2026-9281' },
+          subject: { type: 'string' },
+          status: { type: 'string', enum: ['open', 'assigned', 'in_progress', 'waiting_for_user', 'waiting_for_vendor', 'resolved', 'closed', 'reopened'] },
+          priority: { type: 'string', enum: ['low', 'medium', 'high', 'urgent'] },
+          messages: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                sender: { type: 'string' },
+                senderModel: { type: 'string' },
+                message: { type: 'string' },
+                createdAt: { type: 'string', format: 'date-time' }
+              }
+            }
+          }
+        }
+      },
+      DashboardOverviewResponse: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean', example: true },
+          data: {
+            type: 'object',
+            properties: {
+              overview: { type: 'object' },
+              bookings: { type: 'object' },
+              revenue: { type: 'object' },
+              vendors: { type: 'object' },
+              support: { type: 'object' }
+            }
+          }
         }
       },
       SuccessResponse: {
