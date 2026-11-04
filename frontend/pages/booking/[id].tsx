@@ -63,7 +63,19 @@ export default function BookingPage() {
     if (!agreed) { setError('Please agree to the terms and conditions.'); return }
     try {
       setSubmitting(true)
-      await API.post('/bookings', { service: service._id, date, guests, paymentMethod })
+      const res = await API.post('/bookings', { service: service._id, date, guests, paymentMethod })
+      const createdBooking = res.data?.data
+      const bookingId = createdBooking?._id || createdBooking?.id
+      if (bookingId) {
+        const payRes = await API.post('/payments/initialize', {
+          bookingId,
+          returnUrl: window.location.origin + '/booking/payment-status'
+        })
+        if (payRes.data?.data?.checkoutUrl) {
+          window.location.href = payRes.data.data.checkoutUrl
+          return
+        }
+      }
       setSuccessMessage('Booking confirmed! Check your email for the receipt. Vendor has been notified.')
     } catch (err: any) {
       if (err?.response?.status === 401) setError('Please login first to book.')

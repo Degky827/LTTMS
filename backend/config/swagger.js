@@ -80,6 +80,14 @@ const swaggerDefinition = {
     {
       name: 'Payments',
       description: 'Chapa payment gateway checkout, callback verification, and transaction tracking'
+    },
+    {
+      name: 'Vendor Finance',
+      description: 'Vendor financial ledger, commission breakdown, balance overview, and settlement payout requests'
+    },
+    {
+      name: 'Admin Finance',
+      description: 'Platform financial governance, commission rules, payouts, settlements, and refund execution'
     }
   ],
   components: {
@@ -288,6 +296,94 @@ const swaggerDefinition = {
           confirmationType: { type: 'string', enum: ['instant', 'vendor_confirmation'], example: 'instant' },
           status: { type: 'string', enum: ['pending', 'confirmed', 'completed', 'cancelled', 'rejected', 'expired'], example: 'confirmed' },
           paymentStatus: { type: 'string', enum: ['unpaid', 'paid', 'refunded'], example: 'unpaid' }
+        }
+      },
+      PaymentResponse: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          txRef: { type: 'string', example: 'LTTMS-PAY-2026-A1B2C3D4' },
+          receiptNumber: { type: 'string', example: 'RCP-2026-F9D1E2' },
+          booking: { type: 'string' },
+          user: { type: 'string' },
+          amount: { type: 'number', example: 2500 },
+          currency: { type: 'string', example: 'ETB' },
+          paymentMethod: { type: 'string', example: 'chapa' },
+          status: { type: 'string', enum: ['pending', 'successful', 'failed', 'refunded'], example: 'successful' },
+          checkoutUrl: { type: 'string', example: 'https://checkout.chapa.co/checkout/pay/LTTMS-PAY-2026-A1B2C3D4' }
+        }
+      },
+      ReceiptResponse: {
+        type: 'object',
+        properties: {
+          receiptNumber: { type: 'string', example: 'RCP-2026-F9D1E2' },
+          txRef: { type: 'string', example: 'LTTMS-PAY-2026-A1B2C3D4' },
+          bookingReference: { type: 'string', example: 'LTTMS-2026-4F2A9B1C' },
+          issuedAt: { type: 'string', format: 'date-time' },
+          paymentStatus: { type: 'string', example: 'successful' },
+          paymentMethod: { type: 'string', example: 'chapa' },
+          currency: { type: 'string', example: 'ETB' },
+          breakdown: {
+            type: 'object',
+            properties: {
+              subtotal: { type: 'number', example: 2500 },
+              serviceFee: { type: 'number', example: 0 },
+              totalAmount: { type: 'number', example: 2500 }
+            }
+          }
+        }
+      },
+      VendorFinanceOverview: {
+        type: 'object',
+        properties: {
+          currency: { type: 'string', example: 'ETB' },
+          currentBalance: { type: 'number', example: 9200 },
+          availableBalance: { type: 'number', example: 7200 },
+          pendingSettlementAmount: { type: 'number', example: 2000 },
+          totalGrossRevenue: { type: 'number', example: 10000 },
+          totalPlatformFeesPaid: { type: 'number', example: 800 },
+          totalNetEarnings: { type: 'number', example: 9200 },
+          totalSettledAmount: { type: 'number', example: 5000 }
+        }
+      },
+      SettlementRequest: {
+        type: 'object',
+        required: ['amount'],
+        properties: {
+          amount: { type: 'number', minimum: 50, example: 1500 },
+          payoutMethod: { type: 'string', enum: ['bank_transfer', 'telebirr', 'cbe_birr', 'manual_cash'], default: 'bank_transfer' },
+          payoutDetails: {
+            type: 'object',
+            properties: {
+              accountName: { type: 'string', example: 'Tana Eco Boat Association' },
+              accountNumber: { type: 'string', example: '1000123456789' },
+              bankName: { type: 'string', example: 'Commercial Bank of Ethiopia' },
+              phone: { type: 'string', example: '+251911223344' }
+            }
+          },
+          notes: { type: 'string', example: 'Bi-weekly tour settlement payout request' }
+        }
+      },
+      SettlementResponse: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          settlementReference: { type: 'string', example: 'SET-2026-9E4B1A7C' },
+          amount: { type: 'number', example: 1500 },
+          currency: { type: 'string', example: 'ETB' },
+          status: { type: 'string', enum: ['requested', 'approved', 'processing', 'completed', 'rejected', 'failed'], example: 'requested' },
+          payoutMethod: { type: 'string', example: 'bank_transfer' }
+        }
+      },
+      CommissionRuleInput: {
+        type: 'object',
+        required: ['name', 'rate'],
+        properties: {
+          name: { type: 'string', example: 'Monastery Tours 5% Special Rate' },
+          rate: { type: 'number', minimum: 0, maximum: 1, example: 0.05 },
+          serviceCategory: { type: 'string', nullable: true },
+          vendor: { type: 'string', nullable: true },
+          isActive: { type: 'boolean', default: true }
         }
       },
       AvailabilityResponse: {

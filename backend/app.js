@@ -28,6 +28,8 @@ const messagesRoutes = require('./routes/messages');
 const adminRoutes = require('./routes/admin');
 const uploadsRoutes = require('./routes/uploads');
 const paymentsRoutes = require('./routes/payments');
+const vendorFinanceRoutes = require('./routes/vendorFinance');
+const adminFinanceRoutes = require('./routes/adminFinance');
 
 const app = express();
 
@@ -67,7 +69,12 @@ app.use(cors({
 }));
 
 app.use(cookieParser());
-app.use(express.json({ limit: '100kb' }));
+app.use(express.json({
+  limit: '100kb',
+  verify: (req, res, buf) => {
+    req.rawBody = buf;
+  }
+}));
 app.use(publicLimiter);
 
 // Static uploads serving
@@ -184,6 +191,8 @@ v1Router.use('/messages', messagesRoutes);
 v1Router.use('/admin', adminRoutes);
 v1Router.use('/uploads', uploadsRoutes);
 v1Router.use('/payments', paymentsRoutes);
+v1Router.use('/vendor/finance', vendorFinanceRoutes);
+v1Router.use('/admin/finance', adminFinanceRoutes);
 
 // Mount v1 router at /api/v1
 app.use('/api/v1', v1Router);
