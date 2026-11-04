@@ -7,6 +7,12 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "test": "node --test",
+    "test:jest": "jest",
+    "test:coverage": "jest --coverage",
+    "test:unit": "node --test backend/tests/models.test.js backend/tests/validate.test.js",
+    "test:integration": "node --test backend/tests/step6_booking_engine.test.js backend/tests/step7_payment_finance.test.js backend/tests/step8_reviews_support_admin.test.js",
+    "test:security": "node --test backend/tests/security_hardening_swagger.test.js",
+    "test:all": "node --test",
     "migrate": "node migrations/001_v1_database_upgrade.js",
     "migrate:dry-run": "node migrations/001_v1_database_upgrade.js --dry-run",
     "seed": "node seed.js"

@@ -308,7 +308,126 @@ router.get('/transactions', getTransactions);
 router.get('/reports/commission', getCommissionReport);
 router.put('/bookings/:id/refund', approveRefund);
 
-// Admin Dashboard Analytics (Step 8)
+/**
+ * @openapi
+ * /admin/dashboard/overview:
+ *   get:
+ *     tags:
+ *       - Admin Dashboard
+ *     summary: Real-time comprehensive platform executive overview
+ *     description: Returns aggregated KPIs across registered tourists, vendor verifications, active services, booking status distribution, gross payment volume, platform commissions, pending action items, and recent audit activity.
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Platform executive metrics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DashboardOverviewResponse'
+ *       403:
+ *         description: Admin authorization required
+ * /admin/dashboard/bookings:
+ *   get:
+ *     tags:
+ *       - Admin Dashboard
+ *     summary: In-depth booking trends and status analysis
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Booking volume and conversion statistics
+ * /admin/dashboard/revenue:
+ *   get:
+ *     tags:
+ *       - Admin Dashboard
+ *     summary: Platform revenue, commission, and payout financial analysis
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Revenue timeline and fee statistics
+ * /admin/dashboard/vendors:
+ *   get:
+ *     tags:
+ *       - Admin Dashboard
+ *     summary: Vendor verification pipeline and performance analytics
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Vendor onboarding and compliance statistics
+ * /admin/dashboard/tourists:
+ *   get:
+ *     tags:
+ *       - Admin Dashboard
+ *     summary: Tourist user registration and activity analytics
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: User growth metrics
+ * /admin/dashboard/services:
+ *   get:
+ *     tags:
+ *       - Admin Dashboard
+ *     summary: Tourism service inventory and category distribution
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Service metrics
+ * /admin/dashboard/reviews:
+ *   get:
+ *     tags:
+ *       - Admin Dashboard
+ *     summary: Review sentiment and moderation queue statistics
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Review metrics
+ * /admin/dashboard/refunds:
+ *   get:
+ *     tags:
+ *       - Admin Dashboard
+ *     summary: Refund claim metrics and resolution timelines
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Refund statistics
+ * /admin/dashboard/support:
+ *   get:
+ *     tags:
+ *       - Admin Dashboard
+ *     summary: Customer support ticket resolution metrics
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Support analytics
+ * /admin/dashboard/recent-activity:
+ *   get:
+ *     tags:
+ *       - Admin Dashboard
+ *     summary: Chronological administrative audit logs and platform events
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Recent activity feed
+ */
 router.get('/dashboard/overview', adminDashboardController.getOverview);
 router.get('/dashboard/bookings', adminDashboardController.getBookingsAnalysis);
 router.get('/dashboard/revenue', adminDashboardController.getRevenueAnalysis);
@@ -320,13 +439,241 @@ router.get('/dashboard/refunds', adminDashboardController.getRefundsAnalysis);
 router.get('/dashboard/support', adminDashboardController.getSupportAnalysis);
 router.get('/dashboard/recent-activity', adminDashboardController.getRecentActivity);
 
-// Review Moderation (Step 8)
+/**
+ * @openapi
+ * /admin/reviews:
+ *   get:
+ *     tags:
+ *       - Administration
+ *     summary: Administrative review moderation list
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema: { type: string, enum: [pending, approved, rejected, hidden, flagged] }
+ *       - in: query
+ *         name: flagged
+ *         schema: { type: string, enum: ['true', 'false'] }
+ *     responses:
+ *       200:
+ *         description: Paginated reviews for moderation
+ * /admin/reviews/{reviewId}/moderate:
+ *   patch:
+ *     tags:
+ *       - Administration
+ *     summary: Execute review moderation action
+ *     description: Transitions review status (approve, reject, hide, restore, flag) and recalculates service rating average.
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: reviewId
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [action]
+ *             properties:
+ *               action: { type: string, enum: [approve, reject, hide, restore, flag] }
+ *               reason: { type: string }
+ *     responses:
+ *       200:
+ *         description: Moderation action recorded
+ * /admin/reviews/{reviewId}/reports:
+ *   get:
+ *     tags:
+ *       - Administration
+ *     summary: View abuse reports filed against a review
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: reviewId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: List of submitted user reports
+ */
 router.get('/reviews', reviewController.adminGetReviews);
 router.patch('/reviews/:reviewId/moderate', reviewController.adminModerateReview);
 router.get('/reviews/:reviewId/reports', reviewController.adminGetReviewReports);
 router.delete('/reviews/:id', moderateReview);
 
-// Support Ticket Management (Step 8)
+/**
+ * @openapi
+ * /admin/support/tickets:
+ *   get:
+ *     tags:
+ *       - Administration
+ *     summary: List and filter all platform support tickets
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema: { type: string, enum: [open, assigned, in_progress, waiting_for_user, waiting_for_vendor, resolved, closed, reopened] }
+ *       - in: query
+ *         name: priority
+ *         schema: { type: string, enum: [low, medium, high, urgent] }
+ *       - in: query
+ *         name: category
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Paginated support tickets
+ * /admin/support/tickets/{ticketId}:
+ *   get:
+ *     tags:
+ *       - Administration
+ *     summary: Administrative support ticket detail with private staff notes
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: ticketId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Full ticket details including internal notes
+ * /admin/support/tickets/{ticketId}/assign:
+ *   patch:
+ *     tags:
+ *       - Administration
+ *     summary: Assign staff member to support ticket
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: ticketId
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [assignedTo]
+ *             properties:
+ *               assignedTo: { type: string }
+ *     responses:
+ *       200:
+ *         description: Ticket assigned
+ * /admin/support/tickets/{ticketId}/status:
+ *   patch:
+ *     tags:
+ *       - Administration
+ *     summary: Update support ticket lifecycle status
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: ticketId
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status: { type: string, enum: [open, assigned, in_progress, waiting_for_user, waiting_for_vendor, resolved, closed, reopened] }
+ *     responses:
+ *       200:
+ *         description: Ticket status updated
+ * /admin/support/tickets/{ticketId}/priority:
+ *   patch:
+ *     tags:
+ *       - Administration
+ *     summary: Update ticket priority level
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: ticketId
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [priority]
+ *             properties:
+ *               priority: { type: string, enum: [low, medium, high, urgent] }
+ *     responses:
+ *       200:
+ *         description: Ticket priority updated
+ * /admin/support/tickets/{ticketId}/reply:
+ *   post:
+ *     tags:
+ *       - Administration
+ *     summary: Post public administrative reply to ticket
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: ticketId
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [message]
+ *             properties:
+ *               message: { type: string }
+ *     responses:
+ *       200:
+ *         description: Public reply dispatched to user
+ * /admin/support/tickets/{ticketId}/internal-notes:
+ *   post:
+ *     tags:
+ *       - Administration
+ *     summary: Add private internal note (visible strictly to staff)
+ *     description: Appends a note with visibility set to 'internal'. Stripped from all tourist and vendor API responses.
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: ticketId
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [message]
+ *             properties:
+ *               message: { type: string }
+ *     responses:
+ *       200:
+ *         description: Internal note recorded
+ */
 router.get('/support/tickets', adminSupportController.getAdminTickets);
 router.get('/support/tickets/:ticketId', adminSupportController.getAdminTicketDetail);
 router.patch('/support/tickets/:ticketId/assign', adminSupportController.assignTicket);
@@ -335,14 +682,191 @@ router.patch('/support/tickets/:ticketId/priority', adminSupportController.updat
 router.post('/support/tickets/:ticketId/reply', adminSupportController.adminReply);
 router.post('/support/tickets/:ticketId/internal-notes', adminSupportController.adminInternalNote);
 
-// Admin Refunds (Step 7 / Step 8 Integration)
+/**
+ * @openapi
+ * /admin/refunds:
+ *   get:
+ *     tags:
+ *       - Administration
+ *     summary: List customer refund requests
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema: { type: string, enum: [pending, approved, rejected, processed] }
+ *     responses:
+ *       200:
+ *         description: Paginated refund requests
+ * /admin/refunds/{refundId}:
+ *   get:
+ *     tags:
+ *       - Administration
+ *     summary: View refund request details and associated payment/booking
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: refundId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Refund request and payment breakdown
+ * /admin/refunds/{refundId}/approve:
+ *   patch:
+ *     tags:
+ *       - Administration
+ *     summary: Approve and execute refund
+ *     description: Executes financial rollback via Chapa refund engine, releases held capacity, debits vendor balance, and rolls back platform commission.
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: refundId
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               adminNote: { type: string }
+ *     responses:
+ *       200:
+ *         description: Refund approved and financial rollback executed
+ * /admin/refunds/{refundId}/reject:
+ *   patch:
+ *     tags:
+ *       - Administration
+ *     summary: Reject customer refund request with reason
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: refundId
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [reason]
+ *             properties:
+ *               reason: { type: string }
+ *     responses:
+ *       200:
+ *         description: Refund rejection recorded
+ */
 router.get('/refunds', adminRefundsController.getRefundRequests);
 router.get('/refunds/:refundId', adminRefundsController.getRefundRequestDetail);
 router.patch('/refunds/:refundId/approve', adminRefundsController.approveRefund);
 router.patch('/refunds/:refundId/reject', adminRefundsController.rejectRefund);
 router.post('/refunds/:refundId/retry', adminRefundsController.retryRefund);
 
-// Data Export Engine (Step 8)
+/**
+ * @openapi
+ * /admin/exports/bookings:
+ *   get:
+ *     tags:
+ *       - Admin Exports
+ *     summary: Export bookings to RFC 4180 CSV attachment
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: CSV file download
+ *         content:
+ *           text/csv:
+ *             schema:
+ *               type: string
+ *               format: binary
+ * /admin/exports/payments:
+ *   get:
+ *     tags:
+ *       - Admin Exports
+ *     summary: Export payments to RFC 4180 CSV
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Payments CSV export
+ * /admin/exports/commissions:
+ *   get:
+ *     tags:
+ *       - Admin Exports
+ *     summary: Export platform commissions to RFC 4180 CSV
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Commissions CSV export
+ * /admin/exports/refunds:
+ *   get:
+ *     tags:
+ *       - Admin Exports
+ *     summary: Export refunds to RFC 4180 CSV
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Refunds CSV export
+ * /admin/exports/settlements:
+ *   get:
+ *     tags:
+ *       - Admin Exports
+ *     summary: Export vendor settlements to RFC 4180 CSV
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Settlements CSV export
+ * /admin/exports/vendors:
+ *   get:
+ *     tags:
+ *       - Admin Exports
+ *     summary: Export vendor directory to RFC 4180 CSV
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Vendors CSV export
+ * /admin/exports/reviews:
+ *   get:
+ *     tags:
+ *       - Admin Exports
+ *     summary: Export reviews and rating feedback to RFC 4180 CSV
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Reviews CSV export
+ * /admin/exports/support-tickets:
+ *   get:
+ *     tags:
+ *       - Admin Exports
+ *     summary: Export support tickets to RFC 4180 CSV
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Support tickets CSV export
+ */
 router.get('/exports/bookings', adminExportsController.exportBookings);
 router.get('/exports/payments', adminExportsController.exportPayments);
 router.get('/exports/commissions', adminExportsController.exportCommissions);

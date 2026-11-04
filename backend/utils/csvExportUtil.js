@@ -22,6 +22,10 @@ function convertToCSV(data, fields) {
       } else {
         val = String(val);
       }
+      // CSV Formula Injection (DDE) Defense: Neutralize dangerous leading characters
+      if (/^[=+\-@\t\r]/.test(val)) {
+        val = `'${val}`;
+      }
       return `"${val.replace(/"/g, '""')}"`;
     }).join(',');
   });

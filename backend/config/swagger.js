@@ -104,6 +104,14 @@ const swaggerDefinition = {
     {
       name: 'Admin Exports',
       description: 'Enterprise RFC 4180 CSV export engine for bookings, transactions, commissions, refunds, reviews, and support'
+    },
+    {
+      name: 'Messages',
+      description: 'Real-time messaging, guest inquiries, and tourist-vendor communication channels'
+    },
+    {
+      name: 'Uploads',
+      description: 'Multipart image upload endpoints for profile pictures, service galleries, and KYC documents'
     }
   ],
   components: {
