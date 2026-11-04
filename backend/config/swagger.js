@@ -259,6 +259,50 @@ const swaggerDefinition = {
           createdAt: { type: 'string', format: 'date-time' }
         }
       },
+      BookingInput: {
+        type: 'object',
+        required: ['service', 'date'],
+        properties: {
+          service: { type: 'string', example: '654321000000000000000050' },
+          date: { type: 'string', format: 'date', example: '2026-12-15' },
+          timeSlot: { type: 'string', example: '09:00-12:00' },
+          adults: { type: 'integer', minimum: 0, default: 1, example: 2 },
+          children: { type: 'integer', minimum: 0, default: 0, example: 1 },
+          guests: { type: 'integer', minimum: 1, example: 3 },
+          specialRequests: { type: 'string', example: 'Require life jackets for children' },
+          idempotencyKey: { type: 'string', example: 'bkg-req-unique-uuid-12345' }
+        }
+      },
+      BookingResponse: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          bookingReference: { type: 'string', example: 'LTTMS-2026-4F2A9B1C' },
+          service: { type: 'string' },
+          vendor: { type: 'string' },
+          date: { type: 'string', format: 'date-time' },
+          timeSlot: { type: 'string', example: 'all_day' },
+          guests: { type: 'integer', example: 2 },
+          totalAmount: { type: 'number', example: 1800 },
+          currency: { type: 'string', example: 'ETB' },
+          confirmationType: { type: 'string', enum: ['instant', 'vendor_confirmation'], example: 'instant' },
+          status: { type: 'string', enum: ['pending', 'confirmed', 'completed', 'cancelled', 'rejected', 'expired'], example: 'confirmed' },
+          paymentStatus: { type: 'string', enum: ['unpaid', 'paid', 'refunded'], example: 'unpaid' }
+        }
+      },
+      AvailabilityResponse: {
+        type: 'object',
+        properties: {
+          serviceId: { type: 'string' },
+          date: { type: 'string', format: 'date' },
+          timeSlot: { type: 'string', example: 'all_day' },
+          totalCapacity: { type: 'integer', example: 20 },
+          reservedCapacity: { type: 'integer', example: 5 },
+          heldCapacity: { type: 'integer', example: 2 },
+          remainingCapacity: { type: 'integer', example: 13 },
+          isAvailable: { type: 'boolean', example: true }
+        }
+      },
       SuccessResponse: {
         type: 'object',
         properties: {

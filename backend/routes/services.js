@@ -18,7 +18,9 @@ const {
   getServicePricing,
   updateServicePricing,
   getServiceAvailability,
-  updateServiceAvailability
+  updateServiceAvailability,
+  getServiceAvailabilityCalendar,
+  checkQuickAvailability
 } = require('../controllers/serviceController');
 
 const router = express.Router();
@@ -166,6 +168,73 @@ router
   .route('/:id/pricing')
   .get(getServicePricing)
   .put(protect, authorize('vendor', 'admin', 'super_admin'), validate(servicePricingSchema), updateServicePricing);
+
+/**
+ * @openapi
+ * /services/{id}/availability/calendar:
+ *   get:
+ *     tags:
+ *       - Services
+ *     summary: Get calendar availability matrix across a date range
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: startDate
+ *         schema: { type: string, format: date, example: '2026-12-01' }
+ *       - in: query
+ *         name: endDate
+ *         schema: { type: string, format: date, example: '2026-12-31' }
+ *     responses:
+ *       200:
+ *         description: Date-by-date availability array
+ * /services/{id}/availability/check:
+ *   get:
+ *     tags:
+ *       - Services
+ *     summary: Fast availability and capacity check for specific date and guests
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: date
+ *         required: true
+ *         schema: { type: string, format: date, example: '2026-12-15' }
+ *       - in: query
+ *         name: participants
+ *         schema: { type: integer, default: 1 }
+ *     responses:
+ *       200:
+ *         description: Real-time availability result
+ * /services/{id}/availability:
+ *   get:
+ *     tags:
+ *       - Services
+ *     summary: Get service availability config or live capacity calculation
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: date
+ *         schema: { type: string, format: date }
+ *       - in: query
+ *         name: timeSlot
+ *         schema: { type: string }
+ *       - in: query
+ *         name: participants
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Availability details
+ */
+router.get('/:id/availability/calendar', getServiceAvailabilityCalendar);
+router.get('/:id/availability/check', checkQuickAvailability);
 
 router
   .route('/:id/availability')

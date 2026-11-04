@@ -6,6 +6,7 @@ const Category = require('../models/Category');
 const NodeCache = require('node-cache');
 const { escapeRegex } = require('../shared/database/queryUtils');
 const logger = require('../utils/logger');
+const { checkServiceAvailability, getCalendarAvailability } = require('../services/availabilityService');
 
 const serviceListCache = new NodeCache({ stdTTL: 60, checkperiod: 120 });
 
@@ -821,13 +822,21 @@ exports.updateServicePricing = async (req, res, next) => {
   }
 };
 
-// @desc    Get service capacity and availability configuration
+// @desc    Get service capacity and availability configuration or live query
 // @route   GET /api/v1/services/:id/availability
 // @access  Public
 exports.getServiceAvailability = async (req, res, next) => {
   try {
+    if (req.query.date || req.query.participants || req.query.timeSlot || req.query.adults) {
+      const liveAvailability = await checkServiceAvailability(req.params.id, req.query);
+      return res.status(200).json({
+        success: true,
+        data: liveAvailability
+      });
+    }
+
     const service = await Service.findById(req.params.id).select(
-      'dailyCapacity minBookingCapacity maxBookingCapacity operatingDays timeSlots unavailableDates seasonalAvailability availability'
+      'dailyCapacity minBookingCapacity maxBookingCapacity operatingDays timeSlots unavailableDates seasonalAvailability availability confirmationType'
     );
     if (!service) {
       return res.status(404).json({ success: false, message: 'Service not found' });
@@ -837,6 +846,7 @@ exports.getServiceAvailability = async (req, res, next) => {
       success: true,
       data: {
         isAvailable: service.availability,
+        confirmationType: service.confirmationType || 'instant',
         dailyCapacity: service.dailyCapacity,
         minBookingCapacity: service.minBookingCapacity,
         maxBookingCapacity: service.maxBookingCapacity,
@@ -845,6 +855,40 @@ exports.getServiceAvailability = async (req, res, next) => {
         unavailableDates: service.unavailableDates,
         seasonalAvailability: service.seasonalAvailability
       }
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+// @desc    Get calendar matrix of availability across a date range
+// @route   GET /api/v1/services/:id/availability/calendar
+// @access  Public
+exports.getServiceAvailabilityCalendar = async (req, res, next) => {
+  try {
+    const calendar = await getCalendarAvailability(
+      req.params.id,
+      req.query.startDate,
+      req.query.endDate
+    );
+    res.status(200).json({
+      success: true,
+      data: calendar
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+// @desc    Quick check availability
+// @route   GET /api/v1/services/:id/availability/check
+// @access  Public
+exports.checkQuickAvailability = async (req, res, next) => {
+  try {
+    const availability = await checkServiceAvailability(req.params.id, req.query);
+    res.status(200).json({
+      success: true,
+      data: availability
     });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });

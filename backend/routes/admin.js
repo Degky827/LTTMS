@@ -10,6 +10,16 @@ const {
   sendAnnouncement, getAuditLogs,
   getStats
 } = require('../controllers/adminController');
+const {
+  getAdminBookings,
+  getAdminBookingById,
+  cancelAdminBooking,
+  updateAdminBookingStatus,
+  getAdminBookingStatistics,
+  getAdminRefundRequests,
+  approveRefundRequest,
+  rejectRefundRequest
+} = require('../controllers/adminBookingController');
 
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
@@ -274,10 +284,19 @@ router.put('/users/:id/status', validate(adminUserStatusSchema), updateUserStatu
  */
 router.put('/users/:id/role', validate(adminAssignRoleSchema), assignRole);
 
-// Booking Oversight
-router.get('/bookings', getAllBookings);
+// Booking Oversight & Platform Management (Step 6)
+router.get('/bookings/statistics', getAdminBookingStatistics);
+router.get('/bookings', getAdminBookings);
+router.get('/bookings/:id', getAdminBookingById);
+router.patch('/bookings/:id/cancel', cancelAdminBooking);
+router.patch('/bookings/:id/status', updateAdminBookingStatus);
 router.put('/bookings/:id/override', overrideBooking);
 router.get('/reports/bookings', getBookingReports);
+
+// Refund Requests Management (Step 6)
+router.get('/refund-requests', getAdminRefundRequests);
+router.patch('/refund-requests/:id/approve', approveRefundRequest);
+router.patch('/refund-requests/:id/reject', rejectRefundRequest);
 
 // Payment & Commission
 router.get('/transactions', getTransactions);

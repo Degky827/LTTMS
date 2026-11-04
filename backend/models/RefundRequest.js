@@ -1,6 +1,12 @@
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 
 const refundRequestSchema = new mongoose.Schema({
+  refundReference: {
+    type: String,
+    unique: true,
+    index: true
+  },
   booking: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Booking',
@@ -11,6 +17,12 @@ const refundRequestSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Payment',
     default: null
+  },
+  vendor: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Vendor',
+    default: null,
+    index: true
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
@@ -52,13 +64,17 @@ const refundRequestSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: {
-      values: ['requested', 'under_review', 'approved', 'rejected', 'processed'],
+      values: ['requested', 'submitted', 'under_review', 'approved', 'rejected', 'processing', 'processed', 'completed'],
       message: '{VALUE} is not a valid refund status'
     },
     default: 'requested',
     index: true
   },
   adminNote: {
+    type: String,
+    default: null
+  },
+  rejectionReason: {
     type: String,
     default: null
   },
@@ -85,6 +101,17 @@ const refundRequestSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
+refundRequestSchema.pre('validate', function (next) {
+  if (!this.refundReference) {
+    const year = new Date().getFullYear();
+    const randomHex = crypto.randomBytes(3).toString('hex').toUpperCase();
+    this.refundReference = `REF-${year}-${randomHex}`;
+  }
+  next();
+});
+
 refundRequestSchema.index({ status: 1, createdAt: -1 });
+refundRequestSchema.index({ user: 1, createdAt: -1 });
+refundRequestSchema.index({ vendor: 1, status: 1 });
 
 module.exports = mongoose.model('RefundRequest', refundRequestSchema);
