@@ -1,0 +1,19 @@
+# Root Docker ignore rules
+node_modules
+**/node_modules
+.git
+.gitignore
+.github
+.env
+.env.*
+*.local
+tests
+coverage
+docs
+*.md
+logs
+*.log
+backups
+frontend
+backend/uploads/*
+!backend/uploads/.gitkeep

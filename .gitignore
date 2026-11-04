@@ -42,3 +42,8 @@ coverage/
 
 # Docker
 docker-compose.override.yml
+
+# Database backups
+backups/
+*.dump
+*.gz

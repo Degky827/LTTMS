@@ -1,0 +1,77 @@
+# ==============================================================================
+# LTTMS V1 — Core Docker Compose Architecture
+# Modular Monolith Backend + Persistent MongoDB Database
+# ==============================================================================
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: lttms-backend:latest
+    container_name: lttms-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=5000
+      - TRUST_PROXY=1
+      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/lttms}
+      - JWT_SECRET=${JWT_SECRET:-insecure_default_dev_secret_key_change_in_production_32chars}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-${JWT_SECRET:-insecure_default_dev_secret_key_change_in_production_32chars}}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-15m}
+      - JWT_REFRESH_EXPIRES_IN=${JWT_REFRESH_EXPIRES_IN:-30d}
+      - FRONTEND_ORIGIN=${FRONTEND_ORIGIN:-http://localhost:3000,http://localhost:8080}
+      - CHAPA_SECRET_KEY=${CHAPA_SECRET_KEY:-}
+      - CHAPA_API_URL=${CHAPA_API_URL:-https://api.chapa.co/v1}
+      - CHAPA_CALLBACK_URL=${CHAPA_CALLBACK_URL:-http://localhost:5000/api/v1/payments/verify}
+      - CHAPA_WEBHOOK_SECRET=${CHAPA_WEBHOOK_SECRET:-}
+      - SMTP_HOST=${SMTP_HOST:-smtp.ethereal.email}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_SECURE=${SMTP_SECURE:-false}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - SMTP_FROM=${SMTP_FROM:-"Lake Tana Eco-Tourism" <noreply@laketana.com>}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - backend_uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - lttms-net
+
+  mongodb:
+    image: mongo:7.0
+    container_name: lttms-mongodb
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_DATABASE=lttms
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --eval 'db.adminCommand(\"ping\")' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - lttms-net
+
+volumes:
+  mongodb_data:
+    name: lttms_mongodb_data
+  backend_uploads:
+    name: lttms_backend_uploads
+
+networks:
+  lttms-net:
+    name: lttms-network
+    driver: bridge

@@ -35,6 +35,11 @@ const supportRoutes = require('./routes/support');
 
 const app = express();
 
+// Trust reverse proxy (Nginx, Render, AWS ALB, Cloudflare)
+if (config.isProduction || config.TRUST_PROXY) {
+  app.set('trust proxy', config.TRUST_PROXY ? (typeof config.TRUST_PROXY === 'number' ? config.TRUST_PROXY : 1) : 1);
+}
+
 // Security and request context middleware
 app.use(httpLogger);
 app.use(requestContext);

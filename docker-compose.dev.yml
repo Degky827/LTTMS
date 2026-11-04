@@ -1,0 +1,34 @@
+# ==============================================================================
+# LTTMS V1 — Local Development Compose Configuration
+# Features live reload (nodemon), bind mount, and debug logging
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# ==============================================================================
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: dependencies
+    container_name: lttms-backend-dev
+    command: npm run dev
+    environment:
+      - NODE_ENV=development
+      - PORT=5000
+      - MONGODB_URI=mongodb://mongodb:27017/lttms
+      - JWT_SECRET=development-mode-jwt-secret-key-at-least-32-chars-long
+      - JWT_REFRESH_SECRET=development-mode-jwt-refresh-secret-key-32-chars
+      - FRONTEND_ORIGIN=http://localhost:3000,http://localhost:8080
+      - LOG_LEVEL=debug
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - backend_uploads:/app/uploads
+    ports:
+      - "5000:5000"
+
+  mongodb:
+    container_name: lttms-mongodb-dev
+    ports:
+      # Bound strictly to loopback so external networks cannot access dev DB
+      - "127.0.0.1:27017:27017"

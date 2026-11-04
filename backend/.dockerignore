@@ -1,0 +1,37 @@
+# Docker build ignore rules for LTTMS Backend
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment and secrets (CRITICAL)
+.env
+.env.*
+*.local
+
+# Version control
+.git
+.gitignore
+.github
+
+# Testing and coverage
+tests
+coverage
+*.test.js
+jest.config.js
+
+# Documentation and project artifacts
+docs
+*.md
+LICENSE
+
+# Local logs and temporary files
+logs
+*.log
+*.tmp
+*.cache
+backups
+
+# Ephemeral user uploads (mounted via Docker volume in production)
+uploads/*
+!uploads/.gitkeep
