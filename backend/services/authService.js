@@ -35,6 +35,9 @@ const sanitizeUser = (user) => {
     bio: raw.bio || null,
     languagePreference: raw.languagePreference || 'en',
     isVerified: Boolean(raw.isVerified),
+    isActive: raw.isActive !== undefined ? Boolean(raw.isActive) : true,
+    isSuspended: Boolean(raw.isSuspended),
+    suspendedReason: raw.suspendedReason || null,
     twoFactorEnabled: Boolean(raw.twoFactorEnabled),
     lastLogin: raw.lastLogin || null,
     createdAt: raw.createdAt || null
@@ -297,6 +300,89 @@ const revokeAllUserTokens = async (userId, reason = 'logout_all') => {
 };
 
 /**
+ * Retrieve safe metadata for all active sessions belonging to a user
+ * @param {string} userId
+ * @returns {Promise<Array<{ id: string, family: string, ip: string, userAgent: string, createdAt: Date, expiresAt: Date }>>}
+ */
+const getUserActiveSessions = async (userId) => {
+  if (!userId) return [];
+  const uid = userId.toString();
+  const now = new Date();
+
+  if (mongoose.connection.readyState === 1) {
+    const sessions = await RefreshToken.find({
+      user: userId,
+      isRevoked: false,
+      expiresAt: { $gt: now }
+    }).sort({ createdAt: -1 });
+
+    return sessions.map((s) => ({
+      id: s._id.toString(),
+      family: s.family,
+      ip: s.ip,
+      userAgent: s.userAgent,
+      createdAt: s.createdAt,
+      expiresAt: s.expiresAt,
+      lastUsedAt: s.updatedAt || s.createdAt
+    }));
+  }
+
+  // Memory store fallback
+  const active = [];
+  for (const [key, val] of memorySessionStore.entries()) {
+    if (val.user.toString() === uid && !val.isRevoked && new Date(val.expiresAt) > now) {
+      active.push({
+        id: val._id ? val._id.toString() : key,
+        family: val.family,
+        ip: val.ip,
+        userAgent: val.userAgent,
+        createdAt: val.createdAt || now,
+        expiresAt: val.expiresAt,
+        lastUsedAt: val.updatedAt || val.createdAt || now
+      });
+    }
+  }
+  return active.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+};
+
+/**
+ * Revoke a specific session by ID ensuring ownership
+ * @param {string} userId
+ * @param {string} sessionId
+ * @returns {Promise<boolean>}
+ */
+const revokeSessionById = async (userId, sessionId) => {
+  if (!userId || !sessionId) return false;
+  const uid = userId.toString();
+
+  if (mongoose.connection.readyState === 1) {
+    const session = await RefreshToken.findOne({ _id: sessionId, user: userId });
+    if (!session || session.isRevoked) return false;
+    session.isRevoked = true;
+    session.revokedAt = new Date();
+    session.revokedReason = 'user_revoked';
+    await session.save();
+    return true;
+  }
+
+  // Memory store fallback
+  for (const [key, val] of memorySessionStore.entries()) {
+    const sId = val._id ? val._id.toString() : key;
+    if (sId === sessionId.toString() && val.user.toString() === uid) {
+      if (val.isRevoked) return false;
+      memorySessionStore.set(key, {
+        ...val,
+        isRevoked: true,
+        revokedAt: new Date(),
+        revokedReason: 'user_revoked'
+      });
+      return true;
+    }
+  }
+  return false;
+};
+
+/**
  * Helper to inspect memory session store size (for testing)
  */
 const getMemorySessionStoreSize = () => memorySessionStore.size;
@@ -313,6 +399,8 @@ module.exports = {
   rotateRefreshToken,
   revokeRefreshToken,
   revokeAllUserTokens,
+  getUserActiveSessions,
+  revokeSessionById,
   getMemorySessionStoreSize,
   clearMemorySessionStore
 };

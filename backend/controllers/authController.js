@@ -72,7 +72,7 @@ exports.register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Name, email, and password are required' });
     }
 
-    // Guard against public escalation to admin, super_admin, or support
+    // Strict guard against public escalation to admin, super_admin, or support
     if (requestedRole && !['tourist', 'vendor'].includes(requestedRole)) {
       return res.status(400).json({
         success: false,
@@ -93,7 +93,8 @@ exports.register = async (req, res) => {
       password,
       phone,
       role,
-      isActive: true
+      isActive: true,
+      isSuspended: false
     });
 
     // If registered as vendor, initialize pending vendor profile for admin approval workflow
@@ -114,7 +115,7 @@ exports.register = async (req, res) => {
       }
     }
 
-    // Generate verification token
+    // Generate single-use verification token
     const verificationToken = user.generateVerificationToken();
     await user.save({ validateBeforeSave: false });
 
@@ -181,11 +182,18 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Check account active status
+    // Check account active and suspended status
     if (user.isActive === false) {
       return res.status(403).json({
         success: false,
         message: 'Account has been deactivated. Please contact support.'
+      });
+    }
+
+    if (user.isSuspended === true) {
+      return res.status(403).json({
+        success: false,
+        message: `Account is suspended: ${user.suspendedReason || 'Please contact support.'}`
       });
     }
 
@@ -329,6 +337,57 @@ exports.verifyEmail = async (req, res) => {
   }
 };
 
+// ========== RESEND VERIFICATION EMAIL ==========
+
+exports.resendVerification = async (req, res) => {
+  try {
+    const email = req.body?.email || req.user?.email;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Please provide an email address' });
+    }
+
+    const user = await User.findOne({ email });
+
+    // Prevent user enumeration: generic success response
+    if (!user) {
+      return res.status(200).json({
+        success: true,
+        message: 'If an account with that email exists, a verification link has been sent.'
+      });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: 'This account has already been verified'
+      });
+    }
+
+    // Generate single-use verification token with 24h expiration
+    const verificationToken = user.generateVerificationToken();
+    await user.save({ validateBeforeSave: false });
+
+    const verifyUrl = `${process.env.FRONTEND_ORIGIN || 'http://localhost:3000'}/verify-email/${verificationToken}`;
+
+    await sendEmail({
+      to: user.email,
+      subject: 'Verify your Lake Tana account',
+      template: 'email-verification',
+      context: { name: user.name, url: verifyUrl }
+    });
+
+    auditLog('user.resendVerification', user._id);
+
+    res.status(200).json({
+      success: true,
+      message: 'If an account with that email exists, a verification link has been sent.'
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
 // ========== FORGOT PASSWORD ==========
 
 exports.forgotPassword = async (req, res) => {
@@ -399,8 +458,16 @@ exports.resetPassword = async (req, res) => {
     user.passwordChangedAt = new Date();
     await user.save();
 
-    // Revoke all existing sessions for this user on password reset
+    // Invalidate all existing sessions on password reset
     await authService.revokeAllUserTokens(user._id, 'password_reset');
+
+    // Send confirmation email
+    await sendEmail({
+      to: user.email,
+      subject: 'Your Password Has Been Reset - Lake Tana',
+      template: 'password-reset-success',
+      context: { name: user.name }
+    });
 
     auditLog('user.resetPassword', user._id);
 
@@ -449,6 +516,14 @@ exports.changePassword = async (req, res) => {
 
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
+
+    // Send security notification email
+    await sendEmail({
+      to: user.email,
+      subject: 'Security Alert: Password Changed - Lake Tana',
+      template: 'password-changed',
+      context: { name: user.name }
+    });
 
     auditLog('user.changePassword', user._id);
 
@@ -579,7 +654,7 @@ exports.logoutAll = async (req, res) => {
   res.status(200).json({ success: true, message: 'Logged out from all sessions successfully' });
 };
 
-// ========== GET ME ==========
+// ========== GET ME (USER PROFILE) ==========
 
 exports.getMe = async (req, res) => {
   const user = await User.findById(req.user.id);
@@ -590,4 +665,105 @@ exports.getMe = async (req, res) => {
     data: safeUser,
     user: safeUser
   });
+};
+
+// ========== UPDATE PROFILE (MASS ASSIGNMENT PROTECTED) ==========
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const { name, phone, bio, languagePreference, avatar } = req.body;
+
+    // Apply only whitelisted safe fields (strict mass-assignment protection)
+    if (name !== undefined) user.name = name;
+    if (phone !== undefined) user.phone = phone;
+    if (bio !== undefined) user.bio = bio;
+    if (languagePreference !== undefined) user.languagePreference = languagePreference;
+    if (avatar !== undefined) user.avatar = avatar;
+
+    await user.save();
+
+    const safeUser = authService.sanitizeUser(user);
+    auditLog('user.profile.update', user._id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: safeUser,
+      user: safeUser
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+// ========== GET ACCOUNT STATUS ==========
+
+exports.getAccountStatus = async (req, res) => {
+  const user = await User.findById(req.user.id);
+  const target = user || req.user;
+
+  res.status(200).json({
+    success: true,
+    data: {
+      id: target._id || target.id,
+      email: target.email,
+      role: target.role,
+      isActive: target.isActive !== false,
+      isSuspended: Boolean(target.isSuspended),
+      suspendedReason: target.suspendedReason || null,
+      isVerified: Boolean(target.isVerified),
+      twoFactorEnabled: Boolean(target.twoFactorEnabled),
+      isLocked: target.isLocked ? target.isLocked() : false,
+      loginAttempts: target.loginAttempts || 0,
+      createdAt: target.createdAt
+    }
+  });
+};
+
+// ========== GET ACTIVE SESSIONS ==========
+
+exports.getActiveSessions = async (req, res) => {
+  try {
+    const userId = req.user._id || req.user.id;
+    const sessions = await authService.getUserActiveSessions(userId);
+
+    res.status(200).json({
+      success: true,
+      count: sessions.length,
+      data: sessions
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+// ========== REVOKE SPECIFIC SESSION ==========
+
+exports.revokeSession = async (req, res) => {
+  try {
+    const userId = req.user._id || req.user.id;
+    const sessionId = req.params.id;
+
+    const revoked = await authService.revokeSessionById(userId, sessionId);
+    if (!revoked) {
+      return res.status(404).json({
+        success: false,
+        message: 'Session not found or already revoked'
+      });
+    }
+
+    auditLog('user.session.revoke', userId, { sessionId });
+
+    res.status(200).json({
+      success: true,
+      message: 'Session revoked successfully'
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
 };

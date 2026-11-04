@@ -107,10 +107,21 @@ exports.getService = async (req, res, next) => {
 exports.createService = async (req, res, next) => {
   try {
     // Check if user is a vendor
-    const vendor = await Vendor.findOne({ user: req.user.id });
+    let vendor = req.vendor;
+    if (!vendor) {
+      vendor = await Vendor.findOne({ user: req.user.id });
+    }
 
     if (!vendor) {
       return res.status(401).json({ success: false, message: 'Only vendors can create services' });
+    }
+
+    if (vendor.status !== 'approved' && req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Vendor application is pending or not approved yet',
+        code: 'VENDOR_NOT_APPROVED'
+      });
     }
 
     req.body.vendor = vendor._id;

@@ -5,6 +5,8 @@ const Service = require('../models/Service');
 const Review = require('../models/Review');
 const logger = require('../utils/logger');
 const sendEmail = require('../utils/email');
+const { escapeRegex } = require('../shared/database/queryUtils');
+const authService = require('../services/authService');
 
 const audit = (action, adminId, details = {}) => {
   logger.info({ action, adminId, ...details, timestamp: new Date().toISOString() }, 'ADMIN_AUDIT');
@@ -89,11 +91,74 @@ exports.verifyEcoBadge = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
   try {
-    const { role, page = 1, limit = 20 } = req.query;
-    const filter = role ? { role } : {};
-    const users = await User.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(Number(limit));
+    const { role, status, search, q, page = 1, limit = 20, sort = '-createdAt' } = req.query;
+    const filter = {};
+
+    if (role && ['tourist', 'vendor', 'support', 'admin', 'super_admin'].includes(role)) {
+      filter.role = role;
+    }
+
+    if (status === 'active') {
+      filter.isActive = true;
+      filter.isSuspended = { $ne: true };
+    } else if (status === 'inactive') {
+      filter.isActive = false;
+    } else if (status === 'suspended') {
+      filter.isSuspended = true;
+    } else if (status === 'locked') {
+      filter.lockUntil = { $gt: new Date() };
+    }
+
+    const searchQuery = search || q;
+    if (searchQuery) {
+      const safeRegex = new RegExp(escapeRegex(searchQuery), 'i');
+      filter.$or = [{ name: safeRegex }, { email: safeRegex }];
+    }
+
+    const users = await User.find(filter)
+      .sort(sort)
+      .skip((page - 1) * limit)
+      .limit(Number(limit))
+      .select('-password -verificationToken -verificationTokenExpire -resetPasswordToken -resetPasswordExpire -twoFactorSecret -twoFactorCodeExpire');
+
     const total = await User.countDocuments(filter);
-    res.json({ success: true, data: users, total, page: Number(page), pages: Math.ceil(total / limit) });
+    const sanitized = users.map(u => authService.sanitizeUser(u));
+
+    res.json({
+      success: true,
+      data: sanitized,
+      total,
+      page: Number(page),
+      pages: Math.ceil(total / limit)
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+exports.getUserDetail = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .select('-password -verificationToken -verificationTokenExpire -resetPasswordToken -resetPasswordExpire -twoFactorSecret -twoFactorCodeExpire');
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const sanitized = authService.sanitizeUser(user);
+
+    let vendorProfile = null;
+    if (user.role === 'vendor') {
+      vendorProfile = await Vendor.findOne({ user: user._id });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        ...sanitized,
+        vendorProfile
+      }
+    });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
   }
@@ -101,12 +166,89 @@ exports.getUsers = async (req, res) => {
 
 exports.updateUserStatus = async (req, res) => {
   try {
-    const { isActive } = req.body;
-    if (isActive === undefined) return res.status(400).json({ success: false, message: 'isActive required' });
-    const user = await User.findByIdAndUpdate(req.params.id, { isActive }, { new: true });
-    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-    audit('user.status.update', req.user._id, { targetUserId: user._id, isActive });
-    res.json({ success: true, data: user });
+    const { isActive, isSuspended, suspendedReason, lock } = req.body;
+
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Protection: regular admin cannot modify a super_admin account
+    if (user.role === 'super_admin' && req.user.role !== 'super_admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: Only super administrators can modify super administrator accounts'
+      });
+    }
+
+    let statusChanged = false;
+    let statusText = '';
+
+    if (isActive !== undefined) {
+      user.isActive = Boolean(isActive);
+      statusChanged = true;
+      statusText = user.isActive ? 'Activated' : 'Deactivated';
+    }
+
+    if (isSuspended !== undefined) {
+      user.isSuspended = Boolean(isSuspended);
+      user.suspendedReason = isSuspended ? (suspendedReason || 'Account suspended by administrator') : null;
+      user.suspendedAt = isSuspended ? new Date() : null;
+      statusChanged = true;
+      statusText = user.isSuspended ? 'Suspended' : 'Reactivated';
+    }
+
+    if (lock === false) {
+      user.lockUntil = null;
+      user.loginAttempts = 0;
+      statusChanged = true;
+      statusText = 'Unlocked';
+    } else if (lock === true) {
+      user.lockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      statusChanged = true;
+      statusText = 'Locked';
+    }
+
+    if (!statusChanged) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide status update field (isActive, isSuspended, or lock)'
+      });
+    }
+
+    await user.save();
+
+    // If deactivated, suspended, or locked: revoke all active sessions immediately!
+    if (user.isActive === false || user.isSuspended === true || (user.lockUntil && user.lockUntil > Date.now())) {
+      await authService.revokeAllUserTokens(user._id, 'admin_status_update');
+    }
+
+    // Send account status notification email (graceful error handling)
+    await sendEmail({
+      to: user.email,
+      subject: `Account Status Update: ${statusText} - Lake Tana`,
+      template: 'account-status-update',
+      context: {
+        name: user.name,
+        status: statusText,
+        statusText,
+        isSuspended: user.isSuspended,
+        reason: user.suspendedReason
+      }
+    });
+
+    audit('user.status.update', req.user._id, {
+      targetUserId: user._id,
+      isActive: user.isActive,
+      isSuspended: user.isSuspended,
+      lockUntil: user.lockUntil
+    });
+
+    res.json({
+      success: true,
+      message: `User account status updated: ${statusText}`,
+      data: authService.sanitizeUser(user)
+    });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
   }
@@ -115,11 +257,53 @@ exports.updateUserStatus = async (req, res) => {
 exports.assignRole = async (req, res) => {
   try {
     const { role } = req.body;
-    if (!['tourist', 'vendor', 'admin'].includes(role)) return res.status(400).json({ success: false, message: 'Invalid role' });
-    const user = await User.findByIdAndUpdate(req.params.id, { role }, { new: true });
-    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    const allowedRoles = ['tourist', 'vendor', 'support', 'admin', 'super_admin'];
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({ success: false, message: 'Invalid role specified' });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Protection 1: Non-super_admins cannot modify an existing super_admin
+    if (user.role === 'super_admin' && req.user.role !== 'super_admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: Only super administrators can modify a super administrator account'
+      });
+    }
+
+    // Protection 2: Only super_admin can assign privileged roles (admin, super_admin)
+    if (['admin', 'super_admin'].includes(role) && req.user.role !== 'super_admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: Only super administrators can assign admin or super_admin roles'
+      });
+    }
+
+    // Protection 3: Admins cannot promote/demote other admins
+    if (user.role === 'admin' && req.user.role !== 'super_admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: Only super administrators can alter administrator roles'
+      });
+    }
+
+    user.role = role;
+    await user.save();
+
+    // Invalidate existing sessions so the user must re-authenticate with their new permissions
+    await authService.revokeAllUserTokens(user._id, 'role_assigned');
+
     audit('user.role.assign', req.user._id, { targetUserId: user._id, role });
-    res.json({ success: true, data: user });
+
+    res.json({
+      success: true,
+      message: `Role assigned successfully: ${role}`,
+      data: authService.sanitizeUser(user)
+    });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
   }

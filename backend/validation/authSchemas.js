@@ -34,6 +34,26 @@ const refreshSchema = z.object({
   query: z.object({}).optional()
 });
 
+const updateProfileSchema = z.object({
+  body: z.object({
+    name: z.string().min(2, 'Name must be at least 2 characters').max(100).optional(),
+    phone: z.string().max(20).optional().nullable(),
+    bio: z.string().max(500).optional().nullable(),
+    languagePreference: z.enum(['en', 'am']).optional(),
+    avatar: z.string().optional().nullable()
+  }).strict(),
+  params: z.object({}).optional(),
+  query: z.object({}).optional()
+});
+
+const resendVerificationSchema = z.object({
+  body: z.object({
+    email: z.string().email('Invalid email format').optional()
+  }).strict().optional(),
+  params: z.object({}).optional(),
+  query: z.object({}).optional()
+});
+
 const forgotPasswordSchema = z.object({
   body: z.object({
     email: z.string().email('Invalid email format')
@@ -68,12 +88,41 @@ const twoFactorSchema = z.object({
   query: z.object({}).optional()
 });
 
+const adminUserStatusSchema = z.object({
+  body: z.object({
+    isActive: z.boolean().optional(),
+    isSuspended: z.boolean().optional(),
+    suspendedReason: z.string().max(500).optional(),
+    lock: z.boolean().optional()
+  }).strict(),
+  params: z.object({
+    id: z.string().min(1, 'User ID is required')
+  }).optional(),
+  query: z.object({}).optional()
+});
+
+const adminAssignRoleSchema = z.object({
+  body: z.object({
+    role: z.enum(['tourist', 'vendor', 'support', 'admin', 'super_admin'], {
+      errorMap: () => ({ message: 'Invalid user role specified' })
+    })
+  }).strict(),
+  params: z.object({
+    id: z.string().min(1, 'User ID is required')
+  }).optional(),
+  query: z.object({}).optional()
+});
+
 module.exports = {
   registerSchema,
   loginSchema,
   refreshSchema,
+  updateProfileSchema,
+  resendVerificationSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
   changePasswordSchema,
-  twoFactorSchema
+  twoFactorSchema,
+  adminUserStatusSchema,
+  adminAssignRoleSchema
 };
