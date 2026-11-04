@@ -1,49 +1,49 @@
 const User = require('../models/User');
+const Vendor = require('../models/Vendor');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { authenticator } = require('otplib');
 const logger = require('../utils/logger');
 const sendEmail = require('../utils/email');
 const { blacklistToken } = require('../middleware/auth');
+const authService = require('../services/authService');
 
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCK_DURATION = 30 * 60 * 1000; // 30 minutes
 
 // ========== HELPERS ==========
 
-const sendTokenResponse = (user, statusCode, res, rememberMe = false) => {
-  const accessExpiry = rememberMe ? '7d' : process.env.JWT_EXPIRES_IN || '15m';
-  const refreshExpiry = rememberMe ? '90d' : process.env.JWT_REFRESH_EXPIRES_IN || '30d';
+const sendTokenResponse = async (user, statusCode, res, rememberMe = false, reqContext = {}) => {
+  const tokenData = await authService.issueTokenPair(user, rememberMe, reqContext);
+  const { accessToken, refreshToken } = tokenData;
+
   const accessMaxAge = rememberMe ? 7 * 24 * 60 * 60 * 1000 : 15 * 60 * 1000;
   const refreshMaxAge = rememberMe ? 90 * 24 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000;
 
-  const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
-    expiresIn: accessExpiry
-  });
-  const refreshToken = jwt.sign(
-    { id: user._id, type: 'refresh' },
-    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
-    { expiresIn: refreshExpiry }
-  );
-
   const secure = process.env.NODE_ENV === 'production';
-  const cookieOptions = { httpOnly: true, secure, sameSite: 'strict' };
+  const cookieOptions = {
+    httpOnly: true,
+    secure,
+    sameSite: secure ? 'none' : 'lax',
+    path: '/'
+  };
 
-  res.cookie('accessToken', token, { ...cookieOptions, maxAge: accessMaxAge });
+  res.cookie('accessToken', accessToken, { ...cookieOptions, maxAge: accessMaxAge });
   res.cookie('refreshToken', refreshToken, { ...cookieOptions, maxAge: refreshMaxAge });
 
   logger.info({ userId: user._id, role: user.role }, 'Auth token issued');
 
+  const safeUser = authService.sanitizeUser(user);
+
   res.status(statusCode).json({
     success: true,
-    token,
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      isVerified: user.isVerified,
-      twoFactorEnabled: user.twoFactorEnabled
+    token: accessToken,
+    refreshToken,
+    user: safeUser,
+    data: {
+      accessToken,
+      refreshToken,
+      user: safeUser
     }
   });
 };
@@ -56,9 +56,28 @@ const auditLog = (action, userId, details = {}) => {
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, phone, role: requestedRole } = req.body;
+    const {
+      name,
+      email,
+      password,
+      phone,
+      role: requestedRole,
+      businessName,
+      businessType,
+      location,
+      businessDesc
+    } = req.body;
+
     if (!name || !email || !password) {
       return res.status(400).json({ success: false, message: 'Name, email, and password are required' });
+    }
+
+    // Guard against public escalation to admin, super_admin, or support
+    if (requestedRole && !['tourist', 'vendor'].includes(requestedRole)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Public registration allows only tourist or vendor roles'
+      });
     }
 
     const existingUser = await User.findOne({ email });
@@ -68,7 +87,32 @@ exports.register = async (req, res) => {
 
     const role = requestedRole === 'vendor' ? 'vendor' : 'tourist';
 
-    const user = await User.create({ name, email, password, phone, role });
+    const user = await User.create({
+      name,
+      email,
+      password,
+      phone,
+      role,
+      isActive: true
+    });
+
+    // If registered as vendor, initialize pending vendor profile for admin approval workflow
+    if (role === 'vendor') {
+      try {
+        const resolvedBusinessName = businessName || `${name}'s Tourism Services`;
+        await Vendor.create({
+          user: user._id,
+          businessName: resolvedBusinessName,
+          businessType: businessType || 'tour_operator',
+          location: location || 'Bahir Dar',
+          description: businessDesc || null,
+          status: 'pending'
+        });
+        auditLog('vendor.registered.pending', user._id, { businessName: resolvedBusinessName, status: 'pending' });
+      } catch (vendorErr) {
+        logger.warn({ err: vendorErr.message, userId: user._id }, 'Vendor record initialization note');
+      }
+    }
 
     // Generate verification token
     const verificationToken = user.generateVerificationToken();
@@ -85,7 +129,8 @@ exports.register = async (req, res) => {
 
     auditLog('user.register', user._id, { role: user.role });
 
-    sendTokenResponse(user, 201, res);
+    const reqContext = { ip: req.ip, userAgent: req.headers['user-agent'] };
+    await sendTokenResponse(user, 201, res, false, reqContext);
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
   }
@@ -107,7 +152,7 @@ exports.login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
-    // Check if locked
+    // Check if account is locked due to excessive failed attempts
     if (user.isLocked()) {
       const remaining = Math.ceil((user.lockUntil - Date.now()) / 60000);
       return res.status(423).json({
@@ -119,7 +164,7 @@ exports.login = async (req, res) => {
     const isMatch = await user.matchPassword(password);
 
     if (!isMatch) {
-      user.loginAttempts += 1;
+      user.loginAttempts = (user.loginAttempts || 0) + 1;
       if (user.loginAttempts >= MAX_LOGIN_ATTEMPTS) {
         user.lockUntil = Date.now() + LOCK_DURATION;
         await user.save({ validateBeforeSave: false });
@@ -133,6 +178,14 @@ exports.login = async (req, res) => {
       return res.status(401).json({
         success: false,
         message: `Invalid email or password. ${MAX_LOGIN_ATTEMPTS - user.loginAttempts} attempt(s) remaining.`
+      });
+    }
+
+    // Check account active status
+    if (user.isActive === false) {
+      return res.status(403).json({
+        success: false,
+        message: 'Account has been deactivated. Please contact support.'
       });
     }
 
@@ -167,7 +220,8 @@ exports.login = async (req, res) => {
       });
     }
 
-    sendTokenResponse(user, 200, res, rememberMe);
+    const reqContext = { ip: req.ip, userAgent: req.headers['user-agent'] };
+    await sendTokenResponse(user, 200, res, rememberMe, reqContext);
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
   }
@@ -201,7 +255,8 @@ exports.verifyTwoFactor = async (req, res) => {
 
     auditLog('user.2fa.verify', user._id);
 
-    sendTokenResponse(user, 200, res);
+    const reqContext = { ip: req.ip, userAgent: req.headers['user-agent'] };
+    await sendTokenResponse(user, 200, res, false, reqContext);
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
   }
@@ -341,7 +396,11 @@ exports.resetPassword = async (req, res) => {
     user.resetPasswordExpire = undefined;
     user.loginAttempts = 0;
     user.lockUntil = undefined;
+    user.passwordChangedAt = new Date();
     await user.save();
+
+    // Revoke all existing sessions for this user on password reset
+    await authService.revokeAllUserTokens(user._id, 'password_reset');
 
     auditLog('user.resetPassword', user._id);
 
@@ -362,19 +421,41 @@ exports.changePassword = async (req, res) => {
     if (newPassword.length < 6) {
       return res.status(400).json({ success: false, message: 'New password must be at least 6 characters' });
     }
+    if (currentPassword === newPassword) {
+      return res.status(400).json({ success: false, message: 'New password cannot be the same as current password' });
+    }
 
     const user = await User.findById(req.user.id).select('+password');
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
     const isMatch = await user.matchPassword(currentPassword);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Current password is incorrect' });
     }
 
     user.password = newPassword;
+    user.passwordChangedAt = new Date();
     await user.save();
+
+    // Revoke all existing refresh sessions for this user
+    await authService.revokeAllUserTokens(user._id, 'password_change');
+
+    // Blacklist current access token
+    if (req.token) {
+      blacklistToken(req.token);
+    }
+
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
 
     auditLog('user.changePassword', user._id);
 
-    res.status(200).json({ success: true, message: 'Password changed successfully' });
+    res.status(200).json({
+      success: true,
+      message: 'Password changed successfully. Please log in again.'
+    });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
   }
@@ -384,18 +465,73 @@ exports.changePassword = async (req, res) => {
 
 exports.refresh = async (req, res) => {
   try {
-    const refreshToken = req.cookies?.refreshToken;
+    // Extract refresh token from HTTP-only cookie OR request body (supporting both modern cookie & client storage)
+    const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+
     if (!refreshToken) {
-      return res.status(401).json({ success: false, message: 'No refresh token' });
+      return res.status(401).json({ success: false, message: 'No refresh token provided' });
     }
 
-    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
-    if (!user) {
-      return res.status(401).json({ success: false, message: 'User not found' });
+    const reqContext = {
+      ip: req.ip,
+      userAgent: req.headers['user-agent']
+    };
+
+    const rotationResult = await authService.rotateRefreshToken(refreshToken, reqContext);
+
+    if (rotationResult.status === 'reuse_detected') {
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
+      return res.status(401).json({
+        success: false,
+        message: rotationResult.message,
+        code: 'TOKEN_REUSE_DETECTED'
+      });
     }
 
-    sendTokenResponse(user, 200, res);
+    if (rotationResult.status === 'user_inactive') {
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
+      return res.status(403).json({
+        success: false,
+        message: rotationResult.message
+      });
+    }
+
+    if (rotationResult.status !== 'success') {
+      return res.status(401).json({
+        success: false,
+        message: rotationResult.message || 'Invalid or expired refresh token'
+      });
+    }
+
+    const { tokens, user } = rotationResult;
+    const safeUser = authService.sanitizeUser(user);
+
+    const secure = process.env.NODE_ENV === 'production';
+    const cookieOptions = {
+      httpOnly: true,
+      secure,
+      sameSite: secure ? 'none' : 'lax',
+      path: '/'
+    };
+
+    res.cookie('accessToken', tokens.accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
+    res.cookie('refreshToken', tokens.refreshToken, { ...cookieOptions, maxAge: 30 * 24 * 60 * 60 * 1000 });
+
+    logger.info({ userId: user._id, family: tokens.family }, 'Refresh token rotated successfully');
+
+    res.status(200).json({
+      success: true,
+      token: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      user: safeUser,
+      data: {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        user: safeUser
+      }
+    });
   } catch (err) {
     return res.status(401).json({ success: false, message: 'Invalid or expired refresh token' });
   }
@@ -404,29 +540,54 @@ exports.refresh = async (req, res) => {
 // ========== LOGOUT ==========
 
 exports.logout = async (req, res) => {
-  blacklistToken(req.token);
+  const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+
+  if (refreshToken) {
+    await authService.revokeRefreshToken(refreshToken, 'user_logout');
+  }
+
+  if (req.token) {
+    blacklistToken(req.token);
+  }
+
   res.clearCookie('accessToken');
   res.clearCookie('refreshToken');
+
   auditLog('user.logout', req.user?._id);
+
   res.status(200).json({ success: true, message: 'Logged out successfully' });
+};
+
+// ========== LOGOUT ALL SESSIONS ==========
+
+exports.logoutAll = async (req, res) => {
+  if (req.user?._id) {
+    await authService.revokeAllUserTokens(req.user._id, 'logout_all');
+    req.user.passwordChangedAt = new Date();
+    await req.user.save({ validateBeforeSave: false });
+  }
+
+  if (req.token) {
+    blacklistToken(req.token);
+  }
+
+  res.clearCookie('accessToken');
+  res.clearCookie('refreshToken');
+
+  auditLog('user.logoutAll', req.user?._id);
+
+  res.status(200).json({ success: true, message: 'Logged out from all sessions successfully' });
 };
 
 // ========== GET ME ==========
 
 exports.getMe = async (req, res) => {
   const user = await User.findById(req.user.id);
+  const safeUser = authService.sanitizeUser(user || req.user);
+
   res.status(200).json({
     success: true,
-    data: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      role: user.role,
-      isVerified: user.isVerified,
-      twoFactorEnabled: user.twoFactorEnabled,
-      lastLogin: user.lastLogin,
-      createdAt: user.createdAt
-    }
+    data: safeUser,
+    user: safeUser
   });
 };

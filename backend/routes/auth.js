@@ -1,6 +1,6 @@
 const express = require('express');
 const {
-  register, login, getMe, refresh, logout,
+  register, login, getMe, refresh, logout, logoutAll,
   verifyEmail, forgotPassword, resetPassword, changePassword,
   enableTwoFactor, disableTwoFactor, verifyTwoFactor
 } = require('../controllers/authController');
@@ -8,7 +8,7 @@ const { protect } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 const { authLimiter } = require('../middleware/rateLimiters');
 const {
-  registerSchema, loginSchema, forgotPasswordSchema,
+  registerSchema, loginSchema, refreshSchema, forgotPasswordSchema,
   resetPasswordSchema, changePasswordSchema, twoFactorSchema
 } = require('../validation/authSchemas');
 
@@ -17,7 +17,7 @@ const router = express.Router();
 // Public routes
 router.post('/register', authLimiter, validate(registerSchema), register);
 router.post('/login', authLimiter, validate(loginSchema), login);
-router.post('/refresh', refresh);
+router.post('/refresh', validate(refreshSchema), refresh);
 router.get('/verify-email/:token', verifyEmail);
 router.post('/forgot-password', authLimiter, validate(forgotPasswordSchema), forgotPassword);
 router.put('/reset-password/:token', authLimiter, validate(resetPasswordSchema), resetPassword);
@@ -27,6 +27,7 @@ router.post('/verify-2fa', authLimiter, validate(twoFactorSchema), verifyTwoFact
 
 // Protected routes
 router.post('/logout', protect, logout);
+router.post('/logout-all', protect, logoutAll);
 router.get('/me', protect, getMe);
 router.put('/change-password', protect, validate(changePasswordSchema), changePassword);
 router.post('/enable-2fa', protect, enableTwoFactor);
