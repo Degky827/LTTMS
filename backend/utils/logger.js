@@ -13,6 +13,12 @@ const sensitiveFields = [
   'refreshToken',
   'twoFactorToken',
   'twoFactorSecret',
+  'verificationToken',
+  'emailVerificationToken',
+  'resetPasswordToken',
+  'tokenHash',
+  'code',
+  'rawToken',
   'secret',
   'secretKey',
   'chapaSecret',
@@ -21,7 +27,10 @@ const sensitiveFields = [
   '*.password',
   '*.token',
   '*.refreshToken',
-  '*.twoFactorSecret'
+  '*.twoFactorSecret',
+  '*.verificationToken',
+  '*.resetPasswordToken',
+  '*.tokenHash'
 ];
 
 const logger = pino({

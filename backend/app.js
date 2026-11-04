@@ -9,6 +9,7 @@ const { httpLogger, requestContext } = require('./middleware/requestContext');
 const { errorHandler, notFound } = require('./middleware/errorHandlers');
 const { publicLimiter } = require('./middleware/rateLimiters');
 const { checkDBHealth } = require('./config/database');
+const { swaggerSpec, swaggerUi } = require('./config/swagger');
 
 // Import route modules
 const authRoutes = require('./routes/auth');
@@ -26,7 +27,22 @@ const app = express();
 // Security and request context middleware
 app.use(httpLogger);
 app.use(requestContext);
-app.use(helmet());
+
+// Hardened HTTP security headers with relaxed CSP for Swagger UI assets
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        fontSrc: ["'self'", 'https:', 'data:']
+      }
+    }
+  })
+);
+
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps, curl, or same-origin)
@@ -42,12 +58,35 @@ app.use(cors({
   },
   credentials: true
 }));
+
 app.use(cookieParser());
 app.use(express.json({ limit: '100kb' }));
 app.use(publicLimiter);
 
 // Static uploads serving
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Swagger UI & OpenAPI 3.0 Documentation Endpoints
+const swaggerUiOptions = {
+  customSiteTitle: 'LTTMS API Documentation',
+  customCss: '.swagger-ui .topbar { display: none }',
+  swaggerOptions: {
+    persistAuthorization: true,
+    displayRequestDuration: true
+  }
+};
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+app.use('/api/v1/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+
+// Raw OpenAPI JSON specifications
+const serveSwaggerJson = (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.status(200).send(swaggerSpec);
+};
+app.get('/api-docs.json', serveSwaggerJson);
+app.get('/api/v1/api-docs.json', serveSwaggerJson);
+app.get('/swagger.json', serveSwaggerJson);
 
 // Root landing endpoint
 app.get('/', (req, res) => {
