@@ -93,6 +93,19 @@ const userSchema = new mongoose.Schema({
     default: true,
     index: true
   },
+  isSuspended: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  suspendedReason: {
+    type: String,
+    default: null
+  },
+  suspendedAt: {
+    type: Date,
+    default: null
+  },
   loginAttempts: {
     type: Number,
     default: 0
@@ -102,6 +115,10 @@ const userSchema = new mongoose.Schema({
     default: null
   },
   lastLogin: {
+    type: Date,
+    default: null
+  },
+  passwordChangedAt: {
     type: Date,
     default: null
   }
@@ -149,6 +166,15 @@ userSchema.methods.generateResetToken = function () {
   this.resetPasswordToken = crypto.createHash('sha256').update(token).digest('hex');
   this.resetPasswordExpire = Date.now() + 60 * 60 * 1000; // 1 hour
   return token;
+};
+
+// Check if password changed after token was issued
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
+  if (this.passwordChangedAt) {
+    const changedTimestamp = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
+    return JWTTimestamp < changedTimestamp;
+  }
+  return false;
 };
 
 module.exports = mongoose.model('User', userSchema);

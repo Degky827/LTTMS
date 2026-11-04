@@ -25,10 +25,15 @@ const categorySchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  image: {
+    type: String,
+    default: null
+  },
   parentCategory: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
-    default: null
+    default: null,
+    index: true
   },
   isActive: {
     type: Boolean,
@@ -44,5 +49,13 @@ const categorySchema = new mongoose.Schema({
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });
+
+categorySchema.virtual('subcategories', {
+  ref: 'Category',
+  localField: '_id',
+  foreignField: 'parentCategory'
+});
+
+categorySchema.index({ parentCategory: 1, isActive: 1, displayOrder: 1 });
 
 module.exports = mongoose.model('Category', categorySchema);

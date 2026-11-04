@@ -12,6 +12,8 @@ const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(1).optional(),
   JWT_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('30d'),
+  JWT_ISSUER: z.string().default('lttms-api'),
+  JWT_AUDIENCE: z.string().default('lttms-client'),
 
   // Frontend origin(s) for CORS & redirect URLs
   FRONTEND_ORIGIN: z.string().default('http://localhost:3000,http://localhost:8080'),

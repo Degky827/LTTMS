@@ -93,8 +93,7 @@ const bookingSchema = new mongoose.Schema({
   },
   idempotencyKey: {
     type: String,
-    sparse: true,
-    index: true,
+    trim: true,
     default: null
   },
   adminNote: {
@@ -140,5 +139,17 @@ bookingSchema.pre('validate', function (next) {
 bookingSchema.index({ service: 1, date: 1, status: 1 });
 bookingSchema.index({ vendor: 1, status: 1, date: -1 });
 bookingSchema.index({ user: 1, createdAt: -1 });
+
+// Authoritative idempotency constraint: Enforce unique idempotency keys only for non-empty strings.
+// Documents with null, undefined, or missing idempotencyKey are excluded from this index.
+bookingSchema.index(
+  { idempotencyKey: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      idempotencyKey: { $type: 'string', $gt: '' }
+    }
+  }
+);
 
 module.exports = mongoose.model('Booking', bookingSchema);

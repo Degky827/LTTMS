@@ -56,7 +56,8 @@ const paymentSchema = new mongoose.Schema({
   },
   rawWebhookPayload: {
     type: mongoose.Schema.Types.Mixed,
-    default: null
+    default: null,
+    select: false
   },
   metadata: {
     type: mongoose.Schema.Types.Mixed,

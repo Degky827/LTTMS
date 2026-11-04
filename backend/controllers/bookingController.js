@@ -100,6 +100,7 @@ exports.createBooking = async (req, res, next) => {
 
     const idempotencyKey = req.body.idempotencyKey || req.headers['idempotency-key'];
     if (idempotencyKey) {
+      req.body.idempotencyKey = idempotencyKey;
       const cachedBooking = bookingIdempotencyCache.get(`${req.user.id}:${idempotencyKey}`);
       if (cachedBooking) {
         return res.status(200).json({
@@ -131,6 +132,23 @@ exports.createBooking = async (req, res, next) => {
       data: booking
     });
   } catch (err) {
+    // Authoritative Database Idempotency Handling:
+    // If concurrent requests or cross-server instances collide on the unique idempotencyKey,
+    // catch the MongoDB duplicate key error (code 11000) and safely return the existing booking.
+    if ((err.code === 11000 || err.name === 'MongoServerError') && req.body?.idempotencyKey) {
+      try {
+        const existingBooking = await Booking.findOne({ idempotencyKey: req.body.idempotencyKey });
+        if (existingBooking) {
+          return res.status(200).json({
+            success: true,
+            data: existingBooking,
+            idempotentReplay: true
+          });
+        }
+      } catch (lookupErr) {
+        // Fallback to error response if lookup fails
+      }
+    }
     res.status(400).json({ success: false, message: err.message });
   }
 };

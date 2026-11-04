@@ -128,6 +128,48 @@ const templates = {
         <p style="margin-top: 20px; color: #666;">This code expires in 10 minutes. Never share this code with anyone.</p>
       </div>`
   }),
+  'password-changed': (ctx) => ({
+    subject: 'Security Alert: Password Changed - Lake Tana',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #0EA5E9;">Password Changed</h1>
+        <p>Hi ${ctx.name},</p>
+        <p>Your account password was successfully changed on <strong>${new Date().toUTCString()}</strong>.</p>
+        <p>All active sessions have been invalidated as a security precaution.</p>
+        <p style="margin-top: 20px; color: #ef4444;">If you did not perform this change, please contact our support team immediately.</p>
+      </div>`
+  }),
+  'password-reset-success': (ctx) => ({
+    subject: 'Your Password Has Been Reset - Lake Tana',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #10B981;">Password Reset Successful</h1>
+        <p>Hi ${ctx.name},</p>
+        <p>Your password was successfully reset. You can now log in with your new credentials.</p>
+        <p style="margin-top: 20px; color: #666;">If you did not make this request, please contact security support immediately.</p>
+      </div>`
+  }),
+  'account-status-update': (ctx) => ({
+    subject: `Account Status Update: ${ctx.status || 'Notice'} - Lake Tana`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: ${ctx.isSuspended ? '#ef4444' : '#0EA5E9'};">Account Status Update</h1>
+        <p>Hi ${ctx.name},</p>
+        <p>Your Lake Tana Tourism account status has been updated: <strong>${ctx.statusText || 'Updated'}</strong>.</p>
+        ${ctx.reason ? `<p><strong>Reason:</strong> ${ctx.reason}</p>` : ''}
+        <p style="margin-top: 20px; color: #666;">For questions regarding this action, please reach out to our administration team.</p>
+      </div>`
+  }),
+  'security-alert': (ctx) => ({
+    subject: `Security Alert: ${ctx.action || 'Account Event'} - Lake Tana`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #ef4444;">Important Security Notification</h1>
+        <p>Hi ${ctx.name},</p>
+        <p>${ctx.message || 'A security event was detected on your account.'}</p>
+        <p style="margin-top: 20px; color: #666;">Time: ${new Date().toUTCString()}</p>
+      </div>`
+  }),
   'default': (ctx) => ({
     subject: ctx.subject || 'Notification from Lake Tana',
     html: `<div style="font-family: Arial, sans-serif;"><p>Hi ${ctx.name},</p><p>${ctx.message || 'You have a new notification from Lake Tana Eco-Tourism.'}</p></div>`

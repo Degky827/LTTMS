@@ -153,6 +153,18 @@ test('MODEL: Booking auto-generates bookingReference and sets price snapshots', 
   assert.equal(booking.priceSnapshot, 450);
 });
 
+test('MODEL: Booking enforces partial unique index for non-empty string idempotency keys', () => {
+  const indexes = Booking.schema.indexes();
+  const idempotencyIdx = indexes.find(([fields, options]) => {
+    return fields.idempotencyKey === 1 && options && options.unique === true;
+  });
+  assert.ok(idempotencyIdx, 'Booking schema must define a unique index on idempotencyKey');
+  const [fields, options] = idempotencyIdx;
+  assert.equal(options.unique, true);
+  assert.ok(options.partialFilterExpression, 'Must use partialFilterExpression to avoid indexing explicit null values');
+  assert.deepEqual(options.partialFilterExpression.idempotencyKey, { $type: 'string', $gt: '' });
+});
+
 test('MODEL: Payment requires txRef, amount, and validates status enum', async () => {
   const p = new Payment({
     txRef: 'LTTMS-TX-12345',
@@ -164,6 +176,7 @@ test('MODEL: Payment requires txRef, amount, and validates status enum', async (
   const err = await p.validate().catch(e => e);
   assert.ok(!(err instanceof Error));
   assert.equal(p.currency, 'ETB');
+  assert.equal(Payment.schema.path('rawWebhookPayload').options.select, false, 'rawWebhookPayload must be select: false');
 
   const invalidPayment = new Payment({
     booking: new mongoose.Types.ObjectId(),
@@ -239,4 +252,5 @@ test('MODEL: AuditLog blocks modification and deletion hooks (immutability)', ()
   const hooks = AuditLog.schema.s.hooks;
   assert.ok(hooks._pres.has('updateOne'), 'AuditLog must register pre updateOne hook');
   assert.ok(hooks._pres.has('deleteOne'), 'AuditLog must register pre deleteOne hook');
+  assert.ok(hooks._pres.has('save'), 'AuditLog must register pre save hook');
 });
