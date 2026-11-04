@@ -4,14 +4,38 @@ const {
   getService,
   createService,
   updateService,
-  deleteService
+  deleteService,
+  submitService,
+  approveService,
+  rejectService,
+  publishService,
+  archiveService,
+  featureService,
+  addServiceImage,
+  updateServiceImage,
+  deleteServiceImage,
+  reorderServiceImages,
+  getServicePricing,
+  updateServicePricing,
+  getServiceAvailability,
+  updateServiceAvailability
 } = require('../controllers/serviceController');
 
 const router = express.Router();
 
-const { protect, authorize, requireApprovedVendor } = require('../middleware/auth');
+const { protect, authorize, requireApprovedVendor, optionalAuth } = require('../middleware/auth');
 const validate = require('../middleware/validate');
-const { serviceQuerySchema, createServiceSchema, updateServiceSchema } = require('../validation/serviceSchemas');
+const {
+  serviceQuerySchema,
+  createServiceSchema,
+  updateServiceSchema,
+  servicePricingSchema,
+  serviceAvailabilitySchema,
+  serviceImageSchema,
+  serviceImageUpdateSchema,
+  serviceImageReorderSchema,
+  serviceModerationSchema
+} = require('../validation/serviceSchemas');
 
 /**
  * @openapi
@@ -20,10 +44,16 @@ const { serviceQuerySchema, createServiceSchema, updateServiceSchema } = require
  *     tags:
  *       - Services
  *     summary: Discover and list tourism services
- *     description: Search and filter tourism services with caching, pagination, price range, eco-friendly filtering, and category selection.
+ *     description: Search and filter tourism services with caching, pagination, price range, eco-friendly filtering, category, destination, and rating.
  *     parameters:
  *       - in: query
  *         name: category
+ *         schema: { type: string }
+ *       - in: query
+ *         name: destination
+ *         schema: { type: string }
+ *       - in: query
+ *         name: serviceType
  *         schema: { type: string }
  *       - in: query
  *         name: ecoFriendly
@@ -35,8 +65,14 @@ const { serviceQuerySchema, createServiceSchema, updateServiceSchema } = require
  *         name: maxPrice
  *         schema: { type: number }
  *       - in: query
+ *         name: rating
+ *         schema: { type: number }
+ *       - in: query
  *         name: search
  *         schema: { type: string }
+ *       - in: query
+ *         name: sortBy
+ *         schema: { type: string, enum: [featured, newest, oldest, price-low, price-high, rating, alpha] }
  *       - in: query
  *         name: page
  *         schema: { type: integer, default: 1 }
@@ -50,25 +86,9 @@ const { serviceQuerySchema, createServiceSchema, updateServiceSchema } = require
  *     tags:
  *       - Services
  *     summary: Create a new tourism service (Approved vendors only)
- *     description: Publishes a new service listing. Vendor account MUST be approved by an administrator before listing creation is permitted.
  *     security:
  *       - bearerAuth: []
  *       - cookieAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: ['title', 'description', 'price', 'category']
- *             properties:
- *               title: { type: string, example: 'Lake Tana Monasteries Half-Day Boat Tour' }
- *               description: { type: string, example: 'Explore 14th-century island monasteries with certified local guides.' }
- *               price: { type: number, example: 1200 }
- *               category: { type: string, example: 'boat_tour' }
- *               duration: { type: string, example: '4 hours' }
- *               maxGroupSize: { type: integer, example: 12 }
- *               ecoFriendly: { type: boolean, example: true }
  *     responses:
  *       201:
  *         description: Service created successfully
@@ -77,8 +97,8 @@ const { serviceQuerySchema, createServiceSchema, updateServiceSchema } = require
  */
 router
   .route('/')
-  .get(validate(serviceQuerySchema), getServices)
-  .post(protect, authorize('vendor', 'admin'), requireApprovedVendor, validate(createServiceSchema), createService);
+  .get(optionalAuth, validate(serviceQuerySchema), getServices)
+  .post(protect, authorize('vendor', 'admin', 'super_admin'), requireApprovedVendor, validate(createServiceSchema), createService);
 
 /**
  * @openapi
@@ -97,36 +117,16 @@ router
  *         description: Service details with populated vendor information
  *       404:
  *         description: Service not found
- *   put:
+ *   patch:
  *     tags:
  *       - Services
  *     summary: Update an existing tourism service
- *     description: Restricted to the service owner vendor or administrator.
  *     security:
  *       - bearerAuth: []
  *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: string }
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               title: { type: string }
- *               description: { type: string }
- *               price: { type: number }
  *     responses:
  *       200:
  *         description: Service updated successfully
- *       401:
- *         description: Not authorized to update this service
- *       404:
- *         description: Service not found
  *   delete:
  *     tags:
  *       - Services
@@ -134,23 +134,42 @@ router
  *     security:
  *       - bearerAuth: []
  *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: string }
  *     responses:
  *       200:
  *         description: Service deleted successfully
- *       401:
- *         description: Not authorized to delete this service
- *       404:
- *         description: Service not found
  */
 router
   .route('/:id')
-  .get(getService)
-  .put(protect, authorize('vendor', 'admin'), requireApprovedVendor, validate(updateServiceSchema), updateService)
-  .delete(protect, authorize('vendor', 'admin'), requireApprovedVendor, deleteService);
+  .get(optionalAuth, getService)
+  .patch(protect, authorize('vendor', 'admin', 'super_admin'), requireApprovedVendor, validate(updateServiceSchema), updateService)
+  .delete(protect, authorize('vendor', 'admin', 'super_admin'), requireApprovedVendor, deleteService);
+
+// ==================== WORKFLOW LIFECYCLE ====================
+
+router.post('/:id/submit', protect, authorize('vendor'), submitService);
+router.patch('/:id/approve', protect, authorize('admin', 'super_admin'), approveService);
+router.patch('/:id/reject', protect, authorize('admin', 'super_admin'), validate(serviceModerationSchema), rejectService);
+router.patch('/:id/publish', protect, authorize('vendor', 'admin', 'super_admin'), publishService);
+router.patch('/:id/archive', protect, authorize('vendor', 'admin', 'super_admin'), archiveService);
+router.patch('/:id/feature', protect, authorize('admin', 'super_admin'), featureService);
+
+// ==================== MEDIA & GALLERY ====================
+
+router.post('/:id/images', protect, authorize('vendor', 'admin', 'super_admin'), validate(serviceImageSchema), addServiceImage);
+router.patch('/:id/images/reorder', protect, authorize('vendor', 'admin', 'super_admin'), validate(serviceImageReorderSchema), reorderServiceImages);
+router.patch('/:id/images/:imageId', protect, authorize('vendor', 'admin', 'super_admin'), validate(serviceImageUpdateSchema), updateServiceImage);
+router.delete('/:id/images/:imageId', protect, authorize('vendor', 'admin', 'super_admin'), deleteServiceImage);
+
+// ==================== PRICING & AVAILABILITY ====================
+
+router
+  .route('/:id/pricing')
+  .get(getServicePricing)
+  .put(protect, authorize('vendor', 'admin', 'super_admin'), validate(servicePricingSchema), updateServicePricing);
+
+router
+  .route('/:id/availability')
+  .get(getServiceAvailability)
+  .put(protect, authorize('vendor', 'admin', 'super_admin'), validate(serviceAvailabilitySchema), updateServiceAvailability);
 
 module.exports = router;

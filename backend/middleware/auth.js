@@ -254,11 +254,46 @@ const blacklistToken = (token) => {
 const getBlacklistSize = () => tokenBlacklist.size;
 const clearBlacklist = () => tokenBlacklist.clear();
 
+/**
+ * Optional authentication: if token is present and valid, attaches req.user; otherwise proceeds as anonymous
+ */
+const optionalAuth = async (req, res, next) => {
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies?.accessToken) {
+    token = req.cookies.accessToken;
+  }
+
+  if (!token || isBlacklisted(token)) {
+    req.user = null;
+    return next();
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = req.mockUser || await User.findById(decoded.id);
+    if (user && user.isActive !== false && !user.isSuspended) {
+      req.user = user;
+    } else {
+      req.user = null;
+    }
+  } catch {
+    req.user = null;
+  }
+
+  next();
+};
+
 module.exports = {
   protect,
   authenticate: protect,
   authorize,
   authorizeRoles: authorize,
+  optionalAuth,
   requireVerifiedEmail,
   requireApprovedVendor,
   requireOwnership,

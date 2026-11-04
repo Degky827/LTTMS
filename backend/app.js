@@ -14,6 +14,9 @@ const { swaggerSpec, swaggerUi } = require('./config/swagger');
 // Import route modules
 const authRoutes = require('./routes/auth');
 const servicesRoutes = require('./routes/services');
+const destinationsRoutes = require('./routes/destinations');
+const categoriesRoutes = require('./routes/categories');
+const ecoBadgesRoutes = require('./routes/ecoBadges');
 const bookingsRoutes = require('./routes/bookings');
 const vendorsRoutes = require('./routes/vendors');
 const reviewsRoutes = require('./routes/reviews');
@@ -164,6 +167,9 @@ v1Router.get('/metrics', metricsHandler);
 
 v1Router.use('/auth', authRoutes);
 v1Router.use('/services', servicesRoutes);
+v1Router.use('/destinations', destinationsRoutes);
+v1Router.use('/categories', categoriesRoutes);
+v1Router.use('/eco-badges', ecoBadgesRoutes);
 v1Router.use('/bookings', bookingsRoutes);
 v1Router.use('/vendors', vendorsRoutes);
 v1Router.use('/reviews', reviewsRoutes);

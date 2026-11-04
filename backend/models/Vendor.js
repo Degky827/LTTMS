@@ -15,6 +15,16 @@ const vendorSchema = new mongoose.Schema({
     minlength: [2, 'Business name must be at least 2 characters'],
     maxlength: [100, 'Business name cannot exceed 100 characters']
   },
+  slug: {
+    type: String,
+    lowercase: true,
+    trim: true,
+    index: true
+  },
+  businessDescription: {
+    type: String,
+    maxlength: [3000, 'Description cannot exceed 3000 characters']
+  },
   businessType: {
     type: String,
     enum: {
@@ -23,6 +33,65 @@ const vendorSchema = new mongoose.Schema({
     },
     default: 'tour_operator',
     index: true
+  },
+  registrationNumber: {
+    type: String,
+    trim: true,
+    default: null
+  },
+  licenseNumber: {
+    type: String,
+    trim: true,
+    default: null
+  },
+  taxId: {
+    type: String,
+    trim: true,
+    default: null
+  },
+  logo: {
+    type: String,
+    default: null
+  },
+  coverImage: {
+    type: String,
+    default: null
+  },
+  gallery: {
+    type: [String],
+    default: []
+  },
+  establishedDate: {
+    type: Date,
+    default: null
+  },
+  businessEmail: {
+    type: String,
+    trim: true,
+    lowercase: true,
+    default: null
+  },
+  phone: {
+    type: String,
+    trim: true,
+    maxlength: [20, 'Phone cannot exceed 20 characters']
+  },
+  altPhone: {
+    type: String,
+    trim: true,
+    maxlength: [20, 'Alternate phone cannot exceed 20 characters'],
+    default: null
+  },
+  website: {
+    type: String,
+    trim: true,
+    default: null
+  },
+  socialLinks: {
+    facebook: { type: String, default: null },
+    instagram: { type: String, default: null },
+    twitter: { type: String, default: null },
+    linkedin: { type: String, default: null }
   },
   location: {
     type: String,
@@ -41,14 +110,45 @@ const vendorSchema = new mongoose.Schema({
     default: 'Bahir Dar',
     trim: true
   },
-  phone: {
+  region: {
     type: String,
-    trim: true,
-    maxlength: [20, 'Phone cannot exceed 20 characters']
+    default: 'Amhara',
+    trim: true
   },
-  description: {
+  zone: {
     type: String,
-    maxlength: [2000, 'Description cannot exceed 2000 characters']
+    default: null,
+    trim: true
+  },
+  woreda: {
+    type: String,
+    default: null,
+    trim: true
+  },
+  coordinates: {
+    latitude: { type: Number, default: null },
+    longitude: { type: Number, default: null }
+  },
+  operatingHours: {
+    type: String,
+    default: null
+  },
+  languages: {
+    type: [String],
+    default: ['Amharic', 'English']
+  },
+  servicesOffered: {
+    type: [String],
+    default: []
+  },
+  destinations: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Destination'
+  }],
+  ecoTourismInfo: {
+    practices: { type: [String], default: [] },
+    certifications: { type: [String], default: [] },
+    communityInitiatives: { type: String, default: null }
   },
   ecoCertification: {
     type: Boolean,
@@ -60,10 +160,24 @@ const vendorSchema = new mongoose.Schema({
     enum: ['none', 'bronze', 'silver', 'gold', 'platinum'],
     default: 'none'
   },
+  ecoBadges: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'EcoBadge'
+  }],
+  description: {
+    type: String,
+    maxlength: [2000, 'Description cannot exceed 2000 characters']
+  },
+  verificationStatus: {
+    type: String,
+    enum: ['draft', 'submitted', 'under_review', 'approved', 'rejected'],
+    default: 'draft',
+    index: true
+  },
   status: {
     type: String,
     enum: {
-      values: ['pending', 'approved', 'rejected', 'suspended', 'blacklisted'],
+      values: ['pending', 'approved', 'rejected', 'suspended', 'blacklisted', 'inactive'],
       message: '{VALUE} is not a valid vendor status'
     },
     default: 'pending',
@@ -73,9 +187,8 @@ const vendorSchema = new mongoose.Schema({
     type: String,
     default: null
   },
-  taxId: {
+  adminNotes: {
     type: String,
-    trim: true,
     default: null
   },
   rejectionReason: {
@@ -93,6 +206,15 @@ const vendorSchema = new mongoose.Schema({
   suspendedReason: {
     type: String,
     default: null
+  },
+  reviewedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  reviewedAt: {
+    type: Date,
+    default: null
   }
 }, {
   timestamps: true,
@@ -100,7 +222,7 @@ const vendorSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Indexes for query performance
-vendorSchema.index({ status: 1, ecoCertification: 1 });
+vendorSchema.index({ businessName: 'text', description: 'text', location: 'text' });
+vendorSchema.index({ status: 1, verificationStatus: 1, businessType: 1 });
 
 module.exports = mongoose.model('Vendor', vendorSchema);

@@ -50,8 +50,24 @@ const swaggerDefinition = {
       description: 'Administrative user governance, role management, vendor approval, audit logs, and platform stats'
     },
     {
+      name: 'Destinations',
+      description: 'Lake Tana destinations, monasteries, waterfalls, geographic coordinates, and visitor details'
+    },
+    {
+      name: 'Categories',
+      description: 'Hierarchical tourism categories and subcategories with circular reference prevention'
+    },
+    {
+      name: 'Vendors',
+      description: 'Vendor business profiles, KYC document verification lifecycle, approvals, and suspension workflows'
+    },
+    {
       name: 'Services',
-      description: 'Tourism service catalog, eco-certified experiences, availability, and vendor listings'
+      description: 'Tourism service catalog, eco-certified experiences, availability, media gallery, and vendor listings'
+    },
+    {
+      name: 'Eco-Tourism',
+      description: 'Eco-badge tiers, sustainability criteria, vendor badge applications, and administrative accreditation'
     },
     {
       name: 'Bookings',
