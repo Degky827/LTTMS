@@ -10,7 +10,8 @@ const commissionTransactionSchema = new mongoose.Schema({
   payment: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Payment',
-    default: null
+    default: null,
+    index: true
   },
   vendor: {
     type: mongoose.Schema.Types.ObjectId,
@@ -27,7 +28,7 @@ const commissionTransactionSchema = new mongoose.Schema({
   commissionRate: {
     type: Number,
     required: [true, 'Commission rate is required'],
-    default: 0.05,
+    default: 0.08,
     min: [0, 'Rate cannot be negative'],
     max: [1, 'Rate cannot exceed 100%']
   },
@@ -48,10 +49,19 @@ const commissionTransactionSchema = new mongoose.Schema({
     uppercase: true,
     trim: true
   },
+  calculationRule: {
+    type: String,
+    default: 'standard_default',
+    trim: true
+  },
+  ruleSnapshot: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
+  },
   status: {
     type: String,
     enum: {
-      values: ['pending', 'collected', 'settled', 'refunded'],
+      values: ['pending', 'earned', 'collected', 'settled', 'reversed'],
       message: '{VALUE} is not a valid commission status'
     },
     default: 'pending',
@@ -76,6 +86,10 @@ commissionTransactionSchema.pre('validate', function(next) {
     this.vendorEarning = this.vendorPayoutAmount;
   }
   next();
+});
+
+commissionTransactionSchema.virtual('vendorShare').get(function() {
+  return this.vendorEarning;
 });
 
 commissionTransactionSchema.index({ vendor: 1, status: 1, createdAt: -1 });

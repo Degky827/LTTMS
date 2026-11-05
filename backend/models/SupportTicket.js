@@ -13,7 +13,13 @@ const supportTicketSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: [true, 'Support ticket must belong to a user'],
-    index: true
+    index: true,
+    alias: 'createdBy'
+  },
+  userRole: {
+    type: String,
+    enum: ['tourist', 'vendor', 'support', 'admin', 'super_admin'],
+    default: 'tourist'
   },
   subject: {
     type: String,
@@ -32,7 +38,18 @@ const supportTicketSchema = new mongoose.Schema({
   category: {
     type: String,
     enum: {
-      values: ['booking', 'payment', 'vendor', 'technical', 'eco_guideline', 'general'],
+      values: [
+        'booking',
+        'payment',
+        'refund',
+        'vendor',
+        'service_quality',
+        'account',
+        'technical',
+        'safety',
+        'eco_guideline',
+        'general'
+      ],
       message: '{VALUE} is not a valid support category'
     },
     default: 'general',
@@ -41,7 +58,7 @@ const supportTicketSchema = new mongoose.Schema({
   priority: {
     type: String,
     enum: {
-      values: ['low', 'medium', 'high', 'urgent'],
+      values: ['low', 'normal', 'medium', 'high', 'urgent'],
       message: '{VALUE} is not a valid priority level'
     },
     default: 'medium',
@@ -50,7 +67,17 @@ const supportTicketSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: {
-      values: ['open', 'in_progress', 'waiting_on_user', 'resolved', 'closed'],
+      values: [
+        'open',
+        'assigned',
+        'in_progress',
+        'waiting_for_user',
+        'waiting_on_user',
+        'waiting_for_vendor',
+        'resolved',
+        'closed',
+        'reopened'
+      ],
       message: '{VALUE} is not a valid ticket status'
     },
     default: 'open',
@@ -65,12 +92,20 @@ const supportTicketSchema = new mongoose.Schema({
   relatedBooking: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Booking',
-    default: null
+    default: null,
+    index: true
   },
   relatedPayment: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Payment',
-    default: null
+    default: null,
+    index: true
+  },
+  relatedVendor: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Vendor',
+    default: null,
+    index: true
   },
   messages: [{
     sender: {
@@ -78,23 +113,41 @@ const supportTicketSchema = new mongoose.Schema({
       ref: 'User',
       required: true
     },
+    senderRole: {
+      type: String,
+      default: 'user'
+    },
     message: {
       type: String,
       required: true,
       trim: true,
-      maxlength: 3000
+      maxlength: 5000
     },
     attachments: [{
       url: String,
       filename: String
     }],
+    visibility: {
+      type: String,
+      enum: ['public', 'internal'],
+      default: 'public'
+    },
     createdAt: {
       type: Date,
       default: Date.now
     }
   }],
+  resolution: {
+    type: String,
+    default: null
+  },
   resolutionNote: {
     type: String,
+    default: null
+  },
+  resolvedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     default: null
   },
   resolvedAt: {
@@ -125,5 +178,6 @@ supportTicketSchema.pre('validate', function(next) {
 supportTicketSchema.index({ status: 1, priority: -1, createdAt: 1 });
 supportTicketSchema.index({ user: 1, status: 1 });
 supportTicketSchema.index({ assignedTo: 1, status: 1 });
+supportTicketSchema.index({ relatedVendor: 1, status: 1 });
 
 module.exports = mongoose.model('SupportTicket', supportTicketSchema);

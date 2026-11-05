@@ -32,6 +32,45 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }
 });
 
+/**
+ * @openapi
+ * /uploads/image:
+ *   post:
+ *     tags:
+ *       - Uploads
+ *     summary: Upload image file for services, KYC documents, or profile pictures
+ *     description: Accepts multipart/form-data with a single image file (JPEG, PNG, WebP) up to 5MB.
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required: [image]
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       201:
+ *         description: Image uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     filename: { type: string, example: '1793820000000-123456789.jpg' }
+ *                     url: { type: string, example: '/uploads/1793820000000-123456789.jpg' }
+ *       400:
+ *         description: Only image files allowed or file size exceeds 5MB
+ */
 router.post('/image', protect, authorize('vendor', 'admin'), upload.single('image'), (req, res) => {
   res.status(201).json({
     success: true,

@@ -3,6 +3,7 @@ const app = require('./app');
 const { config } = require('./config/env');
 const { connectDB, disconnectDB } = require('./config/database');
 const { initSocket } = require('./utils/socket');
+const { startHoldCleaner, stopHoldCleaner } = require('./services/holdExpirationService');
 const logger = require('./utils/logger');
 
 const server = http.createServer(app);
@@ -25,6 +26,10 @@ async function startServer(port = config.PORT) {
     if (!io && config.NODE_ENV !== 'test') {
       io = initSocket(server, config.ALLOWED_ORIGINS);
       app.set('io', io);
+    }
+
+    if (config.NODE_ENV !== 'test') {
+      startHoldCleaner(io, 60000);
     }
 
     return new Promise((resolve) => {
@@ -53,6 +58,7 @@ async function shutdown(signal = 'SIGTERM') {
   isShuttingDown = true;
 
   logger.info({ signal }, 'Graceful shutdown initiated');
+  stopHoldCleaner();
 
   // Close HTTP server to stop accepting new requests
   server.close(async () => {

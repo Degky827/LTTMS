@@ -5,7 +5,13 @@ const notificationSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: [true, 'Notification must specify a recipient'],
-    index: true
+    index: true,
+    alias: 'recipientId'
+  },
+  recipientRole: {
+    type: String,
+    enum: ['tourist', 'vendor', 'support', 'admin', 'super_admin', null],
+    default: null
   },
   sender: {
     type: mongoose.Schema.Types.ObjectId,
@@ -14,10 +20,6 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: {
-      values: ['booking', 'payment', 'review', 'system', 'support', 'security', 'promotion'],
-      message: '{VALUE} is not a valid notification type'
-    },
     required: [true, 'Notification type is required'],
     index: true
   },
@@ -31,17 +33,21 @@ const notificationSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Notification message body is required'],
     trim: true,
-    maxlength: [1000, 'Message cannot exceed 1000 characters']
+    maxlength: [2000, 'Message cannot exceed 2000 characters']
   },
   priority: {
     type: String,
     enum: ['low', 'medium', 'high', 'urgent'],
     default: 'medium'
   },
+  channel: {
+    type: String,
+    enum: ['in_app', 'email', 'socket', 'sms'],
+    default: 'in_app'
+  },
   relatedResource: {
     resourceType: {
       type: String,
-      enum: ['Booking', 'Payment', 'Service', 'Review', 'SupportTicket', 'User', null],
       default: null
     },
     resourceId: {
@@ -60,6 +66,10 @@ const notificationSchema = new mongoose.Schema({
     index: true
   },
   readAt: {
+    type: Date,
+    default: null
+  },
+  expiresAt: {
     type: Date,
     default: null
   }

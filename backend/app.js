@@ -18,14 +18,27 @@ const destinationsRoutes = require('./routes/destinations');
 const categoriesRoutes = require('./routes/categories');
 const ecoBadgesRoutes = require('./routes/ecoBadges');
 const bookingsRoutes = require('./routes/bookings');
+const vendorBookingsRoutes = require('./routes/vendorBookings');
+const refundRequestsRoutes = require('./routes/refundRequests');
+const { getVendorRefundRequests } = require('./controllers/vendorBookingController');
+const { protect, authorize } = require('./middleware/auth');
 const vendorsRoutes = require('./routes/vendors');
 const reviewsRoutes = require('./routes/reviews');
 const messagesRoutes = require('./routes/messages');
 const adminRoutes = require('./routes/admin');
 const uploadsRoutes = require('./routes/uploads');
 const paymentsRoutes = require('./routes/payments');
+const vendorFinanceRoutes = require('./routes/vendorFinance');
+const adminFinanceRoutes = require('./routes/adminFinance');
+const notificationsRoutes = require('./routes/notifications');
+const supportRoutes = require('./routes/support');
 
 const app = express();
+
+// Trust reverse proxy (Nginx, Render, AWS ALB, Cloudflare)
+if (config.isProduction || config.TRUST_PROXY) {
+  app.set('trust proxy', config.TRUST_PROXY ? (typeof config.TRUST_PROXY === 'number' ? config.TRUST_PROXY : 1) : 1);
+}
 
 // Security and request context middleware
 app.use(httpLogger);
@@ -63,7 +76,12 @@ app.use(cors({
 }));
 
 app.use(cookieParser());
-app.use(express.json({ limit: '100kb' }));
+app.use(express.json({
+  limit: '100kb',
+  verify: (req, res, buf) => {
+    req.rawBody = buf;
+  }
+}));
 app.use(publicLimiter);
 
 // Static uploads serving
@@ -171,12 +189,19 @@ v1Router.use('/destinations', destinationsRoutes);
 v1Router.use('/categories', categoriesRoutes);
 v1Router.use('/eco-badges', ecoBadgesRoutes);
 v1Router.use('/bookings', bookingsRoutes);
+v1Router.use('/vendor/bookings', vendorBookingsRoutes);
+v1Router.get('/vendor/refund-requests', protect, authorize('vendor', 'admin', 'super_admin'), getVendorRefundRequests);
+v1Router.use('/refund-requests', refundRequestsRoutes);
 v1Router.use('/vendors', vendorsRoutes);
 v1Router.use('/reviews', reviewsRoutes);
 v1Router.use('/messages', messagesRoutes);
 v1Router.use('/admin', adminRoutes);
 v1Router.use('/uploads', uploadsRoutes);
 v1Router.use('/payments', paymentsRoutes);
+v1Router.use('/vendor/finance', vendorFinanceRoutes);
+v1Router.use('/admin/finance', adminFinanceRoutes);
+v1Router.use('/notifications', notificationsRoutes);
+v1Router.use('/support', supportRoutes);
 
 // Mount v1 router at /api/v1
 app.use('/api/v1', v1Router);

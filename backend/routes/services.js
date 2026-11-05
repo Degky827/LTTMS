@@ -18,7 +18,9 @@ const {
   getServicePricing,
   updateServicePricing,
   getServiceAvailability,
-  updateServiceAvailability
+  updateServiceAvailability,
+  getServiceAvailabilityCalendar,
+  checkQuickAvailability
 } = require('../controllers/serviceController');
 
 const router = express.Router();
@@ -146,6 +148,114 @@ router
 
 // ==================== WORKFLOW LIFECYCLE ====================
 
+/**
+ * @openapi
+ * /services/{id}/submit:
+ *   post:
+ *     tags:
+ *       - Services
+ *     summary: Submit a draft service for administrative review
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Service submitted for review
+ * /services/{id}/approve:
+ *   patch:
+ *     tags:
+ *       - Services
+ *     summary: Approve pending service listing (Admin only)
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Service approved
+ * /services/{id}/reject:
+ *   patch:
+ *     tags:
+ *       - Services
+ *     summary: Reject service listing with reason (Admin only)
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [reason]
+ *             properties:
+ *               reason: { type: string }
+ *     responses:
+ *       200:
+ *         description: Service rejected
+ * /services/{id}/publish:
+ *   patch:
+ *     tags:
+ *       - Services
+ *     summary: Publish an approved service to the marketplace
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Service published
+ * /services/{id}/archive:
+ *   patch:
+ *     tags:
+ *       - Services
+ *     summary: Archive service from marketplace
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Service archived
+ * /services/{id}/feature:
+ *   patch:
+ *     tags:
+ *       - Services
+ *     summary: Toggle featured badge on service (Admin only)
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Featured status updated
+ */
 router.post('/:id/submit', protect, authorize('vendor'), submitService);
 router.patch('/:id/approve', protect, authorize('admin', 'super_admin'), approveService);
 router.patch('/:id/reject', protect, authorize('admin', 'super_admin'), validate(serviceModerationSchema), rejectService);
@@ -155,6 +265,108 @@ router.patch('/:id/feature', protect, authorize('admin', 'super_admin'), feature
 
 // ==================== MEDIA & GALLERY ====================
 
+/**
+ * @openapi
+ * /services/{id}/images:
+ *   post:
+ *     tags:
+ *       - Services
+ *     summary: Add gallery image to service
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [url]
+ *             properties:
+ *               url: { type: string }
+ *               caption: { type: string }
+ *               isPrimary: { type: boolean }
+ *     responses:
+ *       201:
+ *         description: Image added
+ * /services/{id}/images/reorder:
+ *   patch:
+ *     tags:
+ *       - Services
+ *     summary: Reorder gallery image display sequence
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [imageIds]
+ *             properties:
+ *               imageIds: { type: array, items: { type: string } }
+ *     responses:
+ *       200:
+ *         description: Images reordered
+ * /services/{id}/images/{imageId}:
+ *   patch:
+ *     tags:
+ *       - Services
+ *     summary: Update image metadata or set as primary
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *       - in: path
+ *         name: imageId
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               caption: { type: string }
+ *               isPrimary: { type: boolean }
+ *     responses:
+ *       200:
+ *         description: Image updated
+ *   delete:
+ *     tags:
+ *       - Services
+ *     summary: Remove an image from service gallery
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *       - in: path
+ *         name: imageId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Image deleted
+ */
 router.post('/:id/images', protect, authorize('vendor', 'admin', 'super_admin'), validate(serviceImageSchema), addServiceImage);
 router.patch('/:id/images/reorder', protect, authorize('vendor', 'admin', 'super_admin'), validate(serviceImageReorderSchema), reorderServiceImages);
 router.patch('/:id/images/:imageId', protect, authorize('vendor', 'admin', 'super_admin'), validate(serviceImageUpdateSchema), updateServiceImage);
@@ -162,10 +374,117 @@ router.delete('/:id/images/:imageId', protect, authorize('vendor', 'admin', 'sup
 
 // ==================== PRICING & AVAILABILITY ====================
 
+/**
+ * @openapi
+ * /services/{id}/pricing:
+ *   get:
+ *     tags:
+ *       - Services
+ *     summary: Get service seasonal pricing tiers and currency
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Pricing tiers
+ *   put:
+ *     tags:
+ *       - Services
+ *     summary: Update service pricing structure
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               price: { type: number, minimum: 0 }
+ *               currency: { type: string, default: 'ETB' }
+ *     responses:
+ *       200:
+ *         description: Pricing updated
+ */
 router
   .route('/:id/pricing')
   .get(getServicePricing)
   .put(protect, authorize('vendor', 'admin', 'super_admin'), validate(servicePricingSchema), updateServicePricing);
+
+/**
+ * @openapi
+ * /services/{id}/availability/calendar:
+ *   get:
+ *     tags:
+ *       - Services
+ *     summary: Get calendar availability matrix across a date range
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: startDate
+ *         schema: { type: string, format: date, example: '2026-12-01' }
+ *       - in: query
+ *         name: endDate
+ *         schema: { type: string, format: date, example: '2026-12-31' }
+ *     responses:
+ *       200:
+ *         description: Date-by-date availability array
+ * /services/{id}/availability/check:
+ *   get:
+ *     tags:
+ *       - Services
+ *     summary: Fast availability and capacity check for specific date and guests
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: date
+ *         required: true
+ *         schema: { type: string, format: date, example: '2026-12-15' }
+ *       - in: query
+ *         name: participants
+ *         schema: { type: integer, default: 1 }
+ *     responses:
+ *       200:
+ *         description: Real-time availability result
+ * /services/{id}/availability:
+ *   get:
+ *     tags:
+ *       - Services
+ *     summary: Get service availability config or live capacity calculation
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: date
+ *         schema: { type: string, format: date }
+ *       - in: query
+ *         name: timeSlot
+ *         schema: { type: string }
+ *       - in: query
+ *         name: participants
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Availability details
+ */
+router.get('/:id/availability/calendar', getServiceAvailabilityCalendar);
+router.get('/:id/availability/check', checkQuickAvailability);
 
 router
   .route('/:id/availability')

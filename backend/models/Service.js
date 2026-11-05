@@ -205,6 +205,11 @@ const serviceSchema = new mongoose.Schema({
     default: true,
     index: true
   },
+  confirmationType: {
+    type: String,
+    enum: ['instant', 'vendor_confirmation'],
+    default: 'instant'
+  },
   status: {
     type: String,
     enum: ['draft', 'pending_review', 'published', 'rejected', 'suspended', 'archived'],

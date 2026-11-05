@@ -160,6 +160,74 @@ const templates = {
         <p style="margin-top: 20px; color: #666;">For questions regarding this action, please reach out to our administration team.</p>
       </div>`
   }),
+  'booking-cancelled': (ctx) => ({
+    subject: `Booking Cancelled: ${ctx.service || 'Reservation'}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #ef4444;">Booking Cancelled</h1>
+        <p>Hi ${ctx.name},</p>
+        <p>Your booking for <strong>${ctx.service || 'Tourism Service'}</strong> has been cancelled.</p>
+        <p><strong>Booking ID:</strong> ${ctx.bookingId || 'N/A'}</p>
+        ${ctx.reason ? `<p><strong>Reason:</strong> ${ctx.reason}</p>` : ''}
+        <p style="margin-top: 20px; color: #666;">If a refund is applicable, it will be processed according to our cancellation policy.</p>
+      </div>`
+  }),
+  'booking-rejected': (ctx) => ({
+    subject: `Booking Request Declined: ${ctx.service || 'Reservation'}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #ef4444;">Booking Request Declined</h1>
+        <p>Hi ${ctx.name},</p>
+        <p>Unfortunately, the vendor could not accept your booking for <strong>${ctx.service || 'Tourism Service'}</strong>.</p>
+        ${ctx.reason ? `<p><strong>Reason:</strong> ${ctx.reason}</p>` : ''}
+        <p>Any funds held have been released back to your payment account.</p>
+      </div>`
+  }),
+  'refund-update': (ctx) => ({
+    subject: `Refund Update: ${ctx.status || 'Status Change'} - Lake Tana`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #0EA5E9;">Refund Request Update</h1>
+        <p>Hi ${ctx.name},</p>
+        <p>Your refund request for <strong>${ctx.amount || '0'} ETB</strong> has been updated: <strong>${ctx.statusText || ctx.status}</strong>.</p>
+        ${ctx.note ? `<p><strong>Note:</strong> ${ctx.note}</p>` : ''}
+        <p style="margin-top: 20px; color: #666;">Thank you for your patience with Lake Tana Eco-Tourism.</p>
+      </div>`
+  }),
+  'review-update': (ctx) => ({
+    subject: `Review Status Update - Lake Tana`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #0EA5E9;">Review Moderation Update</h1>
+        <p>Hi ${ctx.name},</p>
+        <p>Your review for <strong>${ctx.service || 'Tourism Service'}</strong> has been reviewed by our moderation team: <strong>${ctx.status}</strong>.</p>
+        ${ctx.reason ? `<p><strong>Feedback:</strong> ${ctx.reason}</p>` : ''}
+      </div>`
+  }),
+  'support-reply': (ctx) => ({
+    subject: `Support Ticket Reply [${ctx.ticketNumber || 'Ticket'}]`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #0EA5E9;">New Message on Support Ticket</h1>
+        <p>Hi ${ctx.name},</p>
+        <p>A new message has been posted on ticket <strong>${ctx.ticketNumber}</strong> (${ctx.subject || 'Support Request'}):</p>
+        <div style="background: #f0f9ff; padding: 16px; border-radius: 8px; margin: 16px 0;">
+          <p><strong>${ctx.senderName || 'Support Agent'}:</strong></p>
+          <p>${ctx.message}</p>
+        </div>
+        <p>You can view and reply to this ticket in your dashboard.</p>
+      </div>`
+  }),
+  'vendor-status': (ctx) => ({
+    subject: `Vendor Status Update: ${ctx.status || 'Account Notice'} - Lake Tana`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #0EA5E9;">Vendor Account Status Update</h1>
+        <p>Hi ${ctx.name},</p>
+        <p>Your vendor account <strong>${ctx.businessName || ''}</strong> status has been updated to: <strong>${ctx.status}</strong>.</p>
+        ${ctx.reason ? `<p><strong>Details:</strong> ${ctx.reason}</p>` : ''}
+      </div>`
+  }),
   'security-alert': (ctx) => ({
     subject: `Security Alert: ${ctx.action || 'Account Event'} - Lake Tana`,
     html: `

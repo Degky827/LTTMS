@@ -32,12 +32,24 @@ const envSchema = z.object({
   SMTP_PASS: z.string().optional().default(''),
   SMTP_FROM: z.string().default('"Lake Tana Eco-Tourism" <noreply@laketana.com>'),
 
+  // Reverse proxy trust (for Nginx, Render, AWS ALB, Cloudflare)
+  TRUST_PROXY: z.union([z.coerce.number().int().nonnegative(), z.coerce.boolean()]).default(false),
+
   // Logging
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info')
 });
 
 function loadConfig(env = process.env, throwOnError = false) {
-  const result = envSchema.safeParse(env);
+  const normalizedEnv = {
+    ...env,
+    JWT_REFRESH_SECRET: (env.JWT_REFRESH_SECRET && env.JWT_REFRESH_SECRET.trim() !== '') ? env.JWT_REFRESH_SECRET : undefined,
+    FRONTEND_ORIGIN: env.FRONTEND_ORIGIN || env.FRONTEND_URL || env.CORS_ORIGINS || env.APP_ORIGIN || undefined,
+    CHAPA_API_URL: env.CHAPA_API_URL || env.CHAPA_BASE_URL || undefined,
+    CHAPA_CALLBACK_URL: env.CHAPA_CALLBACK_URL || env.CHAPA_RETURN_URL || undefined,
+    SMTP_PASS: env.SMTP_PASS || env.SMTP_PASSWORD || undefined
+  };
+
+  const result = envSchema.safeParse(normalizedEnv);
 
   if (!result.success) {
     const errorDetails = result.error.issues.map(issue => `  - ${issue.path.join('.')}: ${issue.message}`).join('\n');

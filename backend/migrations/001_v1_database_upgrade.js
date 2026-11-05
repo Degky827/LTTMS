@@ -56,24 +56,39 @@ async function runMigration() {
     // STEP 1: Remediate Dangerous TTL Index on User.lockUntil (ISS-01)
     // =========================================================================
     console.log('\n--- Step 1: Checking for dangerous TTL index on User.lockUntil ---');
-    const userCollection = db.collection('users');
-    const userIndexes = await userCollection.indexes();
-
+    const existingCollections = await db.listCollections({ name: 'users' }).toArray();
     let ttlDropped = false;
-    for (const idx of userIndexes) {
-      if (idx.key && idx.key.lockUntil !== undefined && idx.expireAfterSeconds !== undefined) {
-        console.warn(`[DETECTED] Dangerous TTL index found on lockUntil: "${idx.name}" (expireAfterSeconds: ${idx.expireAfterSeconds})`);
-        if (isDryRun) {
-          console.log(`[DRY-RUN] Would drop dangerous TTL index: ${idx.name}`);
+
+    if (existingCollections.length > 0) {
+      const userCollection = db.collection('users');
+      let userIndexes = [];
+      try {
+        userIndexes = await userCollection.indexes();
+      } catch (err) {
+        if (err.codeName === 'NamespaceNotFound' || err.code === 26 || (err.message && err.message.includes('ns does not exist'))) {
+          userIndexes = [];
         } else {
-          await userCollection.dropIndex(idx.name);
-          console.log(`[REPAIRED] Successfully dropped dangerous TTL index: ${idx.name}`);
-          ttlDropped = true;
+          throw err;
         }
       }
-    }
-    if (!ttlDropped && !isDryRun) {
-      console.log('[OK] No dangerous TTL index on lockUntil detected.');
+
+      for (const idx of userIndexes) {
+        if (idx.key && idx.key.lockUntil !== undefined && idx.expireAfterSeconds !== undefined) {
+          console.warn(`[DETECTED] Dangerous TTL index found on lockUntil: "${idx.name}" (expireAfterSeconds: ${idx.expireAfterSeconds})`);
+          if (isDryRun) {
+            console.log(`[DRY-RUN] Would drop dangerous TTL index: ${idx.name}`);
+          } else {
+            await userCollection.dropIndex(idx.name);
+            console.log(`[REPAIRED] Successfully dropped dangerous TTL index: ${idx.name}`);
+            ttlDropped = true;
+          }
+        }
+      }
+      if (!ttlDropped && !isDryRun) {
+        console.log('[OK] No dangerous TTL index on lockUntil detected.');
+      }
+    } else {
+      console.log('[OK] Users collection does not exist yet. No TTL indexes to remediate.');
     }
 
     // =========================================================================
@@ -194,10 +209,19 @@ async function runMigration() {
 
     for (const { name, model } of models) {
       if (isDryRun) {
-        const diff = await model.diffIndexes();
-        const toCreate = diff.toCreate ? Object.keys(diff.toCreate).length : 0;
-        const toDrop = diff.toDrop ? Object.keys(diff.toDrop).length : 0;
-        console.log(`[DRY-RUN] ${name.padEnd(22)}: ${toCreate} index(es) to create, ${toDrop} index(es) to drop`);
+        try {
+          const diff = await model.diffIndexes();
+          const toCreate = diff.toCreate ? Object.keys(diff.toCreate).length : 0;
+          const toDrop = diff.toDrop ? Object.keys(diff.toDrop).length : 0;
+          console.log(`[DRY-RUN] ${name.padEnd(22)}: ${toCreate} index(es) to create, ${toDrop} index(es) to drop`);
+        } catch (err) {
+          if (err.codeName === 'NamespaceNotFound' || err.code === 26 || (err.message && err.message.includes('ns does not exist'))) {
+            const schemaIndexes = model.schema.indexes().length;
+            console.log(`[DRY-RUN] ${name.padEnd(22)}: ${schemaIndexes} index(es) defined in schema (collection empty/not initialized)`);
+          } else {
+            throw err;
+          }
+        }
       } else {
         await model.createIndexes();
         console.log(`[OK] ${name.padEnd(22)}: Schema indexes verified and synchronized.`);
