@@ -18,11 +18,6 @@ let isShuttingDown = false;
 
 async function startServer(port = config.PORT) {
   try {
-    // Connect to MongoDB
-    if (config.NODE_ENV !== 'test') {
-      await connectDB();
-    }
-
     if (!io && config.NODE_ENV !== 'test') {
       io = initSocket(server, config.ALLOWED_ORIGINS);
       app.set('io', io);
@@ -32,7 +27,8 @@ async function startServer(port = config.PORT) {
       startHoldCleaner(io, 60000);
     }
 
-    return new Promise((resolve) => {
+    // Start listening on port immediately so cloud platforms (Render, AWS, K8s) detect the open port
+    await new Promise((resolve) => {
       server.listen(port, () => {
         logger.info(
           {
@@ -47,6 +43,17 @@ async function startServer(port = config.PORT) {
         resolve(server);
       });
     });
+
+    // Connect to MongoDB
+    if (config.NODE_ENV !== 'test') {
+      try {
+        await connectDB();
+      } catch (dbErr) {
+        logger.warn({ err: dbErr.message }, 'Initial MongoDB connection failed. Retrying in background...');
+      }
+    }
+
+    return server;
   } catch (err) {
     logger.fatal({ err: err.message }, 'Failed to start server');
     process.exit(1);
