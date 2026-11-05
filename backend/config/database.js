@@ -10,6 +10,7 @@ const MONGO_OPTIONS = {
 };
 
 let connectionPromise = null;
+let retryTimeout = null;
 
 async function connectDB(uri = config.MONGODB_URI, options = {}) {
   // If already connected, reuse existing connection
@@ -27,11 +28,22 @@ async function connectDB(uri = config.MONGODB_URI, options = {}) {
   connectionPromise = mongoose.connect(uri, mergedOptions)
     .then((conn) => {
       logger.info({ host: conn.connection.host, database: conn.connection.name }, 'MongoDB connected successfully');
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+        retryTimeout = null;
+      }
       return conn.connection;
     })
     .catch((err) => {
       logger.error({ err: err.message }, 'Failed to connect to MongoDB');
       connectionPromise = null;
+      // In production/development, schedule automatic retry in background
+      if (config.NODE_ENV !== 'test' && !retryTimeout) {
+        retryTimeout = setTimeout(() => {
+          retryTimeout = null;
+          connectDB(uri, options).catch(() => {});
+        }, 10000);
+      }
       throw err;
     });
 
@@ -39,6 +51,10 @@ async function connectDB(uri = config.MONGODB_URI, options = {}) {
 }
 
 async function disconnectDB() {
+  if (retryTimeout) {
+    clearTimeout(retryTimeout);
+    retryTimeout = null;
+  }
   if (mongoose.connection.readyState !== 0) {
     try {
       await mongoose.connection.close();
