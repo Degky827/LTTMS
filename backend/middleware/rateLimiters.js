@@ -69,7 +69,7 @@ const refreshLimiter = rateLimit({
  */
 const publicLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 120, // 120 requests per minute
+  max: process.env.NODE_ENV === 'test' ? 10000 : 120, // High throughput in test runner, restricted in production
   standardHeaders: true,
   legacyHeaders: false,
   message: {
