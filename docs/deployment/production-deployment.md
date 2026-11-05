@@ -100,9 +100,17 @@ docker compose exec backend npm run migrate
 ```
 
 ### Step 5: Post-Deployment Smoke Tests
-Execute smoke tests on critical paths:
-1. `GET /api/v1/health` -> returns 200 and `dependencies: { mongodb: 'up', socketio: 'up' }`.
-2. `POST /api/v1/auth/login` -> authenticates user and issues JWT.
-3. `GET /api/v1/services` -> lists published marketplace services.
-4. `POST /api/v1/bookings/check-availability` -> verifies booking calendar engine.
-5. `GET /api-docs` -> loads Swagger UI.
+Execute automated deployment verification with a single command:
+```bash
+npm run verify:deployment
+# Or targeting a specific remote deployment:
+node scripts/verify-deployment.js https://api.laketana.com
+```
+
+The script automatically verifies:
+1. `GET /health` -> Liveness probe and dependencies.
+2. `GET /ready` -> Database connection and application readiness.
+3. `GET /api-docs.json` -> Complete OpenAPI 3.0.3 specification with all 153 paths.
+4. `GET /api/health` -> Backward-compatible legacy frontend API alias.
+5. `GET /api/v1/services` -> Tourism marketplace catalog.
+6. `GET /api/v1/bookings/check-availability` -> Booking engine authorization guards.

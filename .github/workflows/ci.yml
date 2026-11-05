@@ -45,6 +45,9 @@ jobs:
       - name: Validate Environment & Configuration
         run: node -e "require('./config/env')"
 
+      - name: Validate Database Upgrade Migration (Dry Run)
+        run: npm run migrate:dry-run
+
       - name: Run Full Test Suite
         run: npm test
 

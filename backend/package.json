@@ -15,6 +15,7 @@
     "test:all": "node --test",
     "migrate": "node migrations/001_v1_database_upgrade.js",
     "migrate:dry-run": "node migrations/001_v1_database_upgrade.js --dry-run",
+    "verify:deployment": "node ../scripts/verify-deployment.js",
     "seed": "node seed.js"
   },
   "dependencies": {

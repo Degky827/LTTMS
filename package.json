@@ -10,6 +10,7 @@
     "build:frontend": "npm run build --prefix frontend",
     "test": "npm run test --prefix backend",
     "lint": "npm run lint --prefix frontend",
+    "verify:deployment": "node scripts/verify-deployment.js",
     "seed:backend": "node backend/seed.js"
   },
   "devDependencies": {

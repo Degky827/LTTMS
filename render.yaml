@@ -1,30 +1,73 @@
 services:
+  # ----------------------------------------------------------------------------
+  # LTTMS Modular Monolith Backend Service
+  # ----------------------------------------------------------------------------
   - type: web
     name: lttms-backend
     runtime: node
-    buildCommand: npm install
-    startCommand: npm start
     rootDir: backend
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /api/v1/health
+    disk:
+      name: lttms-uploads
+      mountPath: /opt/render/project/src/backend/uploads
+      sizeGB: 10
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 5000
+      - key: TRUST_PROXY
+        value: "1"
       - key: MONGODB_URI
         sync: false
       - key: JWT_SECRET
         sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 30d
       - key: FRONTEND_ORIGIN
         sync: false
+      - key: CHAPA_SECRET_KEY
+        sync: false
+      - key: CHAPA_API_URL
+        value: https://api.chapa.co/v1
+      - key: CHAPA_CALLBACK_URL
+        sync: false
+      - key: CHAPA_WEBHOOK_SECRET
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_SECURE
+        value: "false"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        value: '"Lake Tana Eco-Tourism" <noreply@laketana.com>'
+      - key: LOG_LEVEL
+        value: info
 
+  # ----------------------------------------------------------------------------
+  # LTTMS Next.js Frontend Service
+  # ----------------------------------------------------------------------------
   - type: web
     name: lttms-frontend
     runtime: node
+    rootDir: frontend
     buildCommand: npm install && npm run build
     startCommand: npm start
-    rootDir: frontend
     envVars:
       - key: NODE_ENV
         value: production
       - key: NEXT_PUBLIC_API_URL
-        value: https://lttms.onrender.com/api
+        sync: false
+      - key: NEXT_PUBLIC_SOCKET_URL
+        sync: false
