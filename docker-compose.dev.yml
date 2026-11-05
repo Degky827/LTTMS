@@ -1,10 +1,29 @@
 # ==============================================================================
-# LTTMS V1 — Local Development Compose Configuration
-# Features live reload (nodemon), bind mount, and debug logging
+# LTTMS V2 — Local Development Compose Configuration
+# Features live reload (nodemon + Next.js fast refresh), bind mounts, and debug logging
 # Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
 # ==============================================================================
 
 services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev
+    container_name: lttms-frontend-dev
+    command: npm run dev
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
+      - NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+
   backend:
     build:
       context: ./backend
