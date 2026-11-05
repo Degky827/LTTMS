@@ -1,0 +1,54 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "services": "Services",
+    "vendors": "Prestataires",
+    "bookings": "Réservations",
+    "ecoTourism": "Écotourisme",
+    "reviews": "Avis",
+    "aboutLakeTana": "À propos du lac Tana",
+    "contactUs": "Contactez-nous",
+    "register": "S'inscrire",
+    "login": "Connexion",
+    "getStarted": "Commencer",
+    "logout": "Déconnexion",
+    "dashboard": "Tableau de bord",
+    "language": "Langue"
+  },
+  "common": {
+    "lakeTana": "Lac Tana",
+    "ecoTourism": "Écotourisme",
+    "loading": "Chargement...",
+    "submit": "Soumettre",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "noResults": "Aucun résultat trouvé",
+    "viewAll": "Voir tout",
+    "learnMore": "En savoir plus",
+    "bookNow": "Réserver",
+    "readMore": "Lire plus"
+  },
+  "home": {
+    "heroTitle": "Découvrez le lac Tana",
+    "heroSubtitle": "Explorez le plus grand lac d'Éthiopie — une réserve de biosphère de l'UNESCO avec d'anciens monastères, une faune diversifiée et des aventures écologiques inoubliables.",
+    "heroSearchPlaceholder": "Rechercher des visites, hôtels, activités...",
+    "heroCta": "Explorer les expériences",
+    "featuredDestinations": "Destinations en vedette",
+    "whyChooseUs": "Pourquoi nous choisir",
+    "topServices": "Meilleurs services écotouristiques",
+    "communityTitle": "Communauté et durabilité",
+    "testimonials": "Ce que disent les voyageurs",
+    "statsTitle": "Notre impact en chiffres"
+  },
+  "footer": {
+    "description": "Découvrez le plus grand lac d'Éthiopie — une réserve de biosphère de l'UNESCO avec d'anciens monastères et des éco-aventures inoubliables.",
+    "quickLinks": "Liens rapides",
+    "explore": "Explorer",
+    "portal": "Portails",
+    "allRightsReserved": "Tous droits réservés."
+  }
+}
