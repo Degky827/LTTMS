@@ -33,9 +33,9 @@ export default function Login() {
     try {
       const result = await login(form.email, form.password, form.rememberMe)
       if (result.requiresTwoFactor) {
-        setTwoFactor({ token: result.twoFactorToken })
+        setTwoFactor({ token: result.twoFactorToken || '' })
       } else {
-        const user = result.user
+        const user = result.user; if (!user) return;
         if (user.role === 'vendor') router.push('/vendor/dashboard')
         else if (user.role === 'admin') router.push('/admin/dashboard')
         else router.push('/booking')
@@ -189,3 +189,5 @@ export default function Login() {
     </div>
   )
 }
+
+
