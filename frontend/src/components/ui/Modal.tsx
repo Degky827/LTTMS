@@ -74,7 +74,7 @@ export const Modal: React.FC<ModalProps> = ({
       {/* Modal Dialog Body */}
       <div
         className={cn(
-          'relative w-full bg-white rounded-2xl shadow-lake-xl border border-surface-border overflow-hidden z-10 flex flex-col my-auto max-h-[90vh] animate-slide-up',
+          'relative w-full bg-surface text-text-primary rounded-2xl shadow-lake-xl border border-surface-border overflow-hidden z-10 flex flex-col my-auto max-h-[90vh] animate-slide-up',
           sizeClasses[size]
         )}
       >
