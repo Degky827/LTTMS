@@ -60,7 +60,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Select Language"
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-text-primary bg-white hover:bg-gray-50 border border-surface-border rounded-lg shadow-lake-sm transition-colors"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-text-primary bg-surface hover:bg-gray-100 dark:hover:bg-gray-800 border border-surface-border rounded-lg shadow-lake-sm transition-colors"
       >
         <span className="text-sm leading-none">{currentLang.flag}</span>
         <span className="hidden sm:inline-block">{currentLang.nativeName}</span>
@@ -75,7 +75,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 z-50 mt-2 w-40 rounded-xl bg-white shadow-lake-lg border border-surface-border py-1.5 focus:outline-none animate-slide-down">
+        <div className="absolute right-0 z-50 mt-2 w-40 rounded-xl bg-surface shadow-lake-lg border border-surface-border py-1.5 focus:outline-none animate-slide-down">
           {languages.map((l) => (
             <button
               key={l.code}
@@ -87,8 +87,8 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
               className={cn(
                 'w-full flex items-center justify-between px-3.5 py-2 text-xs font-medium text-left transition-colors',
                 language === l.code
-                  ? 'bg-primary-50 text-primary-700 font-semibold'
-                  : 'text-text-primary hover:bg-gray-50'
+                  ? 'bg-primary-50 dark:bg-primary-950/60 text-primary-700 dark:text-primary-300 font-bold'
+                  : 'text-text-primary hover:bg-gray-100 dark:hover:bg-gray-800'
               )}
             >
               <div className="flex items-center gap-2">

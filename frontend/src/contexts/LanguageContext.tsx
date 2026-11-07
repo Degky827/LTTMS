@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import enTranslations from '../../locales/en.json'
+import amTranslations from '../../locales/am.json'
 
-export type Language = 'en' | 'am' | 'fr'
+export type Language = 'en' | 'am'
 
 export interface LanguageContextType {
   language: Language
@@ -14,30 +16,13 @@ export interface LanguageContextType {
 const SUPPORTED_LANGUAGES: { code: Language; name: string; nativeName: string; flag: string }[] = [
   { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
   { code: 'am', name: 'Amharic', nativeName: 'አማርኛ', flag: '🇪🇹' },
-  { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
 ]
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
-let cachedTranslations: Record<Language, any> = {
-  en: {},
-  am: {},
-  fr: {},
-}
-
-async function loadTranslations(lang: Language) {
-  if (Object.keys(cachedTranslations[lang]).length > 0) {
-    return cachedTranslations[lang]
-  }
-
-  try {
-    const data = await import(`../../locales/${lang}.json`).then((m) => m.default || m)
-    cachedTranslations[lang] = data
-    return data
-  } catch (err) {
-    console.warn(`[i18n] Failed to load translations for ${lang}`, err)
-    return {}
-  }
+const cachedTranslations: Record<Language, any> = {
+  en: enTranslations,
+  am: amTranslations,
 }
 
 function getNestedTranslation(obj: any, path: string): string | null {
@@ -56,7 +41,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     const saved = localStorage.getItem('lttms_lang') as Language | null
-    const initialLang: Language = saved && ['en', 'am', 'fr'].includes(saved) ? saved : 'en'
+    const initialLang: Language = saved && ['en', 'am'].includes(saved) ? saved : 'en'
 
     setLanguageState(initialLang)
     document.documentElement.lang = initialLang
@@ -66,15 +51,9 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } else {
       document.body.classList.remove('font-ethiopic')
     }
-
-    Promise.all([
-      loadTranslations('en'),
-      loadTranslations(initialLang),
-    ])
   }, [])
 
-  const setLanguage = async (newLang: Language) => {
-    await loadTranslations(newLang)
+  const setLanguage = (newLang: Language) => {
     setLanguageState(newLang)
     localStorage.setItem('lttms_lang', newLang)
     document.documentElement.lang = newLang
@@ -87,14 +66,15 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }
 
   const t = (key: string, fallback?: string): string => {
-    // Try current language
+    // 1. Try currently selected language
     const currentTranslation = getNestedTranslation(cachedTranslations[language], key)
     if (currentTranslation) return currentTranslation
 
-    // Fallback to English
+    // 2. Fallback to English dictionary
     const englishTranslation = getNestedTranslation(cachedTranslations.en, key)
     if (englishTranslation) return englishTranslation
 
+    // 3. Fallback to provided string or key
     return fallback || key
   }
 
