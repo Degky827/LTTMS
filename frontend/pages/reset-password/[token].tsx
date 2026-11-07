@@ -1,3 +1,5 @@
+import Head from 'next/head'
+import { PublicLayout } from '@/components/layouts/PublicLayout'
 import { FaLock, FaEye, FaEyeSlash, FaLeaf, FaCheckCircle } from 'react-icons/fa'
 import { useState } from 'react'
 import { useRouter } from 'next/router'
@@ -32,7 +34,10 @@ export default function ResetPassword() {
   }
 
   return (
-    <div>
+    <PublicLayout>
+      <Head>
+        <title>Reset Password | Lake Tana Eco-Tourism</title>
+      </Head>
       <section className="relative h-48 overflow-hidden">
         <div className="absolute inset-0">
           <Image src="/images/bgservice&about.avif" alt="Reset password" fill className="object-cover" priority />
@@ -82,6 +87,6 @@ export default function ResetPassword() {
           )}
         </div>
       </div>
-    </div>
+    </PublicLayout>
   )
 }

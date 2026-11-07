@@ -1,3 +1,5 @@
+import Head from 'next/head'
+import { PublicLayout } from '@/components/layouts/PublicLayout'
 import { FaCheckCircle, FaTimesCircle, FaLeaf } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
@@ -27,7 +29,10 @@ export default function VerifyEmail() {
   }, [token])
 
   return (
-    <div>
+    <PublicLayout>
+      <Head>
+        <title>Verify Email | Lake Tana Eco-Tourism</title>
+      </Head>
       <section className="relative h-48 overflow-hidden">
         <div className="absolute inset-0">
           <Image src="/images/bgservice&about.avif" alt="Verify email" fill className="object-cover" priority />
@@ -65,6 +70,6 @@ export default function VerifyEmail() {
           )}
         </div>
       </div>
-    </div>
+    </PublicLayout>
   )
 }
