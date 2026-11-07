@@ -11,8 +11,17 @@ export interface ToastItem {
   duration?: number
 }
 
+export type ToastFn = ((options: Omit<ToastItem, 'id'> | string) => void) & {
+  success: (message: string, title?: string) => void
+  error: (message: string, title?: string) => void
+  warning: (message: string, title?: string) => void
+  info: (message: string, title?: string) => void
+  dismiss: (id: string) => void
+}
+
 interface ToastContextType {
-  toast: (options: Omit<ToastItem, 'id'> | string) => void
+  toast: ToastFn
+  addToast: (options: Omit<ToastItem, 'id'> | string) => void
   success: (message: string, title?: string) => void
   error: (message: string, title?: string) => void
   warning: (message: string, title?: string) => void
@@ -29,7 +38,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setToasts((prev) => prev.filter((t) => t.id !== id))
   }, [])
 
-  const toast = useCallback(
+  const toastCore = useCallback(
     (options: Omit<ToastItem, 'id'> | string) => {
       const id = Math.random().toString(36).substring(2, 9)
       const toastData: ToastItem =
@@ -49,20 +58,25 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   )
 
   const success = useCallback((message: string, title?: string) => {
-    toast({ message, title, type: 'success' })
-  }, [toast])
+    toastCore({ message, title, type: 'success' })
+  }, [toastCore])
 
   const error = useCallback((message: string, title?: string) => {
-    toast({ message, title, type: 'error' })
-  }, [toast])
+    toastCore({ message, title, type: 'error' })
+  }, [toastCore])
 
   const warning = useCallback((message: string, title?: string) => {
-    toast({ message, title, type: 'warning' })
-  }, [toast])
+    toastCore({ message, title, type: 'warning' })
+  }, [toastCore])
 
   const info = useCallback((message: string, title?: string) => {
-    toast({ message, title, type: 'info' })
-  }, [toast])
+    toastCore({ message, title, type: 'info' })
+  }, [toastCore])
+
+  const toast = Object.assign(
+    (options: Omit<ToastItem, 'id'> | string) => toastCore(options),
+    { success, error, warning, info, dismiss }
+  ) as ToastFn
 
   const icons = {
     success: (
@@ -95,7 +109,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }
 
   return (
-    <ToastContext.Provider value={{ toast, success, error, warning, info, dismiss }}>
+    <ToastContext.Provider value={{ toast, addToast: toast, success, error, warning, info, dismiss }}>
       {children}
       {/* Toast Portal Container */}
       <div
