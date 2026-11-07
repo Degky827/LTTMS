@@ -1,184 +1,211 @@
-import { useState, useEffect } from 'react'
-import Image from 'next/image'
+import React, { useState, useEffect } from 'react'
+import Head from 'next/head'
 import Link from 'next/link'
-import {
-  FaStar, FaLeaf, FaSearch,
-  FaMapMarkerAlt, FaPhone, FaEnvelope, FaShieldAlt,
-  FaStore
-} from 'react-icons/fa'
-import API from '../utils/api'
+import { PublicLayout } from '@/components/layouts/PublicLayout'
+import { vendorService } from '@/features/vendors/services/vendorService'
+import { Vendor } from '@/features/vendors/types'
+import { VendorCard } from '@/features/vendors/components/VendorCard'
+import { Button } from '@/components/ui/Button'
 
-export default function Vendors() {
-  const [vendors, setVendors] = useState<any[]>([])
+export default function VendorsDirectoryPage() {
+  const [vendors, setVendors] = useState<Vendor[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [ecoOnly, setEcoOnly] = useState(false)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
 
   useEffect(() => {
-    const fetchVendors = async () => {
+    const loadVendors = async () => {
       try {
-        const res = await API.get('/vendors')
-        setVendors(res.data.data || [])
-      } catch {
+        setLoading(true)
+        const res = await vendorService.getAll({
+          page,
+          limit: 12,
+          search: search.trim() || undefined,
+        })
+        if (res.data) {
+          setVendors(res.data)
+          setTotalPages(res.totalPages || Math.ceil((res.total || res.data.length) / 12) || 1)
+        }
+      } catch (err) {
+        console.error('Failed to load vendors:', err)
         setVendors([])
       } finally {
         setLoading(false)
       }
     }
-    fetchVendors()
-  }, [])
 
-  const filtered = vendors.filter((v) => {
-    const matchSearch = v.businessName?.toLowerCase().includes(search.toLowerCase()) ||
-                        v.description?.toLowerCase().includes(search.toLowerCase())
-    const matchEco = ecoOnly ? v.ecoCertified : true
-    return matchSearch && matchEco
+    loadVendors()
+  }, [page, search])
+
+  const filteredVendors = vendors.filter((v) => {
+    if (ecoOnly && !v.ecoCertification && (!v.ecoBadgeTier || v.ecoBadgeTier === 'none')) {
+      return false
+    }
+    return true
   })
 
   return (
-    <div>
-
-      {/* Hero */}
-      <section className="relative h-56 overflow-hidden">
-        <Image
-          src="/images/LakeTana.jpg"
-          alt="Vendors Directory"
-          fill
-          className="object-cover scale-110 animate-zoom"
-          priority
+    <PublicLayout>
+      <Head>
+        <title>Verified Local Tourism Partners & Boat Operators | LTTMS</title>
+        <meta
+          name="description"
+          content="Connect with licensed Lake Tana boat captains, monastic guides, lakeside lodges, and cultural tour operators."
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent"></div>
-        <div className="relative z-10 h-full flex items-center">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
-              Our{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-emerald-300">
-                Vendors
-              </span>
-            </h1>
-            <p className="text-lg text-gray-200 max-w-xl">Verified eco-tourism partners around Lake Tana.</p>
-          </div>
-        </div>
-      </section>
+      </Head>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1">
-        {/* Vendor Dashboard CTA */}
-        <div className="bg-gradient-to-r from-primary/5 to-emerald-500/5 border border-primary/10 rounded-2xl p-5 mb-8 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <FaStore className="text-primary text-xl" />
-            <div>
-              <p className="font-semibold text-gray-900 text-sm">Are you a tourism vendor?</p>
-              <p className="text-xs text-gray-500">Manage your services, bookings, and revenue.</p>
+      <div className="bg-surface-muted/30 min-h-screen pb-20">
+        {/* Hero Section */}
+        <div className="bg-gradient-to-r from-primary-950 via-primary-900 to-primary-850 text-white py-16 px-4 sm:px-6 lg:px-8 border-b border-primary-700/50">
+          <div className="max-w-7xl mx-auto space-y-6">
+            <div className="max-w-3xl">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 mb-3">
+                🛡️ Verified Local Operators
+              </span>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-heading tracking-tight">
+                Our Tourism Partners & Boat Captains
+              </h1>
+              <p className="mt-3 text-primary-150 text-base sm:text-lg leading-relaxed">
+                Empowering indigenous Bahir Dar boat cooperatives, heritage custodians, and certified eco-lodges dedicated to sustainable tourism on Lake Tana.
+              </p>
+            </div>
+
+            {/* Search and Filter Bar */}
+            <div className="flex flex-col sm:flex-row gap-3 max-w-2xl pt-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  placeholder="Search by operator name or specialty..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-4 pr-10 py-3.5 rounded-xl bg-white text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 shadow-md"
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setEcoOnly(!ecoOnly)}
+                className={`flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl text-sm font-semibold transition-all border ${
+                  ecoOnly
+                    ? 'bg-emerald-600 text-white border-emerald-500 shadow-md'
+                    : 'bg-primary-900/60 text-primary-100 hover:bg-primary-800 border-primary-700/50'
+                }`}
+              >
+                <span>🌿 Eco-Certified Only</span>
+              </button>
             </div>
           </div>
-          <Link href="/login" className="shrink-0 bg-gradient-to-r from-primary to-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:shadow-lg transition-all">
-            Access Dashboard
-          </Link>
         </div>
 
-        {/* Search & Filter */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-10">
-          <div className="relative flex-1">
-            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search vendors by name or service..."
-              className="w-full border border-gray-200 rounded-xl pl-12 pr-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all bg-white shadow-sm"
-            />
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
+          {/* Vendor Join Banner */}
+          <div className="bg-gradient-to-r from-primary-50 via-emerald-50 to-primary-50 border border-primary-200/60 rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xs">
+            <div className="space-y-1 text-center md:text-left">
+              <h2 className="text-lg sm:text-xl font-bold text-primary-950 font-heading">
+                Are you a local boat captain, guide, or lodge owner?
+              </h2>
+              <p className="text-xs sm:text-sm text-text-secondary max-w-2xl">
+                Join the Lake Tana Tourism Marketplace to list your services, receive online reservations, and accept instant Chapa digital payments.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <Link href="/vendor/register">
+                <Button variant="primary" size="md">
+                  Register as Vendor
+                </Button>
+              </Link>
+              <Link href="/vendor/login">
+                <Button variant="outline" size="md">
+                  Vendor Portal Login
+                </Button>
+              </Link>
+            </div>
           </div>
-          <label className="flex items-center gap-3 px-5 py-3 bg-white border border-gray-200 rounded-xl shadow-sm cursor-pointer hover:border-emerald-300 transition-colors shrink-0">
-            <input
-              type="checkbox"
-              checked={ecoOnly}
-              onChange={() => setEcoOnly(!ecoOnly)}
-              className="w-5 h-5 text-emerald-500 rounded focus:ring-emerald-500"
-            />
-            <FaLeaf className="text-emerald-500" />
-            <span className="text-sm font-semibold text-gray-700">Eco-Certified Only</span>
-          </label>
-        </div>
 
-        {/* Grid */}
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          </div>
-        ) : filtered.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map((vendor) => (
-              <div
-                key={vendor._id}
-                className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
-              >
-                <div className="p-6">
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-emerald-500 flex items-center justify-center text-white text-xl font-bold shrink-0">
-                      {vendor.businessName?.charAt(0) || 'V'}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-gray-900 text-lg truncate">{vendor.businessName || 'Vendor'}</h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        {vendor.ecoCertified && (
-                          <span className="inline-flex items-center gap-1 text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold">
-                            <FaLeaf /> Eco-Certified
-                          </span>
-                        )}
-                        <span className="inline-flex items-center gap-1 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">
-                          <FaShieldAlt /> Verified
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center text-yellow-500 text-sm shrink-0">
-                      <FaStar className="mr-0.5" />
-                      <span className="font-bold text-gray-900">4.8</span>
-                    </div>
-                  </div>
+          {/* Vendors Grid */}
+          <div className="space-y-6">
+            <div className="flex items-center justify-between border-b border-surface-border pb-3">
+              <span className="text-sm font-semibold text-text-secondary">
+                {loading ? 'Loading operators...' : `Showing ${filteredVendors.length} Verified Partner${filteredVendors.length === 1 ? '' : 's'}`}
+              </span>
+            </div>
 
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                    {vendor.description || 'Experienced eco-tourism vendor serving Lake Tana visitors with authentic experiences.'}
-                  </p>
-
-                  <div className="space-y-2 mb-5">
-                    <div className="flex items-center text-sm text-gray-500">
-                      <FaMapMarkerAlt className="mr-2 text-primary shrink-0" />
-                      <span className="truncate">{vendor.location || 'Bahir Dar, Ethiopia'}</span>
-                    </div>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <FaPhone className="mr-2 text-primary shrink-0" />
-                      <span>{vendor.phone || '+251 91 234 5678'}</span>
-                    </div>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <FaEnvelope className="mr-2 text-primary shrink-0" />
-                      <span className="truncate">{vendor.email || 'vendor@laketana.com'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="px-6 pb-6 flex gap-3">
-                  <Link
-                    href={`/services?vendor=${vendor._id}`}
-                    className="flex-1 text-center bg-gradient-to-r from-primary to-blue-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:shadow-lg transition-all duration-300"
-                  >
-                    View Services
-                  </Link>
-                  <button className="px-4 py-2.5 border border-gray-200 text-gray-600 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors">
-                    Contact
-                  </button>
-                </div>
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <div key={n} className="h-44 bg-white rounded-2xl border border-surface-border p-5"></div>
+                ))}
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-200">
-            <FaMapMarkerAlt className="text-5xl text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-gray-900 mb-2">No vendors found</h3>
-            <p className="text-gray-500 text-sm">Try adjusting your search or filters.</p>
-          </div>
-        )}
-      </div>
+            ) : filteredVendors.length === 0 ? (
+              <div className="bg-white rounded-2xl p-12 text-center border border-surface-border space-y-4">
+                <div className="w-16 h-16 bg-surface-muted rounded-full flex items-center justify-center text-3xl mx-auto">
+                  🚤
+                </div>
+                <h3 className="text-xl font-bold text-text-primary font-heading">
+                  No Tourism Partners Found
+                </h3>
+                <p className="text-text-secondary max-w-md mx-auto text-sm">
+                  We could not find any active partners matching your criteria. Try resetting your search or filter.
+                </p>
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={() => {
+                    setSearch('')
+                    setEcoOnly(false)
+                  }}
+                >
+                  Reset Search
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredVendors.map((vendor) => (
+                    <VendorCard key={vendor._id} vendor={vendor} />
+                  ))}
+                </div>
 
-    </div>
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 pt-6">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={page <= 1}
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    >
+                      &larr; Previous
+                    </Button>
+                    <span className="text-xs text-text-secondary px-3 font-semibold">
+                      Page {page} of {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={page >= totalPages}
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    >
+                      Next &rarr;
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </PublicLayout>
   )
 }
