@@ -1,82 +1,104 @@
+import Head from 'next/head'
 import Link from 'next/link'
-import { FaBookOpen, FaChevronRight } from 'react-icons/fa'
+import { PublicLayout } from '@/components/layouts/PublicLayout'
+import { useLanguage } from '@/contexts/LanguageContext'
+import { FaBookOpen, FaChevronRight, FaLandmark, FaExternalLinkAlt } from 'react-icons/fa'
 import { lakeTanaHistorySources, lakeTanaHistoryTimeline } from '../data/lakeTanaHistory'
 
 export default function HistoryPage() {
-  return (
-    <div>
+  const { t } = useLanguage()
 
-      <section className="relative h-96 overflow-hidden">
-        <div className="absolute inset-0">
-          <img
-            src="/images/lake-tana-history.svg"
-            alt="Lake Tana historical overview"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent"></div>
-        </div>
-        <div className="relative z-10 h-full flex items-center">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+  return (
+    <PublicLayout>
+      <Head>
+        <title>{t('history.heroTitle', 'History of Lake Tana')} | LTTMS</title>
+        <meta
+          name="description"
+          content="Explore the rich chronological history of Lake Tana, ancient island monasteries, royal treasures, and UNESCO biosphere sanctuary."
+        />
+      </Head>
+
+      <div className="bg-surface-muted/40 min-h-screen">
+        {/* Hero Section */}
+        <div className="bg-gradient-to-r from-primary-950 via-primary-900 to-primary-800 text-white py-14 px-4 sm:px-6 lg:px-8 border-b border-primary-700/50">
+          <div className="max-w-7xl mx-auto">
             <div className="max-w-3xl">
-              <div className="inline-flex items-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-6">
-                <FaBookOpen className="mr-2 text-cyan-200" />
-                <span className="text-white text-sm font-medium">Learning Hub</span>
-              </div>
-              <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-                History of <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-emerald-300">Lake Tana</span>
+              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-primary-800/80 text-gold-300 border border-gold-500/30 mb-3">
+                <FaLandmark className="text-gold-400" />
+                {t('history.timelineTitle', 'Historical Timeline & Sacred Heritage')}
+              </span>
+              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight font-heading">
+                {t('history.heroTitle', 'History of Lake Tana')}
               </h1>
-              <p className="text-xl text-gray-200">
-                Discover the historical timeline of Ethiopia's largest lake and its island monasteries.
+              <p className="mt-2 text-sm sm:text-base text-primary-100/90 leading-relaxed max-w-2xl">
+                {t(
+                  'history.heroSubtitle',
+                  'A journey through millennia of monastic sanctuary, ancient civilizations, and UNESCO natural heritage.'
+                )}
               </p>
             </div>
           </div>
         </div>
-      </section>
 
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {lakeTanaHistoryTimeline.map((item) => (
-              <div key={item.title} className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-                <p className="text-sm uppercase tracking-wider text-primary font-semibold mb-2">{item.period}</p>
-                <h2 className="text-2xl font-bold text-gray-900 mb-3">{item.title}</h2>
-                <p className="text-gray-700">{item.description}</p>
+        {/* Timeline Grid */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid md:grid-cols-2 gap-6">
+            {lakeTanaHistoryTimeline.map((item, idx) => (
+              <div
+                key={idx}
+                className="bg-surface border border-surface-border rounded-2xl p-6 sm:p-7 shadow-sm flex flex-col justify-between hover:border-primary-600 transition-colors"
+              >
+                <div>
+                  <div className="inline-block text-xs font-bold uppercase tracking-wider text-gold-600 dark:text-gold-400 mb-2">
+                    {item.period}
+                  </div>
+                  <h2 className="text-xl font-bold font-heading text-text-primary mb-3">
+                    {item.title}
+                  </h2>
+                  <p className="text-sm text-text-secondary leading-relaxed">
+                    {item.description}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
 
-      <section className="pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-gradient-to-br from-slate-900 to-blue-900 rounded-3xl p-10">
-            <h2 className="text-3xl font-bold text-white mb-4">Sources and Further Reading</h2>
-            <div className="space-y-3">
-              {lakeTanaHistorySources.map((source) => (
+          {/* Research Sources & Further Reading */}
+          <div className="mt-12 bg-surface border border-surface-border rounded-2xl p-6 sm:p-8 shadow-sm">
+            <h2 className="text-xl font-bold font-heading text-text-primary mb-4 flex items-center gap-2">
+              <FaBookOpen className="text-primary-700 dark:text-primary-400" />
+              {t('history.sourcesTitle', 'Historical References & Research')}
+            </h2>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {lakeTanaHistorySources.map((source, i) => (
                 <a
-                  key={source.url}
+                  key={i}
                   href={source.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="block text-cyan-200 hover:text-cyan-100 underline underline-offset-4"
+                  className="flex items-center justify-between p-3.5 rounded-xl bg-surface-muted border border-surface-border text-xs sm:text-sm font-semibold text-text-primary hover:border-primary-600 transition-colors"
                 >
-                  {source.label}
+                  <span>{source.label}</span>
+                  <FaExternalLinkAlt className="text-xs text-text-secondary shrink-0" />
                 </a>
               ))}
             </div>
-            <div className="mt-8">
+
+            <div className="mt-8 pt-6 border-t border-surface-border flex flex-col sm:flex-row items-center justify-between gap-4">
+              <p className="text-xs sm:text-sm text-text-secondary">
+                Experience these centuries of Ethiopian monastic heritage in person.
+              </p>
               <Link
                 href="/services"
-                className="inline-flex items-center bg-white text-primary px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm bg-primary-700 hover:bg-primary-800 text-white transition-colors shadow-sm shrink-0"
               >
-                Explore Experiences
-                <FaChevronRight className="ml-2" />
+                <span>{t('home.viewAllServices', 'Browse All Services')}</span>
+                <FaChevronRight className="text-xs" />
               </Link>
             </div>
           </div>
         </div>
-      </section>
-
-    </div>
+      </div>
+    </PublicLayout>
   )
 }
