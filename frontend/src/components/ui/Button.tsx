@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils/cn'
 import { Spinner } from './Spinner'
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'accent' | 'outline' | 'ghost' | 'danger'
+  variant?: 'primary' | 'secondary' | 'accent' | 'outline' | 'ghost' | 'danger' | 'warning'
   size?: 'sm' | 'md' | 'lg'
   isLoading?: boolean
   leftIcon?: React.ReactNode
@@ -50,6 +50,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         'text-text-primary bg-transparent hover:bg-primary-50/60 hover:text-primary-600 focus:ring-primary-500/20',
       danger:
         'bg-status-danger text-white hover:bg-red-700 focus:ring-red-500/50 shadow-sm',
+      warning:
+        'bg-amber-500 text-white hover:bg-amber-600 focus:ring-amber-500/50 shadow-sm',
     }
 
     return (

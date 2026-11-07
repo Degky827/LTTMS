@@ -54,7 +54,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             aria-invalid={!!error}
             aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-desc` : undefined}
             className={cn(
-              'w-full h-11 px-3.5 text-sm rounded-lg border bg-white text-text-primary placeholder:text-text-muted transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:bg-gray-100 disabled:cursor-not-allowed',
+              'w-full h-11 px-3.5 text-sm rounded-lg border border-surface-border bg-surface text-text-primary placeholder:text-text-muted transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500/30 disabled:opacity-60 disabled:cursor-not-allowed',
               startIcon && 'pl-10',
               endIcon && 'pr-10',
               error

@@ -4,14 +4,16 @@
 
 @layer base {
   :root {
-    --color-primary: 20 91 70;       /* #145B46 */
-    --color-secondary: 27 138 131;   /* #1B8A83 */
-    --color-accent: 217 164 65;      /* #D9A441 */
-    --color-bg: 248 250 249;         /* #F8FAF9 */
-    --color-surface: 255 255 255;    /* #FFFFFF */
-    --color-text-primary: 23 43 39;  /* #172B27 */
-    --color-text-secondary: 102 117 111; /* #66756F */
-    --color-border: 228 234 230;     /* #E4EAE6 */
+    --color-primary: 20 91 70;         /* #145B46 */
+    --color-secondary: 27 138 131;     /* #1B8A83 */
+    --color-accent: 217 119 6;         /* #D97706 */
+    --color-bg: 248 250 252;           /* #F8FAFC */
+    --color-surface: 255 255 255;      /* #FFFFFF */
+    --color-surface-card: 255 255 255; /* #FFFFFF */
+    --color-border: 226 232 240;       /* #E2E8F0 */
+    --color-text-primary: 15 23 42;    /* #0F172A - Jet Black / Slate 900 */
+    --color-text-secondary: 51 65 85;  /* #334155 - Slate 700 */
+    --color-text-muted: 100 116 139;   /* #64748B - Slate 500 */
     --radius-sm: 0.25rem;
     --radius-md: 0.5rem;
     --radius-lg: 0.75rem;
@@ -20,14 +22,16 @@
   }
 
   .dark {
-    --color-primary: 43 147 116;
-    --color-secondary: 35 174 165;
-    --color-accent: 227 180 86;
-    --color-bg: 18 31 28;            /* #121F1C */
-    --color-surface: 25 42 38;       /* #192A26 */
-    --color-text-primary: 240 247 244;
-    --color-text-secondary: 164 179 173;
-    --color-border: 38 62 56;
+    --color-primary: 27 138 131;       /* #1B8A83 */
+    --color-secondary: 35 174 165;     /* #23AEA5 */
+    --color-accent: 245 158 11;        /* #F59E0B */
+    --color-bg: 11 22 19;              /* #0B1613 Deep Lake Dark */
+    --color-surface: 19 38 32;         /* #132620 Lake Surface */
+    --color-surface-card: 23 45 38;    /* #172D26 Lake Card */
+    --color-border: 30 58 50;          /* #1E3A32 Visible Dark Border */
+    --color-text-primary: 248 250 252; /* #F8FAFC - Pure Crisp White */
+    --color-text-secondary: 226 232 240;/* #E2E8F0 - High Contrast Light Slate */
+    --color-text-muted: 148 163 184;   /* #94A3B8 - Slate 400 */
   }
 
   * {
@@ -44,11 +48,17 @@
   }
 
   body {
-    background-color: #F8FAF9;
-    color: #172B27;
+    background-color: rgb(var(--color-bg));
+    color: rgb(var(--color-text-primary));
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans Ethiopic', sans-serif;
     overflow-x: hidden;
     min-height: 100vh;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .dark body {
+    background-color: #0B1613;
+    color: #F8FAFC;
   }
 
   /* Support Amharic & Ge'ez scripts with crisp typography */

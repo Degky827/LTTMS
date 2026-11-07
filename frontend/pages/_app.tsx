@@ -2,7 +2,6 @@ import '../styles/globals.css'
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
 import { AppProviders } from '@/providers/AppProviders'
-import Layout from '../components/Layout'
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
@@ -27,9 +26,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <meta name="apple-mobile-web-app-title" content="Lake Tana" />
       </Head>
       <AppProviders>
-        <Layout>
-          <Component {...pageProps} />
-        </Layout>
+        <Component {...pageProps} />
       </AppProviders>
     </>
   )

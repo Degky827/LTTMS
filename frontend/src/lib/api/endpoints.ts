@@ -35,6 +35,9 @@ export const API_ENDPOINTS = {
     AVAILABILITY_CALENDAR: (id: string) => `/services/${id}/availability/calendar`,
     PRICING: (id: string) => `/services/${id}/pricing`,
     SUBMIT: (id: string) => `/services/${id}/submit`,
+    APPROVE: (id: string) => `/services/${id}/approve`,
+    REJECT: (id: string) => `/services/${id}/reject`,
+    FEATURE: (id: string) => `/services/${id}/feature`,
     PUBLISH: (id: string) => `/services/${id}/publish`,
     ARCHIVE: (id: string) => `/services/${id}/archive`,
     IMAGES: (id: string) => `/services/${id}/images`,
@@ -150,12 +153,92 @@ export const API_ENDPOINTS = {
 
   // Administration
   ADMIN: {
+    // Dashboard & Stats
+    OVERVIEW: '/admin/dashboard/overview',
+    STATS: '/admin/stats',
+    BOOKINGS_ANALYSIS: '/admin/dashboard/bookings',
+    REVENUE_ANALYSIS: '/admin/dashboard/revenue',
+    VENDORS_ANALYSIS: '/admin/dashboard/vendors',
+    TOURISTS_ANALYSIS: '/admin/dashboard/tourists',
+    SERVICES_ANALYSIS: '/admin/dashboard/services',
+    REVIEWS_ANALYSIS: '/admin/dashboard/reviews',
+    REFUNDS_ANALYSIS: '/admin/dashboard/refunds',
+    SUPPORT_ANALYSIS: '/admin/dashboard/support',
+    RECENT_ACTIVITY: '/admin/dashboard/recent-activity',
+
+    // Users
     USERS: '/admin/users',
-    UPDATE_USER_ROLE: (userId: string) => `/admin/users/${userId}/role`,
-    PENDING_VENDORS: '/admin/vendors/pending',
-    APPROVE_VENDOR: (vendorId: string) => `/admin/vendors/${vendorId}/approve`,
-    REJECT_VENDOR: (vendorId: string) => `/admin/vendors/${vendorId}/reject`,
-    METRICS: '/admin/metrics',
+    USER_BY_ID: (id: string) => `/admin/users/${id}`,
+    UPDATE_USER_STATUS: (id: string) => `/admin/users/${id}/status`,
+    UPDATE_USER_ROLE: (id: string) => `/admin/users/${id}/role`,
+
+    // Vendors
+    VENDORS: '/admin/vendors',
+    VENDOR_BY_ID: (id: string) => `/admin/vendors/${id}`,
+    UPDATE_VENDOR_STATUS: (id: string) => `/admin/vendors/${id}/status`,
+    UPDATE_VENDOR_ECO_BADGE: (id: string) => `/admin/vendors/${id}/eco-badge`,
+
+    // Bookings
+    BOOKINGS: '/admin/bookings',
+    BOOKING_BY_ID: (id: string) => `/admin/bookings/${id}`,
+    BOOKING_CANCEL: (id: string) => `/admin/bookings/${id}/cancel`,
+    BOOKING_STATUS: (id: string) => `/admin/bookings/${id}/status`,
+    BOOKING_OVERRIDE: (id: string) => `/admin/bookings/${id}/override`,
+    BOOKING_STATISTICS: '/admin/bookings/statistics',
+    BOOKING_REPORTS: '/admin/reports/bookings',
+
+    // Finance & Settlements
+    FINANCE_OVERVIEW: '/admin/finance/overview',
+    PAYMENTS: '/admin/finance/payments',
+    COMMISSIONS: '/admin/finance/commissions',
+    COMMISSION_RULES: '/admin/finance/commission-rules',
+    COMMISSION_RULE_BY_ID: (id: string) => `/admin/finance/commission-rules/${id}`,
+    SETTLEMENTS: '/admin/finance/settlements',
+    SETTLEMENT_REVIEW: (id: string) => `/admin/finance/settlements/${id}/review`,
+    SETTLEMENT_COMPLETE: (id: string) => `/admin/finance/settlements/${id}/complete`,
+
+    // Refunds
+    REFUNDS: '/admin/refunds',
+    REFUND_BY_ID: (id: string) => `/admin/refunds/${id}`,
+    REFUND_APPROVE: (id: string) => `/admin/refunds/${id}/approve`,
+    REFUND_REJECT: (id: string) => `/admin/refunds/${id}/reject`,
+    REFUND_RETRY: (id: string) => `/admin/refunds/${id}/retry`,
+    REFUND_PROCESS: (id: string) => `/admin/finance/refunds/${id}/process`,
+
+    // Reviews & Complaints
+    REVIEWS: '/admin/reviews',
+    REVIEW_MODERATE: (id: string) => `/admin/reviews/${id}/moderate`,
+    REVIEW_REPORTS: (id: string) => `/admin/reviews/${id}/reports`,
+    REVIEW_DELETE: (id: string) => `/admin/reviews/${id}`,
+
+    // Support
+    SUPPORT_TICKETS: '/admin/support/tickets',
+    SUPPORT_TICKET_BY_ID: (id: string) => `/admin/support/tickets/${id}`,
+    SUPPORT_ASSIGN: (id: string) => `/admin/support/tickets/${id}/assign`,
+    SUPPORT_STATUS: (id: string) => `/admin/support/tickets/${id}/status`,
+    SUPPORT_PRIORITY: (id: string) => `/admin/support/tickets/${id}/priority`,
+    SUPPORT_REPLY: (id: string) => `/admin/support/tickets/${id}/reply`,
+    SUPPORT_INTERNAL_NOTES: (id: string) => `/admin/support/tickets/${id}/internal-notes`,
+
+    // Eco-Badges
+    ECO_BADGE_APPLICATIONS: '/eco-badges/applications',
+    ECO_BADGE_APPROVE: (id: string) => `/eco-badges/applications/${id}/approve`,
+    ECO_BADGE_REJECT: (id: string) => `/eco-badges/applications/${id}/reject`,
+    ECO_COMPLIANCE: '/admin/eco-compliance',
+
+    // Exports
+    EXPORTS_BOOKINGS: '/admin/exports/bookings',
+    EXPORTS_PAYMENTS: '/admin/exports/payments',
+    EXPORTS_COMMISSIONS: '/admin/exports/commissions',
+    EXPORTS_REFUNDS: '/admin/exports/refunds',
+    EXPORTS_SETTLEMENTS: '/admin/exports/settlements',
+    EXPORTS_VENDORS: '/admin/exports/vendors',
+    EXPORTS_REVIEWS: '/admin/exports/reviews',
+    EXPORTS_SUPPORT: '/admin/exports/support-tickets',
+
+    // Audit & Announcements
+    AUDIT_LOGS: '/admin/audit-logs',
+    ANNOUNCEMENTS: '/admin/announcements',
   },
 
   // File Uploads
