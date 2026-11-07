@@ -1,318 +1,525 @@
-import { useEffect, useMemo, useState } from 'react'
-import Image from 'next/image'
+import React, { useEffect, useState } from 'react'
+import Head from 'next/head'
 import Link from 'next/link'
-import {
-  FaStar, FaMapMarkerAlt, FaLeaf, FaUsers,
-  FaCalendarAlt, FaClock, FaShieldAlt, FaCheckCircle,
-  FaCreditCard, FaMobileAlt, FaPaypal,
-  FaArrowLeft, FaBell
-} from 'react-icons/fa'
 import { useRouter } from 'next/router'
-import API from '../../utils/api'
+import { PublicLayout } from '@/components/layouts/PublicLayout'
+import { marketplaceService } from '@/features/services/services/marketplaceService'
+import { Service } from '@/features/services/types'
+import { bookingService } from '@/features/bookings/services/bookingService'
+import { useAuth } from '@/contexts/AuthContext'
+import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
+import { Card, CardContent } from '@/components/ui/Card'
+import { useToast } from '@/components/feedback/ToastProvider'
 
-const paymentMethods = [
-  { id: 'telebirr', name: 'Telebirr', icon: <FaMobileAlt />, color: 'from-green-500 to-emerald-600' },
-  { id: 'cbe', name: 'CBE Birr', icon: <FaMobileAlt />, color: 'from-blue-600 to-blue-800' },
-  { id: 'amole', name: 'Amole', icon: <FaMobileAlt />, color: 'from-amber-500 to-orange-600' },
-  { id: 'paypal', name: 'PayPal', icon: <FaPaypal />, color: 'from-blue-500 to-indigo-600' },
-  { id: 'stripe', name: 'Stripe', icon: <FaCreditCard />, color: 'from-purple-500 to-purple-700' },
-]
-
-export default function BookingPage() {
+export default function BookingWorkflowPage() {
   const router = useRouter()
-  const { id } = router.query
-  const [service, setService] = useState<any>(null)
-  const [loadingService, setLoadingService] = useState(true)
-  const [date, setDate] = useState('')
-  const [guests, setGuests] = useState(1)
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
-  const [paymentMethod, setPaymentMethod] = useState('telebirr')
-  const [agreed, setAgreed] = useState(false)
+  const { id, date: queryDate, adults: queryAdults, children: queryChildren, timeSlot: querySlot } = router.query
+  const { user, isAuthenticated } = useAuth()
+  const { addToast } = useToast()
 
+  const [service, setService] = useState<Service | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Booking Form State
+  const [bookingDate, setBookingDate] = useState<string>('')
+  const [adults, setAdults] = useState<number>(1)
+  const [children, setChildren] = useState<number>(0)
+  const [timeSlot, setTimeSlot] = useState<string>('morning')
+  const [specialRequests, setSpecialRequests] = useState<string>('')
+  const [agreedToTerms, setAgreedToTerms] = useState<boolean>(false)
+
+  // Traveler contact state
+  const [contactName, setContactName] = useState<string>('')
+  const [contactEmail, setContactEmail] = useState<string>('')
+  const [contactPhone, setContactPhone] = useState<string>('')
+
+  // Initialize service & form state
   useEffect(() => {
     if (!id || Array.isArray(id)) return
-    const fetchService = async () => {
+
+    const loadService = async () => {
       try {
-        setLoadingService(true)
-        setError('')
-        const res = await API.get(`/services/${id}`)
-        setService(res.data.data)
+        setLoading(true)
+        setError(null)
+        const res = await marketplaceService.getByIdOrSlug(id)
+        if (res.data) {
+          setService(res.data)
+        } else {
+          setError('Service not found')
+        }
       } catch (err: any) {
-        setError(err?.response?.data?.message || 'Unable to load service details')
+        console.error('Failed to load service for booking:', err)
+        setError(err?.response?.data?.message || 'Failed to load experience details')
       } finally {
-        setLoadingService(false)
+        setLoading(false)
       }
     }
-    fetchService()
+
+    loadService()
   }, [id])
 
-  const totalPrice = useMemo(() => {
-    const basePrice = Number(service?.price || 0)
-    return basePrice * guests
-  }, [service?.price, guests])
+  // Sync user info into form
+  useEffect(() => {
+    if (user) {
+      setContactName(user.name || '')
+      setContactEmail(user.email || '')
+      if (user.phone) setContactPhone(user.phone)
+    }
+  }, [user])
 
-  const todayStr = new Date().toISOString().split('T')[0]
+  // Sync query parameters into state
+  useEffect(() => {
+    if (queryDate && typeof queryDate === 'string') {
+      setBookingDate(queryDate)
+    } else if (!bookingDate) {
+      // Default to tomorrow
+      const tomorrow = new Date()
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      setBookingDate(tomorrow.toISOString().split('T')[0])
+    }
 
-  const handleBooking = async (e: React.FormEvent) => {
+    if (queryAdults) {
+      const parsedAdults = parseInt(String(queryAdults), 10)
+      if (!isNaN(parsedAdults) && parsedAdults > 0) setAdults(parsedAdults)
+    }
+
+    if (queryChildren) {
+      const parsedChildren = parseInt(String(queryChildren), 10)
+      if (!isNaN(parsedChildren) && parsedChildren >= 0) setChildren(parsedChildren)
+    }
+
+    if (querySlot && typeof querySlot === 'string') {
+      setTimeSlot(querySlot)
+    }
+  }, [queryDate, queryAdults, queryChildren, querySlot, bookingDate])
+
+  // Price calculations
+  const totalGuests = adults + children
+  const adultPrice = service?.price || 0
+  const childPrice = service?.childPrice !== undefined && service?.childPrice !== null ? service.childPrice : adultPrice * 0.5
+  const adultTotal = adultPrice * adults
+  const childTotal = childPrice * children
+  const grandTotal = adultTotal + childTotal
+  const currency = service?.currency || 'ETB'
+
+  const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
-    setSuccessMessage('')
-    if (!service?._id) { setError('Service details are not ready.'); return }
-    if (!agreed) { setError('Please agree to the terms and conditions.'); return }
+
+    if (!isAuthenticated) {
+      addToast({
+        type: 'warning',
+        title: 'Authentication Required',
+        message: 'Please sign in or create an account to finalize your booking.',
+      })
+      router.push(`/login?redirect=${encodeURIComponent(router.asPath)}`)
+      return
+    }
+
+    if (!service) {
+      setError('Service is not loaded yet')
+      return
+    }
+
+    if (!bookingDate) {
+      setError('Please select a date for your tour')
+      return
+    }
+
+    if (!agreedToTerms) {
+      setError('Please accept the booking terms and cancellation policy')
+      return
+    }
+
     try {
       setSubmitting(true)
-      const res = await API.post('/bookings', { service: service._id, date, guests, paymentMethod })
-      const createdBooking = res.data?.data
-      const bookingId = createdBooking?._id || createdBooking?.id
-      if (bookingId) {
-        const payRes = await API.post('/payments/initialize', {
-          bookingId,
-          returnUrl: window.location.origin + '/booking/payment-status'
-        })
-        if (payRes.data?.data?.checkoutUrl) {
-          window.location.href = payRes.data.data.checkoutUrl
-          return
-        }
+      setError(null)
+
+      const payload = {
+        service: service._id,
+        date: bookingDate,
+        adults,
+        children,
+        guests: totalGuests,
+        timeSlot,
+        notes: specialRequests.trim() || undefined,
+        specialRequests: specialRequests.trim() || undefined,
+        contactName: contactName.trim() || undefined,
+        contactEmail: contactEmail.trim() || undefined,
+        contactPhone: contactPhone.trim() || undefined,
       }
-      setSuccessMessage('Booking confirmed! Check your email for the receipt. Vendor has been notified.')
+
+      const res = await bookingService.create(payload)
+
+      if (res.data) {
+        const bookingId = res.data._id || (res.data as any).id
+        addToast({
+          type: 'success',
+          title: 'Reservation Held',
+          message: 'Your booking has been initiated. Proceeding to secure payment checkout.',
+        })
+        router.push(`/checkout/${bookingId}`)
+      } else {
+        throw new Error(res.message || 'Booking reservation could not be initialized')
+      }
     } catch (err: any) {
-      if (err?.response?.status === 401) setError('Please login first to book.')
-      else setError(err?.response?.data?.message || 'Booking failed. Please try again.')
+      console.error('Booking submission failed:', err)
+      setError(err?.response?.data?.message || err?.message || 'Failed to submit booking reservation')
+      addToast({
+        type: 'error',
+        title: 'Booking Error',
+        message: err?.response?.data?.message || 'Could not complete reservation hold.',
+      })
     } finally {
       setSubmitting(false)
     }
   }
 
+  const todayStr = new Date().toISOString().split('T')[0]
+
   return (
-    <div>
+    <PublicLayout>
+      <Head>
+        <title>{service ? `Book ${service.title} | Lake Tana Tourism` : 'Book Tour | LTTMS'}</title>
+      </Head>
 
-      {loadingService ? (
-        <div className="flex-1 flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
-      ) : !service ? (
-        <div className="flex-1 flex flex-col items-center justify-center py-20">
-          <span className="text-6xl mb-4">🌿</span>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Service not found</h2>
-          <Link href="/services" className="text-primary font-semibold hover:underline">Browse services</Link>
-        </div>
-      ) : (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
-          <button onClick={() => router.back()} className="flex items-center gap-2 text-gray-500 hover:text-primary mb-6 transition-colors text-sm font-semibold">
-            <FaArrowLeft /> Back
-          </button>
-
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
-            {/* Left: Service Details */}
-            <div className="lg:col-span-3 space-y-6">
-              <div className="relative h-80 rounded-2xl overflow-hidden shadow-lg">
-                {service.images?.length > 0 ? (
-                  <Image src={`/images/${service.images[0]}`} alt={service.title} fill className="object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-primary/10 to-emerald-500/10 flex items-center justify-center">
-                    <span className="text-6xl opacity-30">🌿</span>
-                  </div>
-                )}
-                {service.ecoFriendly && (
-                  <div className="absolute top-5 left-5 bg-gradient-to-r from-emerald-500 to-green-600 text-white text-sm font-bold px-4 py-2 rounded-full flex items-center shadow-lg">
-                    <FaLeaf className="mr-2" /> Eco-Certified
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{service.title}</h1>
-                <div className="flex flex-wrap items-center gap-4 text-sm">
-                  <div className="flex items-center text-yellow-500">
-                    {[...Array(5)].map((_, i) => <FaStar key={i} className={`${i < (service.rating || 0) ? 'text-yellow-400' : 'text-gray-200'} mr-0.5`} />)}
-                    <span className="ml-2 font-semibold text-gray-900">{service.rating || 'New'}</span>
-                  </div>
-                  <span className="flex items-center text-gray-500"><FaMapMarkerAlt className="mr-1 text-primary" /> Lake Tana Region</span>
-                  <span className="flex items-center text-gray-500"><FaClock className="mr-1 text-primary" /> 3-4 hours</span>
-                </div>
-              </div>
-
-              <p className="text-gray-600 leading-relaxed">{service.description}</p>
-
-              {/* Itinerary Preview */}
-              <div className="bg-gray-50 rounded-2xl p-6">
-                <h3 className="font-bold text-gray-900 mb-4">What to Expect</h3>
-                <ul className="space-y-3">
-                  <li className="flex items-start gap-3">
-                    <div className="w-6 h-6 mt-0.5 rounded-full bg-gradient-to-r from-primary to-blue-600 text-white flex items-center justify-center text-xs font-bold shrink-0">1</div>
-                    <span className="text-sm text-gray-600">Welcome and introduction at the meeting point</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-6 h-6 mt-0.5 rounded-full bg-gradient-to-r from-primary to-blue-600 text-white flex items-center justify-center text-xs font-bold shrink-0">2</div>
-                    <span className="text-sm text-gray-600">Guided tour with experienced local guide</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-6 h-6 mt-0.5 rounded-full bg-gradient-to-r from-primary to-blue-600 text-white flex items-center justify-center text-xs font-bold shrink-0">3</div>
-                    <span className="text-sm text-gray-600">Refreshments and cultural insights along the way</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-6 h-6 mt-0.5 rounded-full bg-gradient-to-r from-primary to-blue-600 text-white flex items-center justify-center text-xs font-bold shrink-0">4</div>
-                    <span className="text-sm text-gray-600">Return journey with memorable experiences</span>
-                  </li>
-                </ul>
-              </div>
+      <div className="bg-surface-muted/30 min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto space-y-8">
+          {/* Header & Breadcrumb */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-border pb-4">
+            <div>
+              <nav className="flex items-center space-x-2 text-xs text-text-muted mb-1">
+                <Link href="/" className="hover:text-primary-600">Home</Link>
+                <span>/</span>
+                <Link href="/services" className="hover:text-primary-600">Marketplace</Link>
+                <span>/</span>
+                <span className="text-text-primary font-medium">Reservation</span>
+              </nav>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-text-primary font-heading">
+                Complete Your Reservation
+              </h1>
             </div>
 
-            {/* Right: Booking Form */}
-            <div className="lg:col-span-2">
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 sticky top-24 space-y-6">
-                <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-                  <div>
-                    <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold">From</div>
-                    <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">
-                      ${service.price}
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-500">per person</div>
-                </div>
-
-                <form onSubmit={handleBooking} className="space-y-5">
-                  {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-start gap-2">
-                      <FaShieldAlt className="mt-0.5 shrink-0" /> {error}
-                    </div>
-                  )}
-                  {successMessage && (
-                    <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm flex items-start gap-2">
-                      <FaCheckCircle className="mt-0.5 shrink-0 text-emerald-500" /> {successMessage}
-                    </div>
-                  )}
-
-                  {/* Date */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                      <FaCalendarAlt className="text-primary" /> Select Date
-                    </label>
-                    <input
-                      type="date"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      min={todayStr}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white"
-                      required
-                    />
-                  </div>
-
-                  {/* Guests */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                      <FaUsers className="text-primary" /> Number of Guests
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="20"
-                      value={guests}
-                      onChange={(e) => setGuests(Math.max(1, Number(e.target.value) || 1))}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white"
-                      required
-                    />
-                  </div>
-
-                  {/* Payment Method */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                      <FaCreditCard className="text-primary" /> Payment Method
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {paymentMethods.map((pm) => (
-                        <button
-                          key={pm.id}
-                          type="button"
-                          onClick={() => setPaymentMethod(pm.id)}
-                          className={`flex items-center gap-2 px-3 py-3 rounded-xl text-xs font-semibold transition-all border ${
-                            paymentMethod === pm.id
-                              ? `bg-gradient-to-r ${pm.color} text-white border-transparent shadow-md`
-                              : 'bg-white text-gray-600 border-gray-200 hover:border-primary'
-                          }`}
-                        >
-                          {pm.icon}
-                          {pm.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Price Breakdown */}
-                  <div className="bg-gray-50 rounded-xl p-4 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">${service.price} × {guests} guest(s)</span>
-                      <span className="font-semibold text-gray-900">${totalPrice}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Service fee</span>
-                      <span className="font-semibold text-gray-900">${(totalPrice * 0.05).toFixed(2)}</span>
-                    </div>
-                    <div className="border-t pt-2 flex justify-between font-bold text-lg">
-                      <span>Total</span>
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">
-                        ${(totalPrice + totalPrice * 0.05).toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Terms */}
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={agreed}
-                      onChange={(e) => setAgreed(e.target.checked)}
-                      className="w-5 h-5 mt-0.5 text-primary rounded focus:ring-primary"
-                    />
-                    <span className="text-xs text-gray-500">
-                      I agree to the <span className="text-primary font-semibold">Terms & Conditions</span> and <span className="text-primary font-semibold">Cancellation Policy</span>. I understand this booking supports eco-tourism.
-                    </span>
-                  </label>
-
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="w-full bg-gradient-to-r from-primary to-blue-600 text-white py-4 rounded-xl font-bold hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-                  >
-                    {submitting ? (
-                      <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> Processing...</>
-                    ) : (
-                      <><FaCheckCircle /> Confirm Booking</>
-                    )}
-                  </button>
-                </form>
-
-                {/* Secure Badge */}
-                <div className="flex items-center justify-center gap-2 text-xs text-gray-400 pt-2 border-t border-gray-100">
-                  <FaShieldAlt className="text-emerald-500" />
-                  <span>Secured with JWT encryption · Your data is protected</span>
-                </div>
-              </div>
-
-              {/* Vendor Info */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mt-4">
-                <h4 className="font-bold text-gray-900 text-sm mb-3 flex items-center gap-2">
-                  <FaBell className="text-primary" /> Provider
-                </h4>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-emerald-500 flex items-center justify-center text-white font-bold text-sm">
-                    {service.vendor?.businessName?.charAt(0) || 'V'}
-                  </div>
-                  <div>
-                    <div className="font-semibold text-sm text-gray-900">{service.vendor?.businessName || 'Lake Tana Tours'}</div>
-                    <div className="text-xs text-gray-500 flex items-center gap-1">
-                      <FaLeaf className="text-emerald-500" /> Verified Eco-Partner
-                    </div>
-                  </div>
-                </div>
-              </div>
+            {/* Stepper Indicator */}
+            <div className="flex items-center gap-2 text-xs font-semibold">
+              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary-600 text-white">
+                1
+              </span>
+              <span className="text-primary-700 font-bold">Details</span>
+              <span className="text-gray-300">───</span>
+              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-surface-muted text-text-muted border border-surface-border">
+                2
+              </span>
+              <span className="text-text-muted">Payment</span>
+              <span className="text-gray-300">───</span>
+              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-surface-muted text-text-muted border border-surface-border">
+                3
+              </span>
+              <span className="text-text-muted">Confirmed</span>
             </div>
           </div>
-        </div>
-      )}
 
-    </div>
+          {loading ? (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-pulse">
+              <div className="lg:col-span-2 h-96 bg-white rounded-2xl border border-surface-border"></div>
+              <div className="h-96 bg-white rounded-2xl border border-surface-border"></div>
+            </div>
+          ) : error && !service ? (
+            <div className="bg-white rounded-2xl p-12 text-center border border-surface-border space-y-4">
+              <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto">
+                !
+              </div>
+              <h2 className="text-xl font-bold text-text-primary">{error}</h2>
+              <Link href="/services">
+                <Button variant="primary">Browse Available Tours</Button>
+              </Link>
+            </div>
+          ) : service && (
+            <form onSubmit={handleBookingSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Left Column: Form Fields */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Error Banner */}
+                {error && (
+                  <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-2">
+                    <span className="font-bold">⚠️</span>
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                {/* Section 1: Date & Time Selection */}
+                <div className="bg-white rounded-2xl p-6 border border-surface-border shadow-xs space-y-4">
+                  <h2 className="text-lg font-bold text-text-primary font-heading border-b border-surface-border pb-3 flex items-center gap-2">
+                    <span>1. Tour Date & Time Slot</span>
+                  </h2>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">
+                        Select Date *
+                      </label>
+                      <input
+                        type="date"
+                        min={todayStr}
+                        value={bookingDate}
+                        onChange={(e) => setBookingDate(e.target.value)}
+                        required
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-surface-border bg-surface-muted text-sm font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">
+                        Time Slot / Departure *
+                      </label>
+                      <select
+                        value={timeSlot}
+                        onChange={(e) => setTimeSlot(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-surface-border bg-surface-muted text-sm font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      >
+                        <option value="morning">Morning Departure (08:30 AM)</option>
+                        <option value="afternoon">Afternoon Excursion (01:30 PM)</option>
+                        <option value="sunset">Sunset Pelican Tour (04:30 PM)</option>
+                        <option value="full_day">Full Day Expedition (08:00 AM)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Participants */}
+                <div className="bg-white rounded-2xl p-6 border border-surface-border shadow-xs space-y-4">
+                  <h2 className="text-lg font-bold text-text-primary font-heading border-b border-surface-border pb-3">
+                    2. Guests & Travelers
+                  </h2>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Adults */}
+                    <div className="p-4 rounded-xl bg-surface-muted border border-surface-border flex items-center justify-between">
+                      <div>
+                        <span className="text-sm font-bold text-text-primary block">Adults</span>
+                        <span className="text-xs text-text-muted">
+                          {Number(adultPrice).toLocaleString()} {currency} each
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setAdults(Math.max(1, adults - 1))}
+                          className="w-8 h-8 rounded-lg bg-white border border-surface-border flex items-center justify-center font-bold text-text-primary hover:bg-gray-100"
+                        >
+                          -
+                        </button>
+                        <span className="w-8 text-center font-bold text-sm">{adults}</span>
+                        <button
+                          type="button"
+                          onClick={() => setAdults(adults + 1)}
+                          className="w-8 h-8 rounded-lg bg-white border border-surface-border flex items-center justify-center font-bold text-text-primary hover:bg-gray-100"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Children */}
+                    <div className="p-4 rounded-xl bg-surface-muted border border-surface-border flex items-center justify-between">
+                      <div>
+                        <span className="text-sm font-bold text-text-primary block">Children (Under 12)</span>
+                        <span className="text-xs text-text-muted">
+                          {Number(childPrice).toLocaleString()} {currency} each (50% off)
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setChildren(Math.max(0, children - 1))}
+                          className="w-8 h-8 rounded-lg bg-white border border-surface-border flex items-center justify-center font-bold text-text-primary hover:bg-gray-100"
+                        >
+                          -
+                        </button>
+                        <span className="w-8 text-center font-bold text-sm">{children}</span>
+                        <button
+                          type="button"
+                          onClick={() => setChildren(children + 1)}
+                          className="w-8 h-8 rounded-lg bg-white border border-surface-border flex items-center justify-center font-bold text-text-primary hover:bg-gray-100"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 3: Contact & Special Requests */}
+                <div className="bg-white rounded-2xl p-6 border border-surface-border shadow-xs space-y-4">
+                  <h2 className="text-lg font-bold text-text-primary font-heading border-b border-surface-border pb-3">
+                    3. Traveler Contact & Special Requests
+                  </h2>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">
+                        Primary Contact Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={contactName}
+                        onChange={(e) => setContactName(e.target.value)}
+                        required
+                        placeholder="e.g. Abebe Kebede"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-surface-border bg-surface-muted text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">
+                        Phone Number *
+                      </label>
+                      <input
+                        type="tel"
+                        value={contactPhone}
+                        onChange={(e) => setContactPhone(e.target.value)}
+                        required
+                        placeholder="+251 91 234 5678"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-surface-border bg-surface-muted text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">
+                      Email Address (for Chapa e-receipt) *
+                    </label>
+                    <input
+                      type="email"
+                      value={contactEmail}
+                      onChange={(e) => setContactEmail(e.target.value)}
+                      required
+                      placeholder="abebe@example.com"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-surface-border bg-surface-muted text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">
+                      Special Requests & Accessibility Notes (Optional)
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={specialRequests}
+                      onChange={(e) => setSpecialRequests(e.target.value)}
+                      placeholder="e.g., child life jacket sizes, English / French speaking guide, vegetarian meal requests..."
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-surface-border bg-surface-muted text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Section 4: Policies and Agreement */}
+                <div className="bg-white rounded-2xl p-6 border border-surface-border shadow-xs space-y-4">
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      id="termsCheckbox"
+                      checked={agreedToTerms}
+                      onChange={(e) => setAgreedToTerms(e.target.checked)}
+                      className="mt-1 w-4 h-4 rounded text-primary-600 focus:ring-primary-500"
+                    />
+                    <label htmlFor="termsCheckbox" className="text-xs text-text-secondary leading-relaxed">
+                      I understand that boat departure times depend on Lake Tana naval weather safety conditions. I agree to the{' '}
+                      <strong>{service.cancellationPolicy || '24-hour free cancellation policy'}</strong> and standard biosphere protection guidelines.
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Order Summary & Action */}
+              <div className="lg:col-span-1 space-y-6">
+                <Card bordered className="bg-white shadow-md sticky top-24">
+                  <CardContent className="p-6 space-y-5">
+                    {/* Tour Mini Card */}
+                    <div className="flex items-center gap-3 border-b border-surface-border pb-4">
+                      <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-surface-muted shrink-0">
+                        <img
+                          src={service.coverImage || service.images?.[0]?.url || '/images/LakeTana.jpg'}
+                          alt={service.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <Badge variant="primary" size="sm" className="capitalize text-[10px] mb-1">
+                          {service.category}
+                        </Badge>
+                        <h3 className="text-sm font-bold text-text-primary truncate">
+                          {service.title}
+                        </h3>
+                        <span className="text-xs text-text-muted block">
+                          📍 {service.location || 'Lake Tana'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Booking Breakdown */}
+                    <div className="space-y-2 text-xs">
+                      <div className="flex justify-between text-text-secondary">
+                        <span>Date:</span>
+                        <span className="font-semibold text-text-primary">{bookingDate || 'Select date'}</span>
+                      </div>
+                      <div className="flex justify-between text-text-secondary">
+                        <span>Time Slot:</span>
+                        <span className="font-semibold text-text-primary capitalize">{timeSlot.replace('_', ' ')}</span>
+                      </div>
+                      <div className="flex justify-between text-text-secondary">
+                        <span>Adults ({adults} × {Number(adultPrice).toLocaleString()} {currency}):</span>
+                        <span className="font-semibold text-text-primary">
+                          {Number(adultTotal).toLocaleString()} {currency}
+                        </span>
+                      </div>
+                      {children > 0 && (
+                        <div className="flex justify-between text-text-secondary">
+                          <span>Children ({children} × {Number(childPrice).toLocaleString()} {currency}):</span>
+                          <span className="font-semibold text-text-primary">
+                            {Number(childTotal).toLocaleString()} {currency}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-text-secondary">
+                        <span>Service & Biosphere Fee:</span>
+                        <span className="font-semibold text-emerald-600">Included</span>
+                      </div>
+                    </div>
+
+                    {/* Total Price */}
+                    <div className="pt-3 border-t border-surface-border flex items-baseline justify-between">
+                      <span className="text-sm font-bold text-text-primary">Total Amount</span>
+                      <div className="text-right">
+                        <span className="text-2xl font-extrabold text-primary-800 font-heading">
+                          {Number(grandTotal).toLocaleString()}
+                        </span>
+                        <span className="text-xs font-bold text-text-secondary ml-1">{currency}</span>
+                      </div>
+                    </div>
+
+                    {/* Submit Button */}
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      size="lg"
+                      disabled={submitting || !agreedToTerms}
+                      className="w-full justify-center shadow-md font-bold"
+                    >
+                      {submitting ? 'Reserving Experience...' : 'Proceed to Payment →'}
+                    </Button>
+
+                    <p className="text-[11px] text-center text-text-muted">
+                      🔒 Payments are securely processed via Chapa Payment Gateway with bank-grade encryption.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    </PublicLayout>
   )
 }

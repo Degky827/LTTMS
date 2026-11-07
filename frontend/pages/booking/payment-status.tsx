@@ -1,138 +1,175 @@
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/router'
+import React, { useEffect, useState } from 'react'
+import Head from 'next/head'
 import Link from 'next/link'
-import { FaCheckCircle, FaTimesCircle, FaSpinner, FaReceipt, FaArrowLeft, FaHome } from 'react-icons/fa'
-import API from '../../utils/api'
+import { useRouter } from 'next/router'
+import { PublicLayout } from '@/components/layouts/PublicLayout'
+import { paymentService } from '@/features/payments/services/paymentService'
+import { PaymentReceipt } from '@/features/payments/types'
+import { ReceiptView } from '@/features/payments/components/ReceiptView'
+import { Button } from '@/components/ui/Button'
 
 export default function PaymentStatusPage() {
   const router = useRouter()
-  const { tx_ref, txRef } = router.query
+  const { tx_ref, txRef, trx_ref } = router.query
 
   const [loading, setLoading] = useState(true)
   const [verified, setVerified] = useState(false)
-  const [paymentData, setPaymentData] = useState<any>(null)
-  const [error, setError] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [receipt, setReceipt] = useState<PaymentReceipt | null>(null)
 
   useEffect(() => {
-    const reference = tx_ref || txRef
-    if (!reference) return
+    const reference = (tx_ref || txRef || trx_ref) as string
+    if (!reference) {
+      if (router.isReady) {
+        setLoading(false)
+        setError('No transaction reference found in callback URL.')
+      }
+      return
+    }
 
-    const verifyTransaction = async () => {
+    const verify = async () => {
       try {
         setLoading(true)
-        setError('')
-        const res = await API.get(`/payments/verify/${reference}`)
-        if (res.data?.success && res.data?.data?.verified) {
+        setError(null)
+        const res = await paymentService.verify(reference)
+
+        if (res.success && res.data?.verified) {
           setVerified(true)
-          setPaymentData(res.data.data)
+
+          // Try loading receipt
+          const identifier = res.data.receiptNumber || reference
+          try {
+            const receiptRes = await paymentService.getReceipt(identifier)
+            if (receiptRes.data) {
+              setReceipt(receiptRes.data)
+            }
+          } catch (receiptErr) {
+            console.error('Failed to load full receipt data, using verification summary:', receiptErr)
+            // Construct receipt from verification response
+            setReceipt({
+              receiptNumber: res.data.receiptNumber || `RCP-${reference.slice(-8).toUpperCase()}`,
+              transactionReference: reference,
+              bookingReference: res.data.booking?.reference || 'CONFIRMED',
+              paymentDate: new Date().toISOString(),
+              amount: res.data.amount || 0,
+              currency: res.data.currency || 'ETB',
+              paymentMethod: 'chapa',
+              paymentStatus: 'completed',
+              payer: {
+                name: (res.data as any).user?.name || 'Valued Traveler',
+                email: (res.data as any).user?.email || '',
+              },
+              service: {
+                title: res.data.booking?.serviceTitle || 'Lake Tana Tour Experience',
+              },
+              vendor: {
+                businessName: 'Lake Tana Certified Operator',
+              },
+              bookingDetails: {
+                date: res.data.booking?.date || new Date().toISOString(),
+                guests: res.data.booking?.guests || 1,
+              },
+            })
+          }
         } else {
           setVerified(false)
-          setError(res.data?.message || 'Payment verification could not be confirmed')
+          setError(res.message || 'Payment verification could not be confirmed.')
         }
       } catch (err: any) {
+        console.error('Verification failed:', err)
         setVerified(false)
-        setError(err.response?.data?.message || 'Error communicating with payment verification service')
+        setError(
+          err?.response?.data?.message ||
+            'Failed to verify transaction with Chapa payment gateway.'
+        )
       } finally {
         setLoading(false)
       }
     }
 
-    verifyTransaction()
-  }, [tx_ref, txRef])
+    verify()
+  }, [router.isReady, tx_ref, txRef, trx_ref])
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 p-8 text-center">
-        {loading ? (
-          <div className="py-12 space-y-4">
-            <FaSpinner className="animate-spin text-5xl text-emerald-600 mx-auto" />
-            <h2 className="text-xl font-bold text-gray-800">Verifying Payment...</h2>
-            <p className="text-gray-500 text-sm">
-              Connecting to Chapa gateway and confirming your Lake Tana reservation.
-            </p>
-          </div>
-        ) : verified ? (
-          <div className="space-y-6">
-            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-3xl shadow-inner">
-              <FaCheckCircle />
-            </div>
+    <PublicLayout>
+      <Head>
+        <title>Payment Verification | LTTMS</title>
+      </Head>
 
-            <div className="space-y-2">
-              <h1 className="text-2xl font-extrabold text-gray-900">Payment Confirmed!</h1>
-              <p className="text-sm text-gray-600">
-                Your reservation has been confirmed and verified with Lake Tana Tourism Management System.
+      <div className="bg-surface-muted/30 min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto space-y-8">
+          {loading ? (
+            <div className="bg-white rounded-3xl p-12 text-center border border-surface-border shadow-md space-y-4">
+              <div className="w-16 h-16 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mx-auto"></div>
+              <h2 className="text-2xl font-extrabold text-text-primary font-heading">
+                Verifying Payment with Chapa...
+              </h2>
+              <p className="text-text-secondary text-sm max-w-md mx-auto">
+                Securely confirming your transaction and locking in your Lake Tana tour reservation.
               </p>
             </div>
+          ) : !verified ? (
+            <div className="bg-white rounded-3xl p-12 text-center border border-surface-border shadow-md space-y-5">
+              <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-3xl font-bold mx-auto">
+                ✕
+              </div>
+              <h1 className="text-2xl font-extrabold text-text-primary font-heading">
+                Payment Verification Unsuccessful
+              </h1>
+              <p className="text-text-secondary text-sm max-w-md mx-auto">
+                {error || 'We could not confirm completion of your payment. If funds were deducted, please contact support with your reference.'}
+              </p>
 
-            <div className="bg-gray-50 rounded-xl p-4 text-left space-y-2 border border-gray-200/60 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-500">Receipt No:</span>
-                <span className="font-mono font-semibold text-gray-800">
-                  {paymentData?.receiptNumber || 'RCP-2026-CONFIRMED'}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Booking Ref:</span>
-                <span className="font-mono font-semibold text-gray-800">
-                  {paymentData?.booking?.reference || 'N/A'}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Status:</span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">
-                  Paid & Confirmed
-                </span>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3 pt-2">
-              {paymentData?.receiptNumber && (
-                <Link
-                  href={`/api/v1/payments/receipt/${paymentData.receiptNumber}`}
-                  target="_blank"
-                  className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all text-sm"
-                >
-                  <FaReceipt /> View Official Receipt
-                </Link>
+              {(tx_ref || txRef) && (
+                <div className="p-3 bg-surface-muted rounded-xl font-mono text-xs text-text-muted inline-block">
+                  Reference: {(tx_ref || txRef) as string}
+                </div>
               )}
-              <Link
-                href="/tourist/dashboard"
-                className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all text-sm"
-              >
-                <FaHome /> Go to My Bookings
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto text-3xl shadow-inner">
-              <FaTimesCircle />
-            </div>
 
-            <div className="space-y-2">
-              <h1 className="text-2xl font-extrabold text-gray-900">Payment Verification Failed</h1>
-              <p className="text-sm text-rose-600 bg-rose-50 rounded-lg p-3">
-                {error || 'Unable to confirm payment with payment gateway'}
-              </p>
+              <div className="flex flex-col sm:flex-row justify-center gap-3 pt-2">
+                <Link href="/services">
+                  <Button variant="primary">Return to Marketplace</Button>
+                </Link>
+                <Link href="/contact">
+                  <Button variant="outline">Contact Support</Button>
+                </Link>
+              </div>
             </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Top Success Banner */}
+              <div className="bg-emerald-600 text-white rounded-3xl p-6 sm:p-8 shadow-lg text-center space-y-2">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl mx-auto mb-2">
+                  ✓
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-extrabold font-heading">
+                  Reservation Confirmed & Paid!
+                </h1>
+                <p className="text-emerald-100 text-sm max-w-lg mx-auto">
+                  Your Lake Tana experience is booked. Your e-receipt and boarding confirmation have been generated below.
+                </p>
+              </div>
 
-            <div className="flex flex-col gap-3 pt-4">
-              <button
-                onClick={() => router.back()}
-                className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl font-semibold bg-gray-800 hover:bg-gray-900 text-white transition-all text-sm"
-              >
-                <FaArrowLeft /> Try Again
-              </button>
-              <Link
-                href="/"
-                className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl font-medium text-gray-500 hover:text-gray-700 text-sm"
-              >
-                Return to Home
-              </Link>
+              {/* Official Receipt Card */}
+              {receipt && <ReceiptView receipt={receipt} />}
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4 print:hidden">
+                <Link href="/tourist">
+                  <Button variant="primary" size="lg">
+                    Go to My Bookings Dashboard →
+                  </Button>
+                </Link>
+                <Link href="/services">
+                  <Button variant="outline" size="lg">
+                    Explore More Tours
+                  </Button>
+                </Link>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+    </PublicLayout>
   )
 }
