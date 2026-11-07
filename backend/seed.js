@@ -253,7 +253,10 @@ async function seedData() {
         'Modest attire required to enter monastery grounds',
         'Allow 45 minutes boat ride from Bahir Dar port'
       ],
-      status: 'published'
+      status: 'published',
+      isFeatured: true,
+      destinationType: 'monastery',
+      coverImage: '/images/monastery.jpg'
     });
 
     const destFalls = await Destination.create({
@@ -273,7 +276,58 @@ async function seedData() {
         'Best water volume during August to November rainy season',
         'Wear sturdy walking shoes for rocky trail'
       ],
-      status: 'published'
+      status: 'published',
+      isFeatured: true,
+      destinationType: 'waterfall',
+      coverImage: '/images/waterfall.jpg'
+    });
+
+    const destKibran = await Destination.create({
+      name: 'Kibran Gebriel Island Monastery',
+      slug: 'kibran-gebriel',
+      description: '14th-century monastery island surrounded by towering acacia trees and housing ancient manuscripts.',
+      location: {
+        type: 'Point',
+        coordinates: [37.3622, 11.6425],
+        address: 'South Lake Tana, Bahir Dar'
+      },
+      highlights: [
+        'Ancient library of parchment manuscripts',
+        'Historic 14th-century stone church',
+        'Tranquil island birdlife'
+      ],
+      travelTips: [
+        'Respect sacred monastic regulations',
+        'Combine with boat tour from Bahir Dar pier'
+      ],
+      status: 'published',
+      isFeatured: true,
+      destinationType: 'monastery',
+      coverImage: '/images/Boat.jpg'
+    });
+
+    const destTanaQirqos = await Destination.create({
+      name: 'Tana Qirqos Historic Island',
+      slug: 'tana-qirqos',
+      description: 'Sacred island steeped in ancient biblical traditions and early Ethiopian ecclesiastical history.',
+      location: {
+        type: 'Point',
+        coordinates: [37.4819, 11.8644],
+        address: 'Eastern Lake Tana'
+      },
+      highlights: [
+        'Sacred stone altars from ancient times',
+        'Centuries of monastic sanctuary',
+        'Panoramic views across Lake Tana'
+      ],
+      travelTips: [
+        'Full day boat charter recommended',
+        'Carry sun protection and drinking water'
+      ],
+      status: 'published',
+      isFeatured: true,
+      destinationType: 'cultural_site',
+      coverImage: '/images/LakeTana.jpg'
     });
 
     console.log(`[OK] 2 primary destinations created.`);
