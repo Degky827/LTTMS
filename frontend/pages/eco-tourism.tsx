@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import Head from 'next/head'
+import { PublicLayout } from '@/components/layouts/PublicLayout'
 import {
   FaLeaf, FaTree, FaHandHoldingHeart,
   FaAward, FaSolarPanel, FaWater, FaGlobeAfrica,
@@ -73,7 +75,11 @@ export default function EcoTourism() {
   ]
 
   return (
-    <div>
+    <PublicLayout>
+      <Head>
+        <title>Lake Tana Biosphere Reserve & Eco-Tourism | LTTMS</title>
+      </Head>
+      <div>
 
       {/* Hero */}
       <section className="relative h-64 overflow-hidden">
@@ -647,5 +653,6 @@ export default function EcoTourism() {
       </div>
 
     </div>
+    </PublicLayout>
   )
 }
