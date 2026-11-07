@@ -56,12 +56,12 @@ export const Logo: React.FC<LogoProps> = ({
             <span
               className={cn(
                 'text-lg sm:text-xl font-extrabold tracking-tight font-heading',
-                isDark ? 'text-white' : 'text-primary-700'
+                isDark ? 'text-white' : 'text-primary-700 dark:text-white'
               )}
             >
               LTTMS
             </span>
-            <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-gold-100 text-gold-800 rounded">
+            <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-gold-100 dark:bg-gold-900/40 text-gold-800 dark:text-gold-300 rounded">
               v2
             </span>
           </div>
@@ -69,7 +69,7 @@ export const Logo: React.FC<LogoProps> = ({
             <span
               className={cn(
                 'text-[10px] sm:text-[11px] font-medium tracking-wide uppercase',
-                isDark ? 'text-gray-300' : 'text-teal-600'
+                isDark ? 'text-gray-300' : 'text-text-secondary dark:text-gray-300'
               )}
             >
               Lake Tana Eco-Tourism
