@@ -103,7 +103,7 @@ export default function RegisterPage() {
     return (
       <PublicLayout>
         <Head>
-          <title>{t('auth.accountCreated', 'Account Created!')} | LTTMS</title>
+          <title>{`${t('auth.accountCreated', 'Account Created!')} | LTTMS`}</title>
         </Head>
         <div className="bg-surface-muted/40 min-h-screen flex items-center justify-center px-4 py-16">
           <div className="w-full max-w-md bg-surface border border-surface-border rounded-2xl p-8 shadow-sm text-center">
@@ -128,7 +128,7 @@ export default function RegisterPage() {
   return (
     <PublicLayout>
       <Head>
-        <title>{t('auth.createAccount', 'Create Your Account')} | LTTMS</title>
+        <title>{`${t('auth.createAccount', 'Create Your Account')} | LTTMS`}</title>
         <meta
           name="description"
           content="Create a tourist or verified vendor account on the Lake Tana Tourism platform."
