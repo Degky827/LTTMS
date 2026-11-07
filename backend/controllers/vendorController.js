@@ -247,9 +247,14 @@ exports.getVendors = async (req, res, next) => {
 // @access  Public
 exports.getVendor = async (req, res, next) => {
   try {
-    const vendor = await Vendor.findById(req.params.id)
-      .populate('user', 'name email phone')
-      .populate('destinations', 'name slug');
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(req.params.id);
+    const vendor = isObjectId
+      ? await Vendor.findById(req.params.id)
+          .populate('user', 'name email phone')
+          .populate('destinations', 'name slug')
+      : await Vendor.findOne({ slug: req.params.id.toLowerCase() })
+          .populate('user', 'name email phone')
+          .populate('destinations', 'name slug');
 
     if (!vendor) {
       return res.status(404).json({ success: false, message: 'Vendor not found' });
