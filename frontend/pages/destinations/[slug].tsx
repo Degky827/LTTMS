@@ -168,7 +168,7 @@ export default function DestinationDetailPage() {
             <div className="space-y-4">
               <div className="relative w-full h-80 sm:h-96 lg:h-[480px] rounded-3xl overflow-hidden shadow-md bg-surface-border">
                 <Image
-                  src={selectedImage || destination.coverImage || 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1200&q=80'}
+                  src={selectedImage || destination.coverImage || '/images/LakeTana.jpg'}
                   alt={destination.name}
                   fill
                   priority

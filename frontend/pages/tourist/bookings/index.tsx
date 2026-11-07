@@ -67,7 +67,7 @@ export default function TouristBookingsListPage() {
             { label: 'My Bookings' },
           ]}
           actions={
-            <Link href="/services">
+            <Link href="/tourist/marketplace">
               <Button variant="primary" size="sm">
                 Book Another Tour
               </Button>
@@ -116,7 +116,7 @@ export default function TouristBookingsListPage() {
                 ? "You haven't made any reservations yet. Browse our marketplace to plan your trip!"
                 : `No reservations found under "${activeTab}" status.`}
             </p>
-            <Link href="/services">
+            <Link href="/tourist/marketplace">
               <Button variant="primary">Browse Tours</Button>
             </Link>
           </div>

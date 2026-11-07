@@ -1,329 +1,435 @@
 import React, { useState } from 'react'
 import Head from 'next/head'
-import Link from 'next/link'
 import { PublicLayout } from '@/components/layouts/PublicLayout'
-import { useLanguage } from '@/contexts/LanguageContext'
-import {
-  FaPhone,
-  FaEnvelope,
-  FaMapMarkerAlt,
-  FaPaperPlane,
-  FaUndo,
-  FaCheckCircle,
-  FaStore,
-  FaExternalLinkAlt,
-  FaLeaf,
-} from 'react-icons/fa'
 
 export default function ContactPage() {
-  const { t } = useLanguage()
+
   const [form, setForm] = useState({
     name: '',
     email: '',
-    subject: 'General Inquiry',
+    subject: 'General Tourism Inquiry',
     message: '',
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+
+  // FAQ State
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(0)
+
+  const FAQS = [
+    {
+      q: 'How do I book a certified boat excursion to island monasteries?',
+      a: 'Browse our Explore or Experiences page, select your desired boat or monastery tour package, choose your date and group size, and click "Book Now". You can checkout instantly using telebirr, CBE Birr, Chapa, or international cards.',
+    },
+    {
+      q: 'What payment methods does LTTMS support?',
+      a: 'We accept local Ethiopian mobile money (telebirr, CBE Birr, Awash Birr), Ethiopian domestic bank transfers via Chapa, as well as international Visa, MasterCard, and American Express. All prices are transparently displayed in Ethiopian Birr (ETB).',
+    },
+    {
+      q: 'What is the dress code and protocol for visiting Orthodox monasteries?',
+      a: 'Monasteries are active sacred places. Modest attire covering shoulders and knees is mandatory. Women are traditionally requested to wear long skirts and head coverings; men should wear trousers. Shoes must be removed before entering church doors. Flash photography is prohibited inside painted sanctuaries.',
+    },
+    {
+      q: 'How can local boat captains, tour guides, and eco-lodges register as vendors?',
+      a: 'Click "Get Started" in the navbar and select "Vendor". Submit your cooperative membership or business license, vessel marine safety inspection certificate, and guide ID. Our verification desk in Bahir Dar approves verified accounts within 24–48 hours.',
+    },
+    {
+      q: 'What happens if a boat tour is cancelled due to adverse weather or lake waves?',
+      a: 'Passenger safety is our top priority. If the Lake Tana Port Authority issues a weather warning or heavy storm alert, your trip will be rescheduled at no extra charge, or you will receive a 100% full refund through our automated financial rollback system.',
+    },
+    {
+      q: 'Are certified life jackets and marine safety equipment provided?',
+      a: 'Yes, mandatory. Every passenger boat registered on LTTMS is legally required to carry certified marine life vests for every adult and child on board before clearance is granted by dock marshals.',
+    },
+  ]
 
   const validate = () => {
-    const e: Record<string, string> = {}
-    if (!form.name.trim()) e.name = 'Name is required'
-    if (!form.email.trim()) e.email = 'Email is required'
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Invalid email format'
-    if (!form.message.trim()) e.message = 'Message is required'
-    setErrors(e)
-    return Object.keys(e).length === 0
+    const errs: Record<string, string> = {}
+    if (!form.name.trim()) errs.name = 'Full name is required'
+    if (!form.email.trim()) errs.email = 'Email address is required'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Valid email address required'
+    if (!form.message.trim()) errs.message = 'Please enter your message'
+    setErrors(errs)
+    return Object.keys(errs).length === 0
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!validate()) return
-
     setSubmitting(true)
     setTimeout(() => {
       setSubmitting(false)
       setSubmitted(true)
-      setForm({ name: '', email: '', subject: 'General Inquiry', message: '' })
+      setForm({ name: '', email: '', subject: 'General Tourism Inquiry', message: '' })
     }, 600)
-  }
-
-  const handleReset = () => {
-    setForm({ name: '', email: '', subject: 'General Inquiry', message: '' })
-    setErrors({})
-    setSubmitted(false)
   }
 
   return (
     <PublicLayout>
       <Head>
-        <title>{t('contact.heroTitle', 'Get in Touch With Us')} | LTTMS</title>
+        <title>Contact Us — Get in Touch | Lake Tana Tourism (LTTMS)</title>
         <meta
           name="description"
-          content="Contact Lake Tana Tourism management for tour bookings, vendor partnerships, and visitor support in Bahir Dar, Ethiopia."
+          content="Contact Lake Tana Tourism Management System: tourist reservations, vendor partnerships, Bahir Dar office location, FAQs, and 24/7 visitor assistance."
         />
       </Head>
 
-      <div className="bg-surface-muted/40 min-h-screen">
-        {/* Header Hero */}
-        <div className="bg-gradient-to-r from-primary-950 via-primary-900 to-primary-800 text-white py-14 px-4 sm:px-6 lg:px-8 border-b border-primary-700/50">
-          <div className="max-w-7xl mx-auto">
+      <div className="min-h-screen bg-slate-50 dark:bg-[#0B1613] text-slate-900 dark:text-slate-100 transition-colors pb-24">
+        {/* 1. Hero Header */}
+        <div className="relative bg-[#143224] text-white pt-16 pb-20 sm:pt-20 sm:pb-28 overflow-hidden border-b border-emerald-950">
+          <div className="absolute inset-0 z-0 opacity-25">
+            <img
+              src="/images/lake-tana-hero-bg.jpg"
+              alt="Bahir Dar Waterfront"
+              className="w-full h-full object-cover object-center"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#143224] via-[#143224]/85 to-transparent" />
+          </div>
+
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary-800/80 text-gold-300 border border-gold-500/30 mb-3">
-                📍 {t('footer.address', 'Bahir Dar, Amhara Region, Ethiopia')}
+              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-white/10 text-emerald-300 border border-white/15 backdrop-blur-md mb-4 shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>BAHIR DAR HEADQUARTERS &amp; VISITOR DESK</span>
               </span>
-              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight font-heading">
-                {t('contact.heroTitle', 'Get in Touch With Us')}
+              <h1 className="text-3xl sm:text-5xl font-extrabold font-heading text-white tracking-tight leading-tight">
+                Contact — Get in Touch
               </h1>
-              <p className="mt-2 text-sm sm:text-base text-primary-100/90 leading-relaxed">
-                {t(
-                  'contact.heroSubtitle',
-                  'We are here to assist with tour reservations, local vendor partnerships, and eco-tourism inquiries.'
-                )}
+              <p className="mt-3 text-sm sm:text-base text-slate-200 leading-relaxed max-w-2xl font-normal">
+                Have questions about booking boat tours, visiting sacred island monasteries, or partnering with LTTMS? Our local team in Bahir Dar is here to assist you every day.
               </p>
             </div>
           </div>
         </div>
 
-        {/* Content Section */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid lg:grid-cols-5 gap-10">
-            {/* Left Column: Form */}
-            <div className="lg:col-span-3">
-              <div className="bg-surface border border-surface-border rounded-2xl p-6 sm:p-10 shadow-sm">
-                <h2 className="text-2xl font-bold font-heading text-text-primary mb-2">
-                  {t('contact.sendMessage', 'Send Us a Message')}
-                </h2>
-                <p className="text-sm text-text-secondary mb-8">
-                  {t(
-                    'contact.sendMessageSubtitle',
-                    'Fill out the inquiry form below and our team in Bahir Dar will respond within 24 hours.'
-                  )}
+        {/* 2. Three Dedicated Support Channels */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* 1. Tourist Helpdesk */}
+            <div className="bg-white dark:bg-[#132620] rounded-2xl p-6 border border-slate-200/90 dark:border-slate-800/90 shadow-xl flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 text-[#244B3A] dark:text-emerald-400 flex items-center justify-center text-2xl mb-4">
+                  🛟
+                </div>
+                <h3 className="text-base font-bold font-heading text-slate-900 dark:text-white mb-1">
+                  24/7 Tourist Assistance
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+                  Immediate help with existing reservations, emergency lake boat dispatch, and pier check-in directions.
                 </p>
-
-                {submitted ? (
-                  <div className="bg-primary-50 dark:bg-primary-950/40 border border-primary-200 dark:border-primary-800 rounded-2xl p-8 text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary-100 dark:bg-primary-900/60 flex items-center justify-center text-primary-700 dark:text-primary-300">
-                      <FaCheckCircle className="text-3xl" />
-                    </div>
-                    <h3 className="text-xl font-bold font-heading text-text-primary mb-2">
-                      {t('contact.successTitle', 'Message Sent Successfully!')}
-                    </h3>
-                    <p className="text-sm text-text-secondary max-w-md mx-auto mb-6">
-                      {t(
-                        'contact.successSubtitle',
-                        'Thank you for reaching out. A Lake Tana tourism specialist will contact you shortly.'
-                      )}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setSubmitted(false)}
-                      className="px-6 py-2.5 rounded-xl font-bold text-sm bg-primary-700 hover:bg-primary-800 text-white transition-colors"
-                    >
-                      {t('contact.sendAnother', 'Send Another Message')}
-                    </button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid sm:grid-cols-2 gap-5">
-                      <div>
-                        <label className="block text-xs font-semibold text-text-primary mb-1.5">
-                          {t('contact.name', 'Full Name')} <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={form.name}
-                          onChange={(e) => setForm({ ...form, name: e.target.value })}
-                          placeholder="Abebe Bikila"
-                          className={`w-full border rounded-xl px-4 py-3 text-sm bg-surface text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                            errors.name ? 'border-red-400' : 'border-surface-border'
-                          }`}
-                        />
-                        {errors.name && (
-                          <p className="text-red-500 text-xs mt-1">{errors.name}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-semibold text-text-primary mb-1.5">
-                          {t('contact.email', 'Email Address')}{' '}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="email"
-                          value={form.email}
-                          onChange={(e) => setForm({ ...form, email: e.target.value })}
-                          placeholder="abebe@example.com"
-                          className={`w-full border rounded-xl px-4 py-3 text-sm bg-surface text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                            errors.email ? 'border-red-400' : 'border-surface-border'
-                          }`}
-                        />
-                        {errors.email && (
-                          <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-text-primary mb-1.5">
-                        {t('contact.subject', 'Subject')}
-                      </label>
-                      <select
-                        value={form.subject}
-                        onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                        className="w-full border border-surface-border rounded-xl px-4 py-3 text-sm bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      >
-                        <option value="General Inquiry">General Tourism Inquiry</option>
-                        <option value="Booking Support">Tour / Booking Reservation</option>
-                        <option value="Vendor Partnership">Become a Certified Vendor</option>
-                        <option value="Eco Tourism">Eco-Tourism & Conservation</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-text-primary mb-1.5">
-                        {t('contact.message', 'Your Message')}{' '}
-                        <span className="text-red-500">*</span>
-                      </label>
-                      <textarea
-                        rows={5}
-                        value={form.message}
-                        onChange={(e) => setForm({ ...form, message: e.target.value })}
-                        placeholder="Tell us about your upcoming travel plans or question..."
-                        className={`w-full border rounded-xl p-4 text-sm bg-surface text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none ${
-                          errors.message ? 'border-red-400' : 'border-surface-border'
-                        }`}
-                      />
-                      {errors.message && (
-                        <p className="text-red-500 text-xs mt-1">{errors.message}</p>
-                      )}
-                    </div>
-
-                    <div className="flex gap-3 pt-2">
-                      <button
-                        type="submit"
-                        disabled={submitting}
-                        className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm bg-primary-700 hover:bg-primary-800 text-white transition-colors shadow-sm disabled:opacity-50"
-                      >
-                        <FaPaperPlane className="text-xs" />
-                        <span>
-                          {submitting
-                            ? t('common.loading', 'Loading...')
-                            : t('contact.sendBtn', 'Submit Message')}
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleReset}
-                        className="px-5 py-3.5 border border-surface-border rounded-xl font-semibold text-sm text-text-secondary hover:bg-surface-muted transition-colors flex items-center gap-1.5"
-                      >
-                        <FaUndo className="text-xs" />
-                        <span>{t('common.cancel', 'Reset')}</span>
-                      </button>
-                    </div>
-                  </form>
-                )}
+              </div>
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80">
+                <a
+                  href="tel:+251918000000"
+                  className="text-xs font-bold text-[#244B3A] dark:text-emerald-400 hover:underline"
+                >
+                  Hotline: +251 91 800 0000
+                </a>
               </div>
             </div>
 
-            {/* Right Column: Contact Details */}
-            <div className="lg:col-span-2 space-y-6">
-              <h2 className="text-xl font-bold font-heading text-text-primary">
-                {t('contact.office', 'Bahir Dar Central Office')}
-              </h2>
-
-              <div className="bg-surface border border-surface-border rounded-2xl p-5 flex items-start gap-4 shadow-sm">
-                <div className="w-11 h-11 rounded-xl bg-primary-50 dark:bg-primary-950/60 border border-primary-200 dark:border-primary-800 flex items-center justify-center text-primary-700 dark:text-primary-300 shrink-0">
-                  <FaMapMarkerAlt className="text-lg" />
+            {/* 2. Vendor Desk */}
+            <div className="bg-white dark:bg-[#132620] rounded-2xl p-6 border border-slate-200/90 dark:border-slate-800/90 shadow-xl flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 text-[#244B3A] dark:text-emerald-400 flex items-center justify-center text-2xl mb-4">
+                  💼
                 </div>
-                <div>
-                  <h3 className="font-bold text-sm text-text-primary">
-                    {t('common.location', 'Location')}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-text-secondary mt-1 leading-relaxed">
-                    {t('contact.address', 'Kebele 03, Shore Road, Bahir Dar, Ethiopia')}
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-surface border border-surface-border rounded-2xl p-5 flex items-start gap-4 shadow-sm">
-                <div className="w-11 h-11 rounded-xl bg-primary-50 dark:bg-primary-950/60 border border-primary-200 dark:border-primary-800 flex items-center justify-center text-primary-700 dark:text-primary-300 shrink-0">
-                  <FaPhone className="text-lg" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-sm text-text-primary">
-                    {t('auth.phone', 'Phone Number')}
-                  </h3>
-                  <a
-                    href="tel:+251582200000"
-                    className="text-xs sm:text-sm text-primary-700 dark:text-primary-400 font-semibold mt-1 block hover:underline"
-                  >
-                    {t('contact.phone', '+251 58 220 0000')}
-                  </a>
-                </div>
-              </div>
-
-              <div className="bg-surface border border-surface-border rounded-2xl p-5 flex items-start gap-4 shadow-sm">
-                <div className="w-11 h-11 rounded-xl bg-primary-50 dark:bg-primary-950/60 border border-primary-200 dark:border-primary-800 flex items-center justify-center text-primary-700 dark:text-primary-300 shrink-0">
-                  <FaEnvelope className="text-lg" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-sm text-text-primary">
-                    {t('auth.email', 'Email Address')}
-                  </h3>
-                  <a
-                    href="mailto:support@laketana-tourism.com"
-                    className="text-xs sm:text-sm text-primary-700 dark:text-primary-400 font-semibold mt-1 block hover:underline"
-                  >
-                    {t('contact.emailAddress', 'support@laketana-tourism.com')}
-                  </a>
-                </div>
-              </div>
-
-              {/* Quick Portals Links */}
-              <div className="bg-surface border border-surface-border rounded-2xl p-5 shadow-sm space-y-3">
-                <h3 className="font-bold text-sm text-text-primary mb-2">
-                  {t('footer.portalsTitle', 'Marketplace Portals')}
+                <h3 className="text-base font-bold font-heading text-slate-900 dark:text-white mb-1">
+                  Vendor &amp; Operator Desk
                 </h3>
-                <Link
-                  href="/services"
-                  className="flex items-center justify-between p-3 rounded-xl bg-surface-muted border border-surface-border text-xs font-semibold text-text-primary hover:border-primary-600 transition-colors"
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+                  For boat cooperatives, licensed monastic guides, and eco-lodges registering or requesting payout support.
+                </p>
+              </div>
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80">
+                <a
+                  href="mailto:vendors@laketana-tourism.com"
+                  className="text-xs font-bold text-[#244B3A] dark:text-emerald-400 hover:underline"
                 >
-                  <span className="flex items-center gap-2">
-                    <FaLeaf className="text-primary-700 dark:text-primary-400" />
-                    {t('footer.touristPortal', 'Tourist Booking Portal')}
-                  </span>
-                  <FaExternalLinkAlt className="text-[10px] text-text-secondary" />
-                </Link>
-                <Link
-                  href="/vendor/login"
-                  className="flex items-center justify-between p-3 rounded-xl bg-surface-muted border border-surface-border text-xs font-semibold text-text-primary hover:border-primary-600 transition-colors"
+                  vendors@laketana-tourism.com
+                </a>
+              </div>
+            </div>
+
+            {/* 3. Eco-Tourism & Research */}
+            <div className="bg-white dark:bg-[#132620] rounded-2xl p-6 border border-slate-200/90 dark:border-slate-800/90 shadow-xl flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 text-[#244B3A] dark:text-emerald-400 flex items-center justify-center text-2xl mb-4">
+                  🌿
+                </div>
+                <h3 className="text-base font-bold font-heading text-slate-900 dark:text-white mb-1">
+                  Eco-Charter &amp; Research
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+                  Collaborate on Lake Tana Biosphere Reserve research, reforestation projects, and zero-plastic compliance.
+                </p>
+              </div>
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80">
+                <a
+                  href="mailto:conservation@laketana-tourism.com"
+                  className="text-xs font-bold text-[#244B3A] dark:text-emerald-400 hover:underline"
                 >
-                  <span className="flex items-center gap-2">
-                    <FaStore className="text-gold-600 dark:text-gold-400" />
-                    {t('footer.vendorPortal', 'Vendor Partner Portal')}
-                  </span>
-                  <FaExternalLinkAlt className="text-[10px] text-text-secondary" />
-                </Link>
+                  conservation@laketana-tourism.com
+                </a>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Interactive Location Map */}
-          <div className="mt-12 bg-surface border border-surface-border rounded-2xl overflow-hidden shadow-sm">
-            <div className="p-5 border-b border-surface-border flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-base font-heading text-text-primary flex items-center gap-2">
-                  <FaMapMarkerAlt className="text-primary-700 dark:text-primary-400" />
-                  {t('common.location', 'Location')} — Lake Tana &amp; Bahir Dar Shoreline
+        {/* 3. Contact Form & Official Contact Details */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-14">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Form Column */}
+            <div className="lg:col-span-7 bg-white dark:bg-[#132620] rounded-3xl p-6 sm:p-10 border border-slate-200/90 dark:border-slate-800/90 shadow-sm">
+              <h2 className="text-2xl font-bold font-heading text-slate-900 dark:text-white mb-2">
+                Send Us a Message
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mb-8">
+                Fill out the form below. A member of our Bahir Dar team will reply within 24 hours.
+              </p>
+
+              {submitted ? (
+                <div className="p-8 text-center bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800">
+                  <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-[#244B3A] dark:text-emerald-400 flex items-center justify-center text-2xl mx-auto mb-4">
+                    ✓
+                  </div>
+                  <h3 className="text-lg font-bold font-heading text-slate-900 dark:text-white mb-2">
+                    Message Sent Successfully!
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto mb-6">
+                    Thank you for reaching out. We have received your inquiry and will contact you promptly.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setSubmitted(false)}
+                    className="px-5 py-2.5 rounded-full bg-[#244B3A] text-white text-xs font-bold transition-all hover:bg-[#1a382b]"
+                  >
+                    Send Another Inquiry
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Name */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Full Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={form.name}
+                        onChange={(e) => {
+                          setForm({ ...form, name: e.target.value })
+                          setErrors((prev) => ({ ...prev, name: '' }))
+                        }}
+                        placeholder="Abebe Bikila"
+                        className={`w-full px-4 py-3 rounded-xl text-sm bg-slate-50 dark:bg-[#0E1D19] border ${
+                          errors.name ? 'border-red-500' : 'border-slate-200 dark:border-slate-700/70'
+                        } text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-[#244B3A] transition-colors`}
+                      />
+                      {errors.name && <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.name}</p>}
+                    </div>
+
+                    {/* Email */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Email Address <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        value={form.email}
+                        onChange={(e) => {
+                          setForm({ ...form, email: e.target.value })
+                          setErrors((prev) => ({ ...prev, email: '' }))
+                        }}
+                        placeholder="you@example.com"
+                        className={`w-full px-4 py-3 rounded-xl text-sm bg-slate-50 dark:bg-[#0E1D19] border ${
+                          errors.email ? 'border-red-500' : 'border-slate-200 dark:border-slate-700/70'
+                        } text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-[#244B3A] transition-colors`}
+                      />
+                      {errors.email && <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.email}</p>}
+                    </div>
+                  </div>
+
+                  {/* Subject */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                      Subject
+                    </label>
+                    <select
+                      value={form.subject}
+                      onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl text-sm bg-slate-50 dark:bg-[#0E1D19] border border-slate-200 dark:border-slate-700/70 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-[#244B3A] transition-colors cursor-pointer"
+                    >
+                      <option value="General Tourism Inquiry">General Tourism Inquiry</option>
+                      <option value="Boat Tour Reservation">Boat Tour &amp; Excursion Booking</option>
+                      <option value="Monastery Guide Services">Monastery Guided Tour Inquiry</option>
+                      <option value="Vendor Registration">Vendor Partnership &amp; Cooperative Desk</option>
+                      <option value="Eco-Tourism & Conservation">Eco-Tourism &amp; Conservation Program</option>
+                    </select>
+                  </div>
+
+                  {/* Message */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                      Your Message <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      rows={5}
+                      value={form.message}
+                      onChange={(e) => {
+                        setForm({ ...form, message: e.target.value })
+                        setErrors((prev) => ({ ...prev, message: '' }))
+                      }}
+                      placeholder="Please tell us about your travel dates, group size, or partner question..."
+                      className={`w-full p-4 rounded-xl text-sm bg-slate-50 dark:bg-[#0E1D19] border ${
+                        errors.message ? 'border-red-500' : 'border-slate-200 dark:border-slate-700/70'
+                      } text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-[#244B3A] transition-colors resize-none`}
+                    />
+                    {errors.message && <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.message}</p>}
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="w-full py-3.5 px-6 rounded-full bg-[#244B3A] hover:bg-[#1a382b] text-white font-bold text-sm shadow-md transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    <span>{submitting ? 'Sending Message...' : 'Submit Message'}</span>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </button>
+                </form>
+              )}
+            </div>
+
+            {/* Official Contact Info Column */}
+            <div className="lg:col-span-5 space-y-6">
+              <div className="bg-white dark:bg-[#132620] rounded-3xl p-6 sm:p-8 border border-slate-200/90 dark:border-slate-800/90 shadow-sm space-y-6">
+                <h3 className="text-lg font-bold font-heading text-slate-900 dark:text-white pb-3 border-b border-slate-100 dark:border-slate-800/80">
+                  Official Contact Information
                 </h3>
-                <p className="text-xs text-text-secondary mt-0.5">
-                  {t('footer.address', 'Bahir Dar, Amhara Region, Ethiopia')}
+
+                {/* Address */}
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-lg flex-shrink-0">
+                    📍
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      Physical Office
+                    </h4>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white mt-0.5">
+                      Shore Road, Waterfront Promenade, Kebele 03
+                    </p>
+                    <p className="text-xs text-slate-600 dark:text-slate-300">
+                      Bahir Dar, Amhara Region, Ethiopia
+                    </p>
+                  </div>
+                </div>
+
+                {/* Telephone */}
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-lg flex-shrink-0">
+                    📞
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      Telephone
+                    </h4>
+                    <a
+                      href="tel:+251582200000"
+                      className="text-sm font-bold text-[#244B3A] dark:text-emerald-400 hover:underline block mt-0.5"
+                    >
+                      +251 58 220 0000
+                    </a>
+                    <a
+                      href="tel:+251918000000"
+                      className="text-xs font-medium text-slate-600 dark:text-slate-300 hover:underline block"
+                    >
+                      Mobile / WhatsApp: +251 91 800 0000
+                    </a>
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-lg flex-shrink-0">
+                    ✉️
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      Email Address
+                    </h4>
+                    <a
+                      href="mailto:support@laketana-tourism.com"
+                      className="text-sm font-bold text-[#244B3A] dark:text-emerald-400 hover:underline block mt-0.5"
+                    >
+                      support@laketana-tourism.com
+                    </a>
+                    <a
+                      href="mailto:info@laketana-tourism.com"
+                      className="text-xs font-medium text-slate-600 dark:text-slate-300 hover:underline block"
+                    >
+                      info@laketana-tourism.com
+                    </a>
+                  </div>
+                </div>
+
+                {/* Operating Hours */}
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-lg flex-shrink-0">
+                    🕒
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      Operating Hours
+                    </h4>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white mt-0.5">
+                      Monday – Sunday: 7:00 AM – 8:00 PM (EAT)
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Boats operate daily between 6:30 AM and 6:00 PM
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Direction Card */}
+              <div className="bg-[#143224] text-white rounded-3xl p-6 border border-emerald-950 shadow-md">
+                <span className="text-[11px] font-bold text-emerald-300 uppercase tracking-wider block mb-1">
+                  Visitor Information
+                </span>
+                <h4 className="text-base font-bold font-heading text-white mb-2">
+                  Arriving at Bahir Dar Airport (BJR)
+                </h4>
+                <p className="text-xs text-slate-200 leading-relaxed">
+                  Ginbot 20 Airport is located just 8 km (15 minutes) from the Bahir Dar Waterfront boat pier. Registered taxis and airport transfer shuttles operate for all scheduled Ethiopian Airlines flights.
                 </p>
               </div>
             </div>
-            <div className="relative w-full h-72 sm:h-96">
+          </div>
+        </div>
+
+        {/* 4. Interactive Location / Map */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
+          <div className="bg-white dark:bg-[#132620] rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800/90 shadow-sm">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 className="text-lg font-bold font-heading text-slate-900 dark:text-white">
+                  Location &amp; Waterfront Departure Pier
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Bahir Dar Harbor, Lake Tana Waterfront Promenade, Ethiopia
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/70 text-[#244B3A] dark:text-emerald-400">
+                <span>Coordinates: 11.5853° N, 37.3166° E</span>
+              </span>
+            </div>
+
+            <div className="relative w-full h-80 sm:h-96">
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126247.64397541005!2d37.31660537739929!3d11.585282374510693!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164418b5c1c2f1a1%3A0x1837ab99c1c8d8f1!2sBahir%20Dar!5e0!3m2!1sen!2set!4v1710000000000"
                 className="absolute inset-0 w-full h-full"
@@ -333,6 +439,56 @@ export default function ContactPage() {
                 title="Bahir Dar - Lake Tana Area Map"
               />
             </div>
+          </div>
+        </div>
+
+        {/* 5. Frequently Asked Questions (FAQ) */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
+          <div className="text-center mb-10">
+            <span className="text-xs font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400 block mb-1">
+              Help &amp; Answers
+            </span>
+            <h2 className="text-3xl font-extrabold font-heading text-slate-900 dark:text-white">
+              Frequently Asked Questions
+            </h2>
+            <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+              Find quick answers to common questions about booking excursions, monastery protocols, and vendor partnerships.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {FAQS.map((faq, idx) => {
+              const isOpen = expandedFaq === idx
+              return (
+                <div
+                  key={idx}
+                  className="bg-white dark:bg-[#132620] rounded-2xl border border-slate-200/90 dark:border-slate-800/90 overflow-hidden transition-colors"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setExpandedFaq(isOpen ? null : idx)}
+                    className="w-full text-left p-5 flex items-center justify-between gap-4 font-bold text-sm sm:text-base text-slate-900 dark:text-white focus:outline-none"
+                  >
+                    <span>{faq.q}</span>
+                    <svg
+                      className={`w-5 h-5 text-slate-500 dark:text-slate-400 flex-shrink-0 transition-transform duration-200 ${
+                        isOpen ? 'rotate-180' : ''
+                      }`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {isOpen && (
+                    <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-slate-800/80">
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       </div>
