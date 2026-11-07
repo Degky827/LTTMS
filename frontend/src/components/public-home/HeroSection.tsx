@@ -1,110 +1,99 @@
 import React from 'react'
-import Link from 'next/link'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { HeroSearch } from './HeroSearch'
 
 export const HeroSection: React.FC = () => {
-  const { t, language } = useLanguage()
+  const { language } = useLanguage()
 
   return (
-    <section className="relative bg-primary-950 text-white overflow-hidden pt-12 pb-24 sm:pt-20 sm:pb-32 lg:pb-36">
-      {/* Background Image & Dual Gradient Overlay */}
-      <div className="absolute inset-0 z-0">
-        <img
-          src="/images/fixedbgforhomepage.jpg"
-          alt="Lake Tana Landscape, Ethiopia"
-          className="w-full h-full object-cover object-center opacity-40 scale-105 transform motion-safe:animate-fade-in"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = '/images/LakeTana.jpg'
-          }}
-        />
-        {/* Multilayer gradient ensuring razor-sharp text legibility */}
-        <div className="absolute inset-0 bg-gradient-to-b from-primary-950/80 via-primary-950/70 to-surface dark:to-surface-dark" />
+    <section className="relative overflow-hidden bg-slate-50 transition-colors">
+      {/* Daylight Lake Tana Landscape Background */}
+      <div className="relative min-h-[580px] sm:min-h-[640px] lg:min-h-[720px] flex items-center">
+        {/* Landscape Photograph */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="/images/lake-tana-hero-bg.jpg"
+            alt="Lake Tana Landscape, Ethiopia"
+            className="w-full h-full object-cover object-right lg:object-center"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/images/fixedbgforhomepage.jpg'
+            }}
+          />
+          {/* Subtle natural daylight gradient overlay for text contrast on left */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/50 to-transparent pointer-events-none" />
+        </div>
+
+        {/* Hero Content - Left Aligned */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-12 pb-24 sm:pt-16 sm:pb-32 lg:pt-20 lg:pb-36">
+          <div className="max-w-2xl text-left">
+            {/* 1. Pill Badge */}
+            <div className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-[#d7ecdf] text-[#173829] text-xs font-bold tracking-wider mb-5 shadow-sm">
+              <span>{language === 'am' ? 'የኢትዮጵያን ውበት ያግኙ' : 'DISCOVER THE BEAUTY OF ETHIOPIA'}</span>
+            </div>
+
+            {/* 2. Headline with Italic Serif Accent */}
+            <h1 className="text-4xl sm:text-6xl lg:text-[68px] font-bold font-heading text-[#173829] tracking-tight leading-[1.08] mb-5">
+              <span>Experience</span>
+              <br />
+              <span>Lake Tana,</span>
+              <br />
+              <span className="italic font-normal font-serif text-[#173829]">beyond imagination.</span>
+            </h1>
+
+            {/* 3. Subtitle */}
+            <p className="text-base sm:text-lg text-[#2D3748] max-w-xl leading-relaxed mb-8 font-normal">
+              {language === 'am'
+                ? 'ልዩ መዳረሻዎችን ያግኙ፣ ባህላዊ ቅርሶችን ያስሱ እና እውነተኛ ተሞክሮዎችን ያግኙ።'
+                : 'Discover extraordinary destinations, explore cultural heritage, and book authentic experiences.'}
+            </p>
+
+            {/* 4. Floating Horizontal Search Bar */}
+            <div className="relative z-20">
+              <HeroSearch />
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Organic Wave Transition */}
+        <div className="absolute bottom-0 left-0 right-0 w-full overflow-hidden leading-none z-10 pointer-events-none">
+          <svg
+            className="relative block w-full h-12 sm:h-20 lg:h-28 text-white"
+            viewBox="0 0 1440 120"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M0,32 C320,120 480,20 800,70 C1120,120 1280,40 1440,60 L1440,120 L0,120 Z"
+              fill="currentColor"
+            />
+          </svg>
+        </div>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        {/* UNESCO Biosphere Pill Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs sm:text-sm font-semibold mb-6 shadow-sm">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span>{t('home.heroBadge', 'UNESCO Biosphere Reserve • Lake Tana, Ethiopia')}</span>
+      {/* Intro transition below wave: "Discover Remarkable Places" */}
+      <div className="bg-white text-center pt-8 pb-4 sm:pt-10 sm:pb-6">
+        <div className="inline-flex items-center justify-center gap-3 mb-3">
+          <span className="w-10 h-[1.5px] bg-[#244B3A]/30 rounded-full" />
+          {/* Leaf Icon */}
+          <svg
+            className="w-5 h-5 text-[#244B3A]"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 008 20C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z" />
+          </svg>
+          <span className="w-10 h-[1.5px] bg-[#244B3A]/30 rounded-full" />
         </div>
-
-        {/* Primary Headline */}
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold font-heading text-white tracking-tight leading-tight max-w-4xl mx-auto drop-shadow-sm">
-          {language === 'am' ? (
-            <>
-              የጣና ሐይቅን ዘመን የማይሽረው <span className="text-gold-400">ድንቅ እና ውበት</span> ያግኙ
-            </>
-          ) : (
-            <>
-              Discover the Beauty of <span className="text-gold-400">Lake Tana</span>
-            </>
-          )}
-        </h1>
-
-        {/* Subtitle */}
-        <p className="mt-5 text-sm sm:text-lg text-gray-200 max-w-2xl mx-auto leading-relaxed font-normal">
-          {t(
-            'home.heroSubtitle',
-            'Explore 14th-century island monasteries, unforgettable boat excursions, abundant wildlife, and authentic Ethiopian hospitality with verified local operators.'
-          )}
+        <h2 className="text-2xl sm:text-4xl font-bold font-heading text-[#173829] tracking-tight">
+          {language === 'am' ? 'ድንቅ ቦታዎችን ያግኙ' : 'Discover Remarkable Places'}
+        </h2>
+        <p className="mt-2 text-sm sm:text-base text-neutral-600 font-normal">
+          {language === 'am'
+            ? 'የጣና ሐይቅን ተፈጥሮአዊ እና ባህላዊ ሀብቶች ያስሱ'
+            : 'Explore the natural and cultural treasures of Lake Tana'}
         </p>
-
-        {/* Action Buttons */}
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-          <Link
-            href="/services"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-primary-700 hover:bg-primary-600 text-white font-bold text-sm shadow-xl shadow-primary-950/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
-          >
-            <span>{language === 'am' ? 'ጉብኝቶችን ያስሱ' : 'Explore Experiences'}</span>
-            <svg className="w-4 h-4 text-gold-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
-          </Link>
-
-          <Link
-            href="/destinations"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white font-bold text-sm transition-all"
-          >
-            <span>{language === 'am' ? 'ቅዱሳን መዳረሻዎች' : 'Sacred Destinations'}</span>
-            <svg className="w-4 h-4 text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            </svg>
-          </Link>
-        </div>
-
-        {/* Quick Highlights Strip */}
-        <div className="mt-12 pt-8 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto text-center">
-          <div className="p-2">
-            <div className="text-xl sm:text-2xl font-extrabold font-heading text-gold-400">37+</div>
-            <div className="text-xs text-gray-300 font-medium mt-0.5">
-              {language === 'am' ? 'ደሴቶች እና ገዳማት' : 'Island Monasteries'}
-            </div>
-          </div>
-          <div className="p-2">
-            <div className="text-xl sm:text-2xl font-extrabold font-heading text-gold-400">217+</div>
-            <div className="text-xs text-gray-300 font-medium mt-0.5">
-              {language === 'am' ? 'የአዕዋፋት ዝርያዎች' : 'Bird Species'}
-            </div>
-          </div>
-          <div className="p-2">
-            <div className="text-xl sm:text-2xl font-extrabold font-heading text-gold-400">100%</div>
-            <div className="text-xs text-gray-300 font-medium mt-0.5">
-              {language === 'am' ? 'የተረጋገጡ አስጎብኚዎች' : 'Verified Local Guides'}
-            </div>
-          </div>
-          <div className="p-2">
-            <div className="text-xl sm:text-2xl font-extrabold font-heading text-gold-400">0%</div>
-            <div className="text-xs text-gray-300 font-medium mt-0.5">
-              {language === 'am' ? 'ያለ ደላላ ኮሚሽን' : 'Middleman Markup'}
-            </div>
-          </div>
-        </div>
-
-        {/* Docked Search Box */}
-        <div className="mt-10 -mb-16 sm:-mb-24 lg:-mb-28 relative z-20">
-          <HeroSearch />
-        </div>
       </div>
     </section>
   )

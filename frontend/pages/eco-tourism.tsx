@@ -1,590 +1,482 @@
-import { useState } from 'react'
-import Link from 'next/link'
+import React, { useState } from 'react'
 import Head from 'next/head'
+import Link from 'next/link'
 import { PublicLayout } from '@/components/layouts/PublicLayout'
-import { useLanguage } from '@/contexts/LanguageContext'
-import {
-  FaLeaf,
-  FaTree,
-  FaHandHoldingHeart,
-  FaAward,
-  FaSolarPanel,
-  FaWater,
-  FaGlobeAfrica,
-  FaCalculator,
-  FaDonate,
-  FaBookOpen,
-  FaShieldAlt,
-  FaCheckCircle,
-  FaUsers,
-  FaArrowRight,
-  FaLightbulb,
-  FaTrash,
-  FaCamera,
-  FaTrophy,
-  FaMedal,
-} from 'react-icons/fa'
 
-const tips = [
+// 1. Conservation Initiatives
+const CONSERVATION_INITIATIVES = [
   {
-    icon: <FaLeaf className="text-primary-700 dark:text-primary-400" />,
-    title: 'Travel Responsibly',
-    desc: 'Respect local customs, dress modestly at religious sites, and always ask permission before taking photos.',
-  },
-  {
-    icon: <FaWater className="text-primary-700 dark:text-primary-400" />,
-    title: 'Protect Lake Tana',
-    desc: 'Never dispose of waste in the lake. Minimize single-use plastics and support clean-up drives.',
-  },
-  {
-    icon: <FaTrash className="text-primary-700 dark:text-primary-400" />,
-    title: 'Zero Plastic Use',
-    desc: 'Carry a reusable water bottle. Certified partner eco-lodges provide filtered refill stations.',
-  },
-  {
-    icon: <FaTree className="text-primary-700 dark:text-primary-400" />,
-    title: 'Preserve Forest Trails',
-    desc: 'Stick to designated paths in the Zege peninsula forests to protect fragile ecosystems.',
-  },
-  {
-    icon: <FaHandHoldingHeart className="text-primary-700 dark:text-primary-400" />,
-    title: 'Direct Local Benefit',
-    desc: 'Purchase handicrafts directly from women artisans and hire certified local guides.',
-  },
-  {
-    icon: <FaCamera className="text-primary-700 dark:text-primary-400" />,
-    title: 'Respect Monastic Heritage',
-    desc: 'Never touch ancient mural paintings or church relics. Follow monastery photography guidelines.',
-  },
-]
-
-const badgeTiers = [
-  {
-    tier: 'Bronze',
-    icon: <FaMedal className="text-amber-700 dark:text-amber-400 text-2xl" />,
-    req: '3+ criteria met',
-    desc: 'Verified commitment to sustainable tourism basics.',
-  },
-  {
-    tier: 'Silver',
-    icon: <FaShieldAlt className="text-slate-500 dark:text-slate-300 text-2xl" />,
-    req: '5+ criteria met',
-    desc: 'Demonstrated waste reduction and fair local employment.',
-  },
-  {
-    tier: 'Gold',
-    icon: <FaAward className="text-gold-500 dark:text-gold-400 text-2xl" />,
-    req: '7+ criteria met',
-    desc: 'Solar powered, community revenue sharing, zero plastic.',
-  },
-  {
-    tier: 'Platinum',
-    icon: <FaTrophy className="text-primary-700 dark:text-primary-300 text-2xl" />,
-    req: 'All criteria met',
-    desc: 'Exemplary UNESCO biosphere eco-tourism leadership.',
-  },
-]
-
-const projects = [
-  {
-    title: 'Lake Tana Shoreline Reforestation',
-    icon: <FaTree />,
-    goal: 'Plant 50,000 indigenous trees by 2027',
+    id: 'reforestation',
+    title: 'Shoreline & Sacred Forest Reforestation',
+    category: 'Ecosystem Restoration',
+    impact: '50,000 native trees by 2027',
+    description: 'Restoring native Cordia africana and Acacia abyssinica trees along Lake Tana shores and Zege Peninsula buffer zones to halt agricultural soil erosion and preserve ancient monastery canopy habitats.',
+    metric: '68% of 2026 Goal Reached',
     progress: 68,
-    donors: 340,
-    raised: 12800,
+    image: '/images/lake-tana-hero-bg.jpg',
   },
   {
-    title: 'Monastery Manuscript Preservation',
-    icon: <FaBookOpen />,
-    goal: 'Safeguard ancient Ge’ez scrolls and murals',
-    progress: 42,
-    donors: 185,
-    raised: 6700,
+    id: 'wetlands',
+    title: 'Papyrus Bed & Wetland Sanctuary Protection',
+    category: 'Water & Biodiversity',
+    impact: '12km protected shoreline',
+    description: 'Safeguarding natural papyrus reed beds that act as Lake Tana’s natural biological filtration sponge and nursery grounds for 28 endemic fish species and migrating pelicans.',
+    metric: '14 Wetland Zones Protected',
+    progress: 85,
+    image: '/images/Boat.jpg',
   },
   {
-    title: 'Community Clean Water Initiative',
-    icon: <FaWater />,
-    goal: 'Install biological sand water filters',
-    progress: 55,
-    donors: 220,
-    raised: 9200,
+    id: 'clean-water',
+    title: 'Biological Sand Filters & Community Clean Water',
+    category: 'Community Health',
+    impact: '18 Island Villages Supported',
+    description: 'Partnering with local cooperative communities to install slow sand water filtration units, ensuring clean drinking water without disposable single-use plastic bottles.',
+    metric: '18 Units Installed',
+    progress: 90,
+    image: '/images/waterfall.jpg',
+  },
+  {
+    id: 'manuscripts',
+    title: 'Ancient Manuscript & Mural Preservation',
+    category: 'Heritage Safeguard',
+    impact: '37 Island Monasteries',
+    description: 'Supporting non-invasive climate-controlled storage, parchment digitization, and traditional conservation of 14th-to-16th-century illuminated ecclesiastical manuscripts.',
+    metric: '120+ Manuscripts Documented',
+    progress: 58,
+    image: '/images/monastery.jpg',
+  },
+]
+
+// 2. Local Community Participation
+const COMMUNITY_PROGRAMS = [
+  {
+    title: 'Lake Tana Boatmen Cooperatives',
+    role: 'Transport & Safety',
+    share: '90%+ Direct Income',
+    desc: 'Local boat operators and youth captains co-own and operate licensed passenger boats, guaranteeing fair living wages, certified life jackets, and low-noise engine standards.',
+    icon: '⛵',
+  },
+  {
+    title: 'Certified Monastic & Forest Resident Guides',
+    role: 'Heritage Storytelling',
+    share: '100% Local Guides',
+    desc: 'Youth from Zege and surrounding islands are trained in biosphere biodiversity, monastery history, and language skills, providing authentic, respectful visitor guidance.',
+    icon: '🥾',
+  },
+  {
+    title: 'Women Artisan & Tankwa Weaving Guilds',
+    role: 'Handicrafts & Fair Trade',
+    share: 'Direct Artisan Sales',
+    desc: 'Preserving ancient papyrus reed boat building, hand-spun cotton textiles, and traditional culinary arts with fair-trade retail desks at monastery piers.',
+    icon: '🧶',
+  },
+  {
+    title: 'Organic Lakeside Coffee Farmers',
+    role: 'Sustainable Agriculture',
+    share: 'Shade-Grown Arabica',
+    desc: 'Wild forest Arabica coffee grown without synthetic pesticides under the ancient monastery canopies, preventing deforestation and supporting rural farming families.',
+    icon: '☕',
+  },
+]
+
+// 3. Responsible Travel Guidelines
+const RESPONSIBLE_GUIDELINES = [
+  {
+    number: '01',
+    title: 'Respect Monastic Sanctuaries',
+    instruction: 'Dress modestly when visiting monasteries (cover shoulders and knees). Always remove your shoes before stepping into the inner church dome, and respect sanctuary areas restricted to monks or nuns.',
+    icon: '⛪',
+  },
+  {
+    number: '02',
+    title: 'Never Touch Ancient Murals & Relics',
+    instruction: 'The 16th-century paintings on parchment and wood are vulnerable to skin oils and moisture. Please admire without touching, and strictly turn off camera flash inside churches.',
+    icon: '🎨',
+  },
+  {
+    number: '03',
+    title: 'Enforce Zero Single-Use Plastic',
+    instruction: 'Plastic pollution severely harms Lake Tana pelicans and freshwater fish. Carry a refillable water canteen. Certified eco-lodges and visitor centers provide free filtered water refills.',
+    icon: '🚯',
+  },
+  {
+    number: '04',
+    title: 'Stay on Designated Forest Trails',
+    instruction: 'Zege Peninsula’s forest floor is home to rare wild coffee saplings and endemic flora. Stick strictly to stone paths to prevent soil compaction and habitat destruction.',
+    icon: '🌿',
+  },
+  {
+    number: '05',
+    title: 'Support Direct Local Commerce',
+    instruction: 'Buy handicrafts, spices, and honey directly from local producers rather than middlemen. Tip boatmen, guides, and monastery caretakers directly to foster economic dignity.',
+    icon: '🤝',
+  },
+  {
+    number: '06',
+    title: 'Leave Wildlife Undisturbed',
+    instruction: 'Maintain a quiet distance from pelican nesting sites, hippopotamus pools at the Blue Nile outlet, and forest monkeys. Never feed wildlife or discard organic waste in the lake.',
+    icon: '🦅',
+  },
+]
+
+// 4. Sustainable Tourism Activities
+const SUSTAINABLE_ACTIVITIES = [
+  {
+    title: 'Traditional Papyrus Tankwa Paddle',
+    type: 'Zero-Emission Boating',
+    duration: '2 Hours',
+    co2: '0 kg CO₂',
+    description: 'Gliding along the reed fringes in an ancient handmade papyrus boat, identical to those depicted in ancient Ethiopian manuscripts.',
+    image: '/images/Boat.jpg',
+    actionHref: '/services?category=boat',
+  },
+  {
+    title: 'Zege Peninsula Shade-Coffee Nature Walk',
+    type: 'Low-Impact Hiking',
+    duration: '3.5 Hours',
+    co2: '< 1 kg CO₂',
+    description: 'A gentle shaded hike under giant fig trees to explore wild coffee harvesting, medicinal herbs, and circular timber monasteries.',
+    image: '/images/monastery.jpg',
+    actionHref: '/services?category=tour',
+  },
+  {
+    title: 'Blue Nile Falls Gorge & Portuguese Bridge Trek',
+    type: 'Community-Guided Hike',
+    duration: '5 Hours',
+    co2: '< 2 kg CO₂',
+    description: 'Scenic countryside walking trail across the 1626 stone bridge to witness the dramatic 45-meter Tis Issat waterfall with local village guides.',
+    image: '/images/waterfall.jpg',
+    actionHref: '/services?category=tour',
+  },
+  {
+    title: 'Pelican Sanctuary Sunset Rowing Excursion',
+    type: 'Birdwatching & Wetlands',
+    duration: '2.5 Hours',
+    co2: '0 kg CO₂',
+    description: 'Silent oar-powered rowing to the Blue Nile river outlet as hundreds of great white pelicans return to roost in acacia treetops.',
+    image: '/images/lake-tana-hero-bg.jpg',
+    actionHref: '/services?category=wildlife',
   },
 ]
 
 export default function EcoTourismPage() {
-  const { t } = useLanguage()
-  const [activeSection, setActiveSection] = useState('overview')
-  const [donationAmount, setDonationAmount] = useState(25)
-  const [volForm, setVolForm] = useState({ name: '', email: '', interest: 'reforestation' })
-  const [carbonActivity, setCarbonActivity] = useState('boat')
-  const [volSubmitted, setVolSubmitted] = useState(false)
-  const [donSubmitted, setDonSubmitted] = useState(false)
-
-  const carbonFootprints: Record<string, { label: string; kg: number; tip: string }> = {
-    boat: { label: 'Boat Tour (2hr)', kg: 12, tip: 'Offset by planting 1 indigenous tree (~15kg CO₂)' },
-    walk: { label: 'Zege Forest Walk (2hr)', kg: 2, tip: 'Already low-impact! Perfect eco-friendly travel.' },
-    drive: { label: 'Transfer from Airport (15km)', kg: 6, tip: 'Shared electric or hybrid taxi recommended.' },
-    lodge: { label: 'Solar Eco-Lodge Stay (1 night)', kg: 4, tip: 'Solar installations cut lodge emissions by 75%.' },
-  }
-
-  const sectionNav = [
-    { id: 'overview', label: 'Overview', icon: <FaGlobeAfrica /> },
-    { id: 'badges', label: 'Eco-Badges', icon: <FaAward /> },
-    { id: 'carbon', label: 'Carbon Calculator', icon: <FaCalculator /> },
-    { id: 'community', label: 'Community & Projects', icon: <FaUsers /> },
-    { id: 'tips', label: 'Sustainability Tips', icon: <FaLightbulb /> },
-    { id: 'volunteer', label: 'Volunteer & Donate', icon: <FaDonate /> },
-  ]
+  const [activeTab, setActiveTab] = useState<'all' | 'conservation' | 'community' | 'guidelines' | 'activities'>('all')
 
   return (
     <PublicLayout>
       <Head>
-        <title>{t('eco.title', 'Eco-Tourism & Conservation Hub')} | LTTMS</title>
+        <title>Eco-Tourism & Responsible Travel | Lake Tana UNESCO Biosphere | LTTMS</title>
         <meta
           name="description"
-          content="Learn about Lake Tana UNESCO Biosphere Reserve conservation, eco-badge certified vendors, carbon tracking, and community initiatives."
+          content="Discover Lake Tana UNESCO Biosphere Reserve eco-tourism: environmental conservation initiatives, local community cooperatives, responsible travel guidelines, and low-impact activities."
         />
       </Head>
 
-      <div className="bg-surface-muted/40 min-h-screen">
-        {/* Hero Section */}
-        <div className="bg-gradient-to-r from-primary-950 via-primary-900 to-primary-800 text-white py-14 px-4 sm:px-6 lg:px-8 border-b border-primary-700/50">
-          <div className="max-w-7xl mx-auto">
+      <div className="min-h-screen bg-slate-50 dark:bg-[#0B1613] text-slate-900 dark:text-slate-100 transition-colors pb-24">
+        {/* 1. Eco-Tourism Hero Header */}
+        <div className="relative bg-[#143224] text-white pt-16 pb-20 sm:pt-20 sm:pb-28 overflow-hidden border-b border-emerald-950">
+          <div className="absolute inset-0 z-0 opacity-30">
+            <img
+              src="/images/lake-tana-hero-bg.jpg"
+              alt="Lake Tana UNESCO Biosphere Reserve"
+              className="w-full h-full object-cover object-center"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#143224] via-[#143224]/85 to-transparent" />
+          </div>
+
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary-800/80 text-gold-300 border border-gold-500/30 mb-3">
-                🌿 {t('eco.badge', 'UNESCO Biosphere Reserve')}
+              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 backdrop-blur-md mb-4 shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>UNESCO BIOSPHERE RESERVE • RECOGNIZED 2015</span>
               </span>
-              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight font-heading">
-                {t('eco.title', 'Eco-Tourism & Conservation Hub')}
+              <h1 className="text-3xl sm:text-5xl font-extrabold font-heading text-white tracking-tight leading-tight">
+                Eco-Tourism — Responsible Tourism
               </h1>
-              <p className="mt-2 text-sm sm:text-base text-primary-100/90 leading-relaxed">
-                {t(
-                  'eco.subtitle',
-                  'Travel responsibly, preserve ancient heritage, and protect the Lake Tana ecosystem for generations to come.'
-                )}
+              <p className="mt-3 text-sm sm:text-base text-slate-200 leading-relaxed max-w-2xl font-normal">
+                Promote sustainable tourism around Lake Tana: protect fragile wetland ecosystems, safeguard 14th-century monastic treasures, and ensure every booking directly benefits indigenous host communities.
               </p>
             </div>
           </div>
         </div>
 
-        {/* Sticky Secondary Nav */}
-        <div className="sticky top-0 z-20 bg-surface/95 backdrop-blur-md border-b border-surface-border">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex overflow-x-auto gap-2 py-3 scrollbar-none">
-              {sectionNav.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => setActiveSection(s.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-colors ${
-                    activeSection === s.id
-                      ? 'bg-primary-700 text-white shadow-sm'
-                      : 'bg-surface text-text-secondary hover:text-text-primary hover:bg-surface-muted'
-                  }`}
-                >
-                  <span>{s.icon}</span>
-                  <span>{s.label}</span>
-                </button>
-              ))}
+        {/* 2. Key Metrics Bar */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
+          <div className="bg-white dark:bg-[#132620] rounded-2xl shadow-xl border border-slate-200/90 dark:border-slate-800/90 p-5 sm:p-6 transition-colors">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 dark:divide-slate-800/80">
+              <div className="text-center pt-2 sm:pt-0">
+                <div className="text-2xl sm:text-3xl font-extrabold font-heading text-[#173829] dark:text-emerald-400">
+                  217+
+                </div>
+                <div className="text-xs font-semibold text-slate-600 dark:text-slate-300 mt-1">
+                  Bird Species Protected
+                </div>
+              </div>
+
+              <div className="text-center pt-2 sm:pt-0 sm:pl-4">
+                <div className="text-2xl sm:text-3xl font-extrabold font-heading text-[#173829] dark:text-emerald-400">
+                  90%+
+                </div>
+                <div className="text-xs font-semibold text-slate-600 dark:text-slate-300 mt-1">
+                  Direct Local Revenue
+                </div>
+              </div>
+
+              <div className="text-center pt-2 sm:pt-0 sm:pl-4">
+                <div className="text-2xl sm:text-3xl font-extrabold font-heading text-[#173829] dark:text-emerald-400">
+                  37
+                </div>
+                <div className="text-xs font-semibold text-slate-600 dark:text-slate-300 mt-1">
+                  Sacred Monastery Sanctuaries
+                </div>
+              </div>
+
+              <div className="text-center pt-2 sm:pt-0 sm:pl-4">
+                <div className="text-2xl sm:text-3xl font-extrabold font-heading text-[#173829] dark:text-emerald-400">
+                  0%
+                </div>
+                <div className="text-xs font-semibold text-slate-600 dark:text-slate-300 mt-1">
+                  Single-Use Plastic Target
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Tab Content Container */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {/* 1. OVERVIEW */}
-          {activeSection === 'overview' && (
-            <div className="space-y-12">
-              <div className="text-center max-w-2xl mx-auto">
-                <h2 className="text-2xl sm:text-3xl font-extrabold font-heading text-text-primary">
-                  Sustainable Tourism with Tangible Impact
+        {/* 3. Section Navigation Tabs */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-slate-200/80 dark:border-slate-800/80">
+            {[
+              { id: 'all', label: 'All Dimensions' },
+              { id: 'conservation', label: 'Conservation Initiatives' },
+              { id: 'community', label: 'Community Participation' },
+              { id: 'guidelines', label: 'Responsible Travel Guidelines' },
+              { id: 'activities', label: 'Sustainable Tourism Activities' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 ${
+                  activeTab === tab.id
+                    ? 'bg-[#244B3A] text-white shadow-sm'
+                    : 'bg-white dark:bg-[#132620] text-slate-700 dark:text-slate-300 border border-slate-200/90 dark:border-slate-800/90 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 4. Environmental Conservation Initiatives */}
+        {(activeTab === 'all' || activeTab === 'conservation') && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-14">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400 block mb-1">
+                  Ecological Stewardship
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-extrabold font-heading text-slate-900 dark:text-white">
+                  Environmental Conservation Initiatives
                 </h2>
-                <p className="text-sm text-text-secondary mt-2">
-                  Every booking directly funds Lake Tana wetland protection, tree planting, and fair income for local communities.
-                </p>
-              </div>
-
-              {/* Impact Metrics */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-                {[
-                  { value: '5,200+', label: 'Trees Planted', icon: <FaTree /> },
-                  { value: '100%', label: 'Verified Operators', icon: <FaAward /> },
-                  { value: '12.5T', label: 'CO₂ Emissions Offset', icon: <FaGlobeAfrica /> },
-                  { value: '90%', label: 'Local Community Revenue', icon: <FaUsers /> },
-                ].map((s, i) => (
-                  <div
-                    key={i}
-                    className="bg-surface border border-surface-border rounded-2xl p-6 text-center shadow-sm"
-                  >
-                    <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-primary-50 dark:bg-primary-950/60 border border-primary-200 dark:border-primary-800 flex items-center justify-center text-primary-700 dark:text-primary-300 text-xl">
-                      {s.icon}
-                    </div>
-                    <div className="text-2xl sm:text-3xl font-extrabold font-heading text-text-primary">
-                      {s.value}
-                    </div>
-                    <div className="text-xs font-semibold text-text-secondary mt-1">
-                      {s.label}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Certification Tiers Overview */}
-              <div className="bg-surface border border-surface-border rounded-2xl p-6 sm:p-8 shadow-sm">
-                <h3 className="text-xl font-bold font-heading text-text-primary text-center mb-6">
-                  {t('eco.badgesTitle', 'Lake Tana Eco-Certification')}
-                </h3>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {badgeTiers.map((b, i) => (
-                    <div
-                      key={i}
-                      className="bg-surface-muted border border-surface-border rounded-xl p-5 text-center"
-                    >
-                      <div className="mb-2 flex justify-center">{b.icon}</div>
-                      <h4 className="font-bold text-text-primary text-base">{b.tier}</h4>
-                      <p className="text-xs text-text-secondary mt-1">{b.req}</p>
-                      <p className="text-xs text-text-secondary mt-2 leading-relaxed">{b.desc}</p>
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
-          )}
 
-          {/* 2. ECO-BADGES */}
-          {activeSection === 'badges' && (
-            <div className="space-y-8">
-              <div className="text-center max-w-2xl mx-auto mb-8">
-                <h2 className="text-2xl sm:text-3xl font-extrabold font-heading text-text-primary">
-                  {t('eco.badgesTitle', 'Lake Tana Eco-Certification')}
-                </h2>
-                <p className="text-sm text-text-secondary mt-2">
-                  {t(
-                    'eco.badgesSubtitle',
-                    'Recognizing operators committed to environmental stewardship, zero plastic, and fair wages.'
-                  )}
-                </p>
-              </div>
-
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {badgeTiers.map((b, i) => (
-                  <div
-                    key={i}
-                    className="bg-surface border border-surface-border rounded-2xl p-6 shadow-sm text-center"
-                  >
-                    <div className="mb-3 flex justify-center">{b.icon}</div>
-                    <h3 className="text-lg font-bold font-heading text-text-primary">{b.tier}</h3>
-                    <div className="text-xs font-semibold text-primary-700 dark:text-primary-400 mt-1 mb-2">
-                      {b.req}
-                    </div>
-                    <p className="text-xs text-text-secondary leading-relaxed">{b.desc}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="bg-surface border border-surface-border rounded-2xl p-6 sm:p-8 shadow-sm">
-                <h3 className="text-lg font-bold font-heading text-text-primary mb-5">
-                  Core Evaluation Criteria
-                </h3>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[
-                    { icon: <FaSolarPanel />, label: 'Renewable Solar Energy', desc: 'Solar electrical systems for boats and lodges' },
-                    { icon: <FaTrash />, label: 'Zero Single-Use Plastic', desc: 'Filtered water stations & compostable packaging' },
-                    { icon: <FaUsers />, label: 'Local Fair Employment', desc: '80%+ staff hired from Bahir Dar communities' },
-                    { icon: <FaWater />, label: 'Freshwater Conservation', desc: 'Rainwater collection & wastewater treatment' },
-                    { icon: <FaTree />, label: 'Carbon Neutrality', desc: 'Contributions to native tree reforestation' },
-                    { icon: <FaHandHoldingHeart />, label: 'Heritage Preservation', desc: 'Direct support to island monastery maintenance' },
-                  ].map((c, i) => (
-                    <div key={i} className="bg-surface-muted border border-surface-border rounded-xl p-4 flex items-start gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-primary-50 dark:bg-primary-950/60 border border-primary-200 dark:border-primary-800 flex items-center justify-center text-primary-700 dark:text-primary-300 shrink-0">
-                        {c.icon}
-                      </div>
-                      <div>
-                        <div className="font-bold text-xs sm:text-sm text-text-primary">{c.label}</div>
-                        <div className="text-xs text-text-secondary mt-0.5">{c.desc}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 3. CARBON CALCULATOR */}
-          {activeSection === 'carbon' && (
-            <div className="space-y-8">
-              <div className="text-center max-w-2xl mx-auto mb-8">
-                <h2 className="text-2xl sm:text-3xl font-extrabold font-heading text-text-primary">
-                  {t('eco.carbonTitle', 'Carbon & Eco-Impact Calculator')}
-                </h2>
-                <p className="text-sm text-text-secondary mt-2">
-                  {t(
-                    'eco.carbonSubtitle',
-                    'Estimate the ecological footprint of your Lake Tana journey and support verified local tree-planting.'
-                  )}
-                </p>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-8">
-                <div className="bg-surface border border-surface-border rounded-2xl p-6 sm:p-8 shadow-sm">
-                  <h3 className="font-bold text-base font-heading text-text-primary mb-4">
-                    Select Your Activity
-                  </h3>
-                  <div className="space-y-3">
-                    {Object.entries(carbonFootprints).map(([key, val]) => (
-                      <button
-                        key={key}
-                        onClick={() => setCarbonActivity(key)}
-                        className={`w-full text-left p-4 rounded-xl border text-sm transition-all flex items-center justify-between ${
-                          carbonActivity === key
-                            ? 'bg-primary-50 dark:bg-primary-950/40 border-primary-600 text-text-primary font-bold shadow-sm'
-                            : 'bg-surface border-surface-border text-text-secondary hover:bg-surface-muted'
-                        }`}
-                      >
-                        <div>
-                          <div className="text-text-primary">{val.label}</div>
-                          <div className="text-xs text-text-secondary mt-0.5">{val.tip}</div>
-                        </div>
-                        <span className="text-xs font-mono font-bold text-primary-700 dark:text-primary-400 bg-surface px-2.5 py-1 rounded-lg border border-surface-border shrink-0 ml-3">
-                          {val.kg} kg CO₂
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bg-surface border border-surface-border rounded-2xl p-6 sm:p-8 shadow-sm flex flex-col justify-between">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-7">
+              {CONSERVATION_INITIATIVES.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-white dark:bg-[#132620] rounded-2xl border border-slate-200/90 dark:border-slate-800/90 shadow-sm hover:shadow-xl hover:border-emerald-600/40 dark:hover:border-emerald-500/40 transition-all duration-300 p-6 flex flex-col justify-between"
+                >
                   <div>
-                    <h3 className="font-bold text-base font-heading text-text-primary mb-2">
-                      Estimated Carbon Impact
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
+                        {item.category}
+                      </span>
+                      <span className="text-xs font-bold text-[#173829] dark:text-emerald-400">
+                        {item.impact}
+                      </span>
+                    </div>
+
+                    <h3 className="text-lg font-bold font-heading text-slate-900 dark:text-white mb-2">
+                      {item.title}
                     </h3>
-                    <div className="p-6 bg-surface-muted border border-surface-border rounded-xl text-center my-4">
-                      <div className="text-4xl sm:text-5xl font-extrabold font-heading text-primary-700 dark:text-primary-400">
-                        {carbonFootprints[carbonActivity].kg}
-                      </div>
-                      <div className="text-xs font-semibold text-text-secondary mt-1">
-                        kg CO₂ Equivalent
-                      </div>
-                    </div>
-                    <div className="p-4 bg-primary-50 dark:bg-primary-950/40 border border-primary-200 dark:border-primary-800 rounded-xl text-xs text-text-primary leading-relaxed">
-                      💡 <strong>Recommended Offset:</strong> {carbonFootprints[carbonActivity].tip}
-                    </div>
-                  </div>
-
-                  <Link
-                    href="/services"
-                    className="mt-6 w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm bg-primary-700 hover:bg-primary-800 text-white transition-colors shadow-sm"
-                  >
-                    <span>Browse Eco-Certified Tours</span>
-                    <FaArrowRight className="text-xs" />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 4. COMMUNITY & PROJECTS */}
-          {activeSection === 'community' && (
-            <div className="space-y-8">
-              <div className="text-center max-w-2xl mx-auto mb-8">
-                <h2 className="text-2xl sm:text-3xl font-extrabold font-heading text-text-primary">
-                  {t('eco.communityTitle', 'Community Conservation Projects')}
-                </h2>
-                <p className="text-sm text-text-secondary mt-2">
-                  {t(
-                    'eco.communitySubtitle',
-                    'Direct community initiatives funded by sustainable tourism in Bahir Dar and Lake Tana.'
-                  )}
-                </p>
-              </div>
-
-              <div className="space-y-5">
-                {projects.map((p, i) => (
-                  <div
-                    key={i}
-                    className="bg-surface border border-surface-border rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-5"
-                  >
-                    <div className="w-12 h-12 rounded-xl bg-primary-50 dark:bg-primary-950/60 border border-primary-200 dark:border-primary-800 flex items-center justify-center text-primary-700 dark:text-primary-300 text-xl shrink-0">
-                      {p.icon}
-                    </div>
-                    <div className="flex-1 w-full">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                        <h4 className="font-bold text-base text-text-primary">{p.title}</h4>
-                        <span className="text-xs font-bold text-primary-700 dark:text-primary-400">
-                          ${p.raised.toLocaleString()} raised
-                        </span>
-                      </div>
-                      <p className="text-xs text-text-secondary mt-1">{p.goal}</p>
-
-                      <div className="mt-3">
-                        <div className="flex justify-between text-xs text-text-secondary mb-1">
-                          <span>{p.progress}% completed</span>
-                          <span>{p.donors} active donors</span>
-                        </div>
-                        <div className="h-2 bg-surface-muted border border-surface-border rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-primary-700"
-                            style={{ width: `${p.progress}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 5. SUSTAINABILITY TIPS */}
-          {activeSection === 'tips' && (
-            <div className="space-y-8">
-              <div className="text-center max-w-2xl mx-auto mb-8">
-                <h2 className="text-2xl sm:text-3xl font-extrabold font-heading text-text-primary">
-                  {t('eco.tipsTitle', 'Responsible Travel Principles')}
-                </h2>
-                <p className="text-sm text-text-secondary mt-2">
-                  {t(
-                    'eco.tipsSubtitle',
-                    'Simple ways you can support local communities and protect sacred natural sites.'
-                  )}
-                </p>
-              </div>
-
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {tips.map((tip, i) => (
-                  <div
-                    key={i}
-                    className="bg-surface border border-surface-border rounded-2xl p-6 shadow-sm hover:border-primary-600 transition-colors"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-surface-muted flex items-center justify-center text-xl mb-4">
-                      {tip.icon}
-                    </div>
-                    <h3 className="font-bold text-base font-heading text-text-primary mb-2">
-                      {tip.title}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
-                      {tip.desc}
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+                      {item.description}
                     </p>
                   </div>
-                ))}
+
+                  <div>
+                    <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
+                      <span>Milestone Progress</span>
+                      <span className="text-slate-800 dark:text-slate-200">{item.metric}</span>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                      <div
+                        className="h-full bg-emerald-600 rounded-full transition-all duration-500"
+                        style={{ width: `${item.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 5. Local Community Participation */}
+        {(activeTab === 'all' || activeTab === 'community') && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400 block mb-1">
+                  Community Benefit
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-extrabold font-heading text-slate-900 dark:text-white">
+                  Local Community Participation
+                </h2>
               </div>
             </div>
-          )}
 
-          {/* 6. VOLUNTEER & DONATE */}
-          {activeSection === 'volunteer' && (
-            <div className="space-y-8">
-              <div className="text-center max-w-2xl mx-auto mb-8">
-                <h2 className="text-2xl sm:text-3xl font-extrabold font-heading text-text-primary">
-                  Support Conservation &amp; Community
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {COMMUNITY_PROGRAMS.map((item, i) => (
+                <div
+                  key={i}
+                  className="bg-white dark:bg-[#132620] rounded-2xl border border-slate-200/90 dark:border-slate-800/90 shadow-sm hover:shadow-xl hover:border-emerald-600/40 dark:hover:border-emerald-500/40 transition-all duration-300 p-6 flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center text-2xl mb-4">
+                      {item.icon}
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 block mb-1">
+                      {item.role}
+                    </span>
+                    <h3 className="text-base font-bold font-heading text-slate-900 dark:text-white mb-2 leading-snug">
+                      {item.title}
+                    </h3>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-xs font-bold text-[#173829] dark:text-emerald-400">
+                    {item.share}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 6. Responsible Travel Guidelines */}
+        {(activeTab === 'all' || activeTab === 'guidelines') && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400 block mb-1">
+                  Ethical Code
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-extrabold font-heading text-slate-900 dark:text-white">
+                  Responsible Travel Guidelines
                 </h2>
-                <p className="text-sm text-text-secondary mt-2">
-                  100% of proceeds go directly to Lake Tana wetland reforestation and monastery preservation.
-                </p>
               </div>
+            </div>
 
-              <div className="grid md:grid-cols-2 gap-8">
-                {/* Direct Donation Card */}
-                <div className="bg-surface border border-surface-border rounded-2xl p-6 sm:p-8 shadow-sm">
-                  <h3 className="font-bold text-base font-heading text-text-primary mb-2">
-                    Direct Conservation Donation
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {RESPONSIBLE_GUIDELINES.map((guide, i) => (
+                <div
+                  key={i}
+                  className="bg-white dark:bg-[#132620] rounded-2xl border border-slate-200/90 dark:border-slate-800/90 shadow-sm hover:shadow-xl hover:border-emerald-600/40 dark:hover:border-emerald-500/40 transition-all duration-300 p-6"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-extrabold text-[#244B3A] dark:text-emerald-400">
+                      Rule {guide.number}
+                    </span>
+                    <span className="text-xl">{guide.icon}</span>
+                  </div>
+                  <h3 className="text-base font-bold font-heading text-slate-900 dark:text-white mb-2 leading-snug">
+                    {guide.title}
                   </h3>
-                  <p className="text-xs text-text-secondary mb-5">
-                    Select an amount to fund indigenous seedling planting and clean water projects.
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                    {guide.instruction}
                   </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-                  <div className="grid grid-cols-4 gap-2 mb-4">
-                    {[10, 25, 50, 100].map((amt) => (
-                      <button
-                        key={amt}
-                        onClick={() => setDonationAmount(amt)}
-                        className={`py-2.5 rounded-xl text-xs font-bold border transition-colors ${
-                          donationAmount === amt
-                            ? 'bg-primary-700 text-white border-primary-700 shadow-sm'
-                            : 'bg-surface border-surface-border text-text-secondary hover:text-text-primary hover:bg-surface-muted'
-                        }`}
-                      >
-                        ${amt}
-                      </button>
-                    ))}
+        {/* 7. Sustainable Tourism Activities */}
+        {(activeTab === 'all' || activeTab === 'activities') && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400 block mb-1">
+                  Low-Carbon Adventures
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-extrabold font-heading text-slate-900 dark:text-white">
+                  Sustainable Tourism Activities
+                </h2>
+              </div>
+              <Link
+                href="/services?ecoFriendly=true"
+                className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-[#244B3A] dark:text-emerald-400 hover:underline"
+              >
+                <span>Browse All Eco-Tours</span>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {SUSTAINABLE_ACTIVITIES.map((act, i) => (
+                <div
+                  key={i}
+                  className="group bg-white dark:bg-[#132620] rounded-2xl border border-slate-200/90 dark:border-slate-800/90 shadow-sm hover:shadow-xl hover:border-emerald-600/40 dark:hover:border-emerald-500/40 transition-all duration-300 overflow-hidden flex flex-col justify-between"
+                >
+                  <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-900">
+                    <img
+                      src={act.image}
+                      alt={act.title}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute top-2.5 left-2.5">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-600 text-white shadow-sm">
+                        {act.co2}
+                      </span>
+                    </div>
                   </div>
 
-                  <button
-                    onClick={() => {
-                      setDonSubmitted(true)
-                      setTimeout(() => setDonSubmitted(false), 2500)
-                    }}
-                    className="w-full py-3 rounded-xl font-bold text-sm bg-primary-700 hover:bg-primary-800 text-white transition-colors shadow-sm"
-                  >
-                    {donSubmitted ? '✓ Thank You for Supporting Lake Tana!' : `Donate $${donationAmount}`}
-                  </button>
-                  <p className="text-[11px] text-text-secondary text-center mt-3">
-                    Supports Telebirr, CBE Birr, Chapa, and international cards.
-                  </p>
-                </div>
-
-                {/* Volunteer Signup Card */}
-                <div className="bg-surface border border-surface-border rounded-2xl p-6 sm:p-8 shadow-sm">
-                  <h3 className="font-bold text-base font-heading text-text-primary mb-2">
-                    Volunteer in Bahir Dar
-                  </h3>
-                  <p className="text-xs text-text-secondary mb-5">
-                    Participate in guided weekend shoreline clean-ups or seedling planting.
-                  </p>
-
-                  {volSubmitted ? (
-                    <div className="p-6 bg-primary-50 dark:bg-primary-950/40 border border-primary-200 dark:border-primary-800 rounded-xl text-center">
-                      <FaCheckCircle className="text-3xl text-primary-700 dark:text-primary-300 mx-auto mb-2" />
-                      <h4 className="font-bold text-text-primary text-sm">Thank You for Registering!</h4>
-                      <p className="text-xs text-text-secondary mt-1">Our coordinator in Bahir Dar will reach out to you.</p>
+                  <div className="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 block mb-1">
+                        {act.type} • {act.duration}
+                      </span>
+                      <h3 className="text-sm sm:text-base font-bold font-heading text-slate-900 dark:text-white mb-2 leading-snug group-hover:text-[#244B3A] dark:group-hover:text-emerald-400 transition-colors">
+                        {act.title}
+                      </h3>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        {act.description}
+                      </p>
                     </div>
-                  ) : (
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault()
-                        setVolSubmitted(true)
-                      }}
-                      className="space-y-3"
-                    >
-                      <input
-                        type="text"
-                        placeholder="Your Name"
-                        value={volForm.name}
-                        onChange={(e) => setVolForm({ ...volForm, name: e.target.value })}
-                        required
-                        className="w-full border border-surface-border rounded-xl px-4 py-2.5 text-xs sm:text-sm bg-surface text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      />
-                      <input
-                        type="email"
-                        placeholder="Email Address"
-                        value={volForm.email}
-                        onChange={(e) => setVolForm({ ...volForm, email: e.target.value })}
-                        required
-                        className="w-full border border-surface-border rounded-xl px-4 py-2.5 text-xs sm:text-sm bg-surface text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      />
-                      <select
-                        value={volForm.interest}
-                        onChange={(e) => setVolForm({ ...volForm, interest: e.target.value })}
-                        className="w-full border border-surface-border rounded-xl px-4 py-2.5 text-xs sm:text-sm bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
+
+                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+                      <Link
+                        href={act.actionHref}
+                        className="w-full py-2 px-3 inline-flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-[#244B3A] dark:hover:bg-[#244B3A] text-slate-800 dark:text-slate-200 hover:text-white dark:hover:text-white text-xs font-bold transition-all"
                       >
-                        <option value="reforestation">Indigenous Tree Planting</option>
-                        <option value="cleanup">Lake Shoreline Clean-Up</option>
-                        <option value="monastery">Monastery Preservation Support</option>
-                        <option value="education">Community Youth Education</option>
-                      </select>
-                      <button
-                        type="submit"
-                        className="w-full py-3 rounded-xl font-bold text-sm bg-primary-700 hover:bg-primary-800 text-white transition-colors shadow-sm"
-                      >
-                        Sign Up as Volunteer
-                      </button>
-                    </form>
-                  )}
+                        <span>Book Activity</span>
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </Link>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </PublicLayout>
   )

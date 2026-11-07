@@ -72,7 +72,7 @@ export default function TouristReviewsPage() {
             { label: 'My Reviews' },
           ]}
           actions={
-            <Link href="/services">
+            <Link href="/tourist/marketplace">
               <Button variant="primary" size="sm">
                 Explore More Tours
               </Button>

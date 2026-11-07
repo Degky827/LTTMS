@@ -5,8 +5,8 @@ import { HeroSection } from '@/components/public-home/HeroSection'
 import { ExperienceCategories } from '@/components/public-home/ExperienceCategories'
 import { DestinationShowcase } from '@/components/public-home/DestinationShowcase'
 import { FeaturedExperiences } from '@/components/public-home/FeaturedExperiences'
-import { LakeTanaStory } from '@/components/public-home/LakeTanaStory'
 import { EcoTourismSection } from '@/components/public-home/EcoTourismSection'
+import { LakeTanaStory } from '@/components/public-home/LakeTanaStory'
 import { TrustedVendors } from '@/components/public-home/TrustedVendors'
 import { HowItWorks } from '@/components/public-home/HowItWorks'
 import { TravelerReviews } from '@/components/public-home/TravelerReviews'
@@ -37,25 +37,37 @@ export default function HomePage() {
       {/* 1. Integrated Premium Sticky Navigation */}
       <PublicNavbar />
 
-      {/* Main Page Flow */}
+      {/* Main Page Flow - Single-Page Experience */}
       <main className="flex-1">
         {/* 2 & 3. Hero Section & Overlapping Search Box */}
-        <HeroSection />
+        <div id="home" className="scroll-mt-20">
+          <HeroSection />
+        </div>
 
         {/* 4. Explore by Experience Category */}
-        <ExperienceCategories />
+        <div id="explore" className="scroll-mt-20">
+          <ExperienceCategories />
+        </div>
 
         {/* 5. Discover Lake Tana Sacred & Natural Destinations */}
-        <DestinationShowcase />
+        <div id="destinations" className="scroll-mt-20">
+          <DestinationShowcase />
+        </div>
 
         {/* 6. Featured Tourism Experiences */}
-        <FeaturedExperiences />
+        <div id="experiences" className="scroll-mt-20">
+          <FeaturedExperiences />
+        </div>
 
-        {/* 7. Experience Lake Tana (Editorial Heritage & Nature Storytelling) */}
-        <LakeTanaStory />
+        {/* 7. Eco-Tourism & Sustainable Travel (Badges & Carbon Impact) */}
+        <div id="eco-tourism" className="scroll-mt-20">
+          <EcoTourismSection />
+        </div>
 
-        {/* 8. Eco-Tourism & Sustainable Travel (Badges & Carbon Impact) */}
-        <EcoTourismSection />
+        {/* 8. Experience Lake Tana (About / Heritage & Nature Storytelling) */}
+        <div id="about" className="scroll-mt-20">
+          <LakeTanaStory />
+        </div>
 
         {/* 9. Trusted Local Tourism Providers & Cooperatives */}
         <TrustedVendors />
@@ -73,8 +85,10 @@ export default function HomePage() {
         <FinalCallToAction />
       </main>
 
-      {/* 14. Professional Comprehensive Footer */}
-      <PublicFooter />
+      {/* 14. Professional Comprehensive Footer & Contact */}
+      <div id="contact" className="scroll-mt-20">
+        <PublicFooter />
+      </div>
     </div>
   )
 }
