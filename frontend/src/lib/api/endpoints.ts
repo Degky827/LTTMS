@@ -32,6 +32,14 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string) => `/services/${id}`,
     DELETE: (id: string) => `/services/${id}`,
     AVAILABILITY: (id: string) => `/services/${id}/availability`,
+    AVAILABILITY_CALENDAR: (id: string) => `/services/${id}/availability/calendar`,
+    PRICING: (id: string) => `/services/${id}/pricing`,
+    SUBMIT: (id: string) => `/services/${id}/submit`,
+    PUBLISH: (id: string) => `/services/${id}/publish`,
+    ARCHIVE: (id: string) => `/services/${id}/archive`,
+    IMAGES: (id: string) => `/services/${id}/images`,
+    IMAGE_REORDER: (id: string) => `/services/${id}/images/reorder`,
+    IMAGE_BY_ID: (id: string, imageId: string) => `/services/${id}/images/${imageId}`,
   },
 
   // Destinations & Monasteries
@@ -51,6 +59,9 @@ export const API_ENDPOINTS = {
   ECO_BADGES: {
     LIST: '/eco-badges',
     GET_BY_ID: (id: string) => `/eco-badges/${id}`,
+    VENDOR_BADGES: (vendorId: string) => `/eco-badges/vendor/${vendorId}`,
+    APPLY: '/eco-badges/applications',
+    APPLICATIONS_ME: '/eco-badges/applications/me',
   },
 
   // Bookings (Tourist)
@@ -66,6 +77,9 @@ export const API_ENDPOINTS = {
     LIST: '/vendor/bookings',
     GET_BY_ID: (id: string) => `/vendor/bookings/${id}`,
     UPDATE_STATUS: (id: string) => `/vendor/bookings/${id}/status`,
+    CONFIRM: (id: string) => `/vendor/bookings/${id}/confirm`,
+    REJECT: (id: string) => `/vendor/bookings/${id}/reject`,
+    STATISTICS: '/vendor/bookings/statistics',
   },
 
   // Refund Requests
@@ -81,15 +95,23 @@ export const API_ENDPOINTS = {
     LIST: '/vendors',
     GET_BY_ID: (id: string) => `/vendors/${id}`,
     PROFILE: '/vendors/profile',
-    UPDATE_PROFILE: '/vendors/profile',
+    PROFILE_ME: '/vendors/profile/me',
+    UPDATE_PROFILE: '/vendors/profile/me',
+    VERIFICATION_DOCUMENTS: '/vendors/verification/documents',
+    VERIFICATION_STATUS: '/vendors/verification/status',
+    VERIFICATION_SUBMIT: '/vendors/verification/submit',
   },
 
   // Reviews & Ratings
   REVIEWS: {
     LIST: '/reviews',
     FOR_SERVICE: (serviceId: string) => `/reviews/service/${serviceId}`,
+    GET_BY_ID: (id: string) => `/reviews/${id}`,
     CREATE: '/reviews',
+    UPDATE: (id: string) => `/reviews/${id}`,
     DELETE: (id: string) => `/reviews/${id}`,
+    RESPOND: (reviewId: string) => `/reviews/${reviewId}/respond`,
+    REPORT: (reviewId: string) => `/reviews/${reviewId}/report`,
   },
 
   // Payments & Payouts (Chapa Integration)
@@ -102,6 +124,9 @@ export const API_ENDPOINTS = {
   // Finance & Commissions
   FINANCE: {
     VENDOR_OVERVIEW: '/vendor/finance/overview',
+    VENDOR_TRANSACTIONS: '/vendor/finance/transactions',
+    VENDOR_COMMISSIONS: '/vendor/finance/commissions',
+    VENDOR_SETTLEMENTS: '/vendor/finance/settlements',
     VENDOR_PAYOUTS: '/vendor/finance/payouts',
     ADMIN_OVERVIEW: '/admin/finance/overview',
     ADMIN_COMMISSIONS: '/admin/finance/commissions',
@@ -120,6 +145,7 @@ export const API_ENDPOINTS = {
     TICKETS: '/support/tickets',
     TICKET_BY_ID: (id: string) => `/support/tickets/${id}`,
     CREATE_TICKET: '/support/tickets',
+    MESSAGES: (id: string) => `/support/tickets/${id}/messages`,
   },
 
   // Administration
@@ -133,5 +159,8 @@ export const API_ENDPOINTS = {
   },
 
   // File Uploads
-  UPLOADS: '/uploads',
+  UPLOADS: {
+    BASE: '/uploads',
+    IMAGE: '/uploads/image',
+  },
 } as const
