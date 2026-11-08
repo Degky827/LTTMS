@@ -1,8 +1,9 @@
 import { API_ENDPOINTS } from '@/lib/api/endpoints'
+import { apiClient } from '@/lib/api/client'
 
 export const adminReportExportService = {
   getExportUrl: (type: string) => {
-    const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'
+    const base = apiClient.getBaseURL()
     switch (type) {
       case 'bookings':
         return `${base}${API_ENDPOINTS.ADMIN.EXPORTS_BOOKINGS}`

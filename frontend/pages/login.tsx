@@ -5,6 +5,7 @@ import { useRouter } from 'next/router'
 import { PublicLayout } from '@/components/layouts/PublicLayout'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { apiClient } from '@/lib/api/client'
 
 export default function LoginPage() {
   const { login } = useAuth()
@@ -80,8 +81,9 @@ export default function LoginPage() {
       }
     } catch (err: any) {
       if (!err.response && (err.code === 'ERR_NETWORK' || err.message?.includes('Network') || !err.response)) {
-        setError('Cannot connect to the LTTMS backend server (http://localhost:5000). Please start the backend server.')
-        setSpecificErrors(['Network: Backend API on port 5000 is offline or connection was refused.'])
+        const targetUrl = apiClient.getBaseURL()
+        setError(`Cannot connect to the LTTMS backend server (${targetUrl}). Please ensure the backend server is reachable.`)
+        setSpecificErrors([`Network: Backend API at ${targetUrl} is offline or connection was refused. Check your internet connection.`])
         return
       }
 
