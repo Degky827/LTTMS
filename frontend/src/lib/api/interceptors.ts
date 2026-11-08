@@ -18,7 +18,7 @@ const processQueue = (error: any = null, token: string | null = null) => {
   failedQueue = []
 }
 
-export function setupInterceptors(instance: AxiosInstance, baseURL: string): void {
+export function setupInterceptors(instance: AxiosInstance, _baseURL?: string): void {
   // Request Interceptor
   instance.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
@@ -90,7 +90,7 @@ export function setupInterceptors(instance: AxiosInstance, baseURL: string): voi
             typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null
 
           const refreshResponse = await instance.post(
-            `${baseURL}/auth/refresh`,
+            '/auth/refresh',
             { refreshToken: storedRefreshToken },
             { withCredentials: true }
           )

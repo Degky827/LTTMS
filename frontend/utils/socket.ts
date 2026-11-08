@@ -1,6 +1,32 @@
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
+export const PRODUCTION_SOCKET_URL = 'https://lttms.onrender.com';
+
+export function resolveSocketUrl(): string {
+  const envUrl = (process.env.NEXT_PUBLIC_SOCKET_URL || '').trim();
+
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    const isLocalhost =
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === '0.0.0.0' ||
+      hostname.endsWith('.local');
+
+    if (!isLocalhost) {
+      if (!envUrl || envUrl.includes('localhost') || envUrl.includes('127.0.0.1')) {
+        return PRODUCTION_SOCKET_URL;
+      }
+      return envUrl;
+    }
+  }
+
+  if (envUrl) {
+    return envUrl;
+  }
+
+  return 'http://localhost:5000';
+}
 
 let socket: Socket | null = null;
 
@@ -8,8 +34,9 @@ export const connectSocket = (token?: string | null): Socket => {
   if (socket?.connected) return socket;
 
   const authToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+  const targetUrl = resolveSocketUrl();
 
-  socket = io(SOCKET_URL, {
+  socket = io(targetUrl, {
     auth: { token: authToken },
     transports: ['websocket', 'polling'],
     reconnection: true,

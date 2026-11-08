@@ -30,8 +30,10 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NODE_ENV=production
 ENV NEXT_STANDALONE=1
-ENV NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
-ENV NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
+ARG NEXT_PUBLIC_API_URL=https://lttms.onrender.com/api/v1
+ARG NEXT_PUBLIC_SOCKET_URL=https://lttms.onrender.com
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_SOCKET_URL=$NEXT_PUBLIC_SOCKET_URL
 RUN npm run build
 
 # 5. Production Runner stage

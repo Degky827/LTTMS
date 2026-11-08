@@ -68,4 +68,35 @@ describe('LTTMS ApiError and Normalization Tests', () => {
     assert.equal(error.isNetworkError, true)
     assert.equal(error.status, 0)
   })
+
+  it('Resolves production API URL when running in browser on deployed remote host', () => {
+    const PRODUCTION_API_URL = 'https://lttms.onrender.com/api/v1'
+    function testResolver(envUrl, hostname) {
+      const isLocalhost =
+        hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname === '0.0.0.0' ||
+        hostname.endsWith('.local')
+
+      if (!isLocalhost) {
+        if (!envUrl || envUrl.includes('localhost') || envUrl.includes('127.0.0.1')) {
+          return PRODUCTION_API_URL
+        }
+        return envUrl
+      }
+      return envUrl || 'http://localhost:5000/api/v1'
+    }
+
+    // Deployed host with missing or localhost env var falls back to production API
+    assert.equal(testResolver('', 'lttms-frontend.onrender.com'), PRODUCTION_API_URL)
+    assert.equal(testResolver('http://localhost:5000/api/v1', 'lttms-frontend.onrender.com'), PRODUCTION_API_URL)
+    assert.equal(testResolver('http://localhost:5000/api/v1', 'custom-domain.com'), PRODUCTION_API_URL)
+
+    // Deployed host with custom production URL preserves configured URL
+    assert.equal(testResolver('https://api.custom.com/api/v1', 'custom-domain.com'), 'https://api.custom.com/api/v1')
+
+    // Localhost retains localhost
+    assert.equal(testResolver('http://localhost:5000/api/v1', 'localhost'), 'http://localhost:5000/api/v1')
+    assert.equal(testResolver('', '127.0.0.1'), 'http://localhost:5000/api/v1')
+  })
 })

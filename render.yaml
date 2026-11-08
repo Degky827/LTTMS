@@ -68,6 +68,6 @@ services:
       - key: NODE_ENV
         value: production
       - key: NEXT_PUBLIC_API_URL
-        sync: false
+        value: https://lttms.onrender.com/api/v1
       - key: NEXT_PUBLIC_SOCKET_URL
-        sync: false
+        value: https://lttms.onrender.com
