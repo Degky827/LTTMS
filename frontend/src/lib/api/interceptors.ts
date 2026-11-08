@@ -134,6 +134,7 @@ export function setupInterceptors(instance: AxiosInstance, _baseURL?: string): v
               status: 401,
               code: 'SESSION_EXPIRED',
               data: responseData,
+              response: error.response,
             })
           )
         }
@@ -156,6 +157,7 @@ export function setupInterceptors(instance: AxiosInstance, _baseURL?: string): v
           code: responseData?.code,
           errors: Array.isArray(validationErrors) ? validationErrors : undefined,
           data: responseData,
+          response: error.response,
         })
       )
     }

@@ -143,21 +143,27 @@ export default function RegisterPage() {
         }
       }, 1600)
     } catch (err: any) {
-      // 1. Connection Refused / Network Error
-      if (!err.response && (err.code === 'ERR_NETWORK' || err.message?.includes('Network') || !err.response)) {
+      const isNetwork =
+        err?.isNetworkError ||
+        err?.code === 'ERR_NETWORK' ||
+        (err?.status === 0 && !err?.response)
+
+      if (isNetwork) {
         const targetUrl = apiClient.getBaseURL()
         setError(`Cannot connect to the LTTMS backend server (${targetUrl}). Please ensure the backend server is reachable.`)
         setSpecificErrors([`Network: Backend API at ${targetUrl} is offline or connection was refused. Check your internet connection.`])
         return
       }
 
-      // 2. Specific Backend Validation Issues (e.g. Zod validation or duplicate key)
-      const data = err.response?.data
-      if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+      const data = err?.response?.data || err?.data
+      const rawErrors = err?.errors || data?.errors || data?.details
+      const responseMessage = data?.message || err?.message
+
+      if (rawErrors && Array.isArray(rawErrors) && rawErrors.length > 0) {
         const issues: string[] = []
         const newFieldErrors: Record<string, string> = {}
 
-        data.errors.forEach((issue: any) => {
+        rawErrors.forEach((issue: any) => {
           const field = issue.field || 'general'
           const msg = issue.message || 'Validation error'
           newFieldErrors[field] = msg
@@ -166,15 +172,14 @@ export default function RegisterPage() {
 
         setFieldErrors(newFieldErrors)
         setSpecificErrors(issues)
-        setError(data.message || 'Validation failed. Please correct the highlighted errors.')
-      } else if (data?.message) {
-        // e.g. "User with this email already exists"
-        setError(data.message)
-        if (data.message.toLowerCase().includes('email')) {
-          setFieldErrors({ email: data.message })
-          setSpecificErrors([`Email: ${data.message}`])
+        setError(responseMessage || 'Validation failed. Please correct the highlighted errors.')
+      } else if (responseMessage) {
+        setError(responseMessage)
+        if (responseMessage.toLowerCase().includes('email')) {
+          setFieldErrors({ email: responseMessage })
+          setSpecificErrors([`Email: ${responseMessage}`])
         } else {
-          setSpecificErrors([data.message])
+          setSpecificErrors([responseMessage])
         }
       } else {
         setError('Registration failed. Please check your information.')
