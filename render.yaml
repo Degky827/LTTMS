@@ -63,7 +63,9 @@ services:
     runtime: node
     rootDir: frontend
     buildCommand: npm install && npm run build
-    startCommand: npm start
+    # Render injects PORT at runtime; next start must bind to it
+    startCommand: node_modules/.bin/next start -p $PORT
+    healthCheckPath: /
     envVars:
       - key: NODE_ENV
         value: production

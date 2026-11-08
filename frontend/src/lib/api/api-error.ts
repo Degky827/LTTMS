@@ -12,6 +12,7 @@ export class ApiError extends Error {
   public errors?: ValidationErrorItem[]
   public data?: any
   public isNetworkError: boolean
+  public response?: { data?: any; status?: number }
 
   constructor(options: {
     message: string
@@ -20,6 +21,7 @@ export class ApiError extends Error {
     errors?: ValidationErrorItem[]
     data?: any
     isNetworkError?: boolean
+    response?: { data?: any; status?: number }
   }) {
     super(options.message)
     this.name = 'ApiError'
@@ -28,6 +30,7 @@ export class ApiError extends Error {
     this.errors = options.errors
     this.data = options.data
     this.isNetworkError = options.isNetworkError || false
+    this.response = options.response || (options.data !== undefined ? { data: options.data, status: options.status } : undefined)
 
     // Maintain prototype chain for instanceof checks
     Object.setPrototypeOf(this, ApiError.prototype)

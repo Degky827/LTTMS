@@ -80,18 +80,26 @@ export default function LoginPage() {
         }
       }
     } catch (err: any) {
-      if (!err.response && (err.code === 'ERR_NETWORK' || err.message?.includes('Network') || !err.response)) {
+      const isNetwork =
+        err?.isNetworkError ||
+        err?.code === 'ERR_NETWORK' ||
+        (err?.status === 0 && !err?.response)
+
+      if (isNetwork) {
         const targetUrl = apiClient.getBaseURL()
         setError(`Cannot connect to the LTTMS backend server (${targetUrl}). Please ensure the backend server is reachable.`)
         setSpecificErrors([`Network: Backend API at ${targetUrl} is offline or connection was refused. Check your internet connection.`])
         return
       }
 
-      const data = err.response?.data
-      if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+      const data = err?.response?.data || err?.data
+      const rawErrors = err?.errors || data?.errors || data?.details
+      const responseMessage = data?.message || err?.message
+
+      if (rawErrors && Array.isArray(rawErrors) && rawErrors.length > 0) {
         const issues: string[] = []
         const newFieldErrors: Record<string, string> = {}
-        data.errors.forEach((issue: any) => {
+        rawErrors.forEach((issue: any) => {
           const field = issue.field || 'general'
           const msg = issue.message || 'Validation error'
           newFieldErrors[field] = msg
@@ -99,10 +107,10 @@ export default function LoginPage() {
         })
         setErrors(newFieldErrors)
         setSpecificErrors(issues)
-        setError(data.message || 'Validation failed. Please correct the highlighted errors.')
+        setError(responseMessage || 'Validation failed. Please correct the highlighted errors.')
       } else {
-        setError(data?.message || 'Invalid email or password. Please try again.')
-        setSpecificErrors([data?.message || 'Authentication credentials do not match our records.'])
+        setError(responseMessage || 'Invalid email or password. Please try again.')
+        setSpecificErrors([responseMessage || 'Authentication credentials do not match our records.'])
       }
     } finally {
       setLoading(false)
